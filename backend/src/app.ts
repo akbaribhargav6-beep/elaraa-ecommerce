@@ -12,6 +12,14 @@ import { apiRouter } from './routes';
 
 export const app = express();
 
+// Railway (like most PaaS) terminates TLS at a single edge proxy in front of
+// the app and forwards the real client IP via X-Forwarded-For. Without this,
+// express-rate-limit throws on every request (it refuses to trust that
+// header by default) — trusting exactly one hop is the correct, safe setting
+// here, not `true` (which would trust the entire chain and allow IP
+// spoofing via a client-supplied header).
+app.set('trust proxy', 1);
+
 app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
 app.use(
   cors({

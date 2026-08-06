@@ -51,7 +51,10 @@ async function register(input: RegisterInput) {
   });
 
   const verifyUrl = `${env.CLIENT_URL}/verify-email?token=${emailVerifyToken}`;
-  await sendMail({
+  // Not awaited — a slow or unreachable SMTP path must never block the
+  // user-facing register response (email verification is soft anyway; see
+  // README). Matches the fire-and-forget pattern in order.service.ts.
+  sendMail({
     to: user.email,
     subject: 'Verify your ELARAA account',
     html: verifyEmailTemplate(user.firstName, verifyUrl),
@@ -133,7 +136,7 @@ async function forgotPassword(email: string) {
   });
 
   const resetUrl = `${env.CLIENT_URL}/reset-password?token=${resetToken}`;
-  await sendMail({
+  sendMail({
     to: user.email,
     subject: 'Reset your ELARAA password',
     html: resetPasswordTemplate(user.firstName, resetUrl),
@@ -183,7 +186,7 @@ async function resendVerification(email: string) {
   });
 
   const verifyUrl = `${env.CLIENT_URL}/verify-email?token=${emailVerifyToken}`;
-  await sendMail({
+  sendMail({
     to: user.email,
     subject: 'Verify your ELARAA account',
     html: verifyEmailTemplate(user.firstName, verifyUrl),

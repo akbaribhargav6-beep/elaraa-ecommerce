@@ -13,6 +13,8 @@ function createTransporter(): Promise<Transporter> {
       port: env.SMTP_PORT,
       secure: env.SMTP_PORT === 465,
       auth: { user: env.SMTP_USER, pass: env.SMTP_PASS },
+      connectionTimeout: 10_000,
+      socketTimeout: 10_000,
     });
     console.log(`✓ Mailer configured with real SMTP host ${env.SMTP_HOST}`);
     return Promise.resolve(transporter);
@@ -24,6 +26,8 @@ function createTransporter(): Promise<Transporter> {
       port: testAccount.smtp.port,
       secure: testAccount.smtp.secure,
       auth: { user: testAccount.user, pass: testAccount.pass },
+      connectionTimeout: 10_000,
+      socketTimeout: 10_000,
     });
     console.log('✓ Mailer configured with Ethereal test SMTP (dev sandbox)');
     console.log(`  Inbox: https://ethereal.email  (user: ${testAccount.user})`);

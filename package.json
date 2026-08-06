@@ -1,0 +1,32 @@
+{
+  "name": "elaraa-ecommerce",
+  "private": true,
+  "version": "1.0.0",
+  "description": "ELARAA fine jewellery — full-stack e-commerce monorepo",
+  "workspaces": [
+    "shared",
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "dev:backend": "npm run dev -w backend",
+    "dev:frontend": "npm run dev -w frontend",
+    "build:backend": "npm run build -w backend",
+    "build:frontend": "npm run build -w frontend",
+    "start:backend": "npm run start -w backend",
+    "prisma:generate": "npm run prisma:generate -w backend",
+    "prisma:migrate": "npm run prisma:migrate -w backend",
+    "prisma:seed": "npm run prisma:seed -w backend",
+    "prisma:studio": "npm run prisma:studio -w backend",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down"
+  },
+  "allowScripts": {
+    "@prisma/client@6.19.3": true,
+    "@prisma/engines@6.19.3": true,
+    "bcrypt@5.1.1": true,
+    "esbuild@0.28.1": true,
+    "prisma@6.19.3": true,
+    "sharp@0.34.5": true
+  }
+}

@@ -22,7 +22,10 @@ const envSchema = z.object({
   MAIL_FROM: z.string().default('ELARAA <no-reply@elaraa.example>'),
 
   UPLOAD_DIR: z.string().default('uploads'),
-  STORAGE_PROVIDER: z.enum(['local', 's3']).default('local'),
+  STORAGE_PROVIDER: z.enum(['local', 's3', 'cloudinary']).default('local'),
+  CLOUDINARY_CLOUD_NAME: z.string().optional(),
+  CLOUDINARY_API_KEY: z.string().optional(),
+  CLOUDINARY_API_SECRET: z.string().optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);

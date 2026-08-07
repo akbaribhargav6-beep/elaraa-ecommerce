@@ -6,6 +6,9 @@
 // to be added here too, not just localhost:4000 used in local dev.
 const remotePatterns = [
   { protocol: 'http', hostname: 'localhost', port: '4000', pathname: '/uploads/**' },
+  // Cloudinary-hosted uploads (used in production so photos survive backend
+  // redeploys — see backend/src/services/storage/CloudinaryStorageProvider.ts).
+  { protocol: 'https', hostname: 'res.cloudinary.com', pathname: '/**' },
 ];
 
 if (process.env.NEXT_PUBLIC_API_URL) {

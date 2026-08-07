@@ -54,15 +54,34 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     []
   );
 
-  const updateItem = useCallback(async (itemId: string, quantity: number) => {
-    const data = await api.patch<{ cart: CartDTO }>(`/api/cart/items/${itemId}`, { quantity });
-    setCart(data.cart);
-  }, []);
+  const updateItem = useCallback(
+    async (itemId: string, quantity: number) => {
+      try {
+        const data = await api.patch<{ cart: CartDTO }>(`/api/cart/items/${itemId}`, { quantity });
+        setCart(data.cart);
+      } catch (err) {
+        // Item wasn't found in the identity the server resolved for this
+        // request (e.g. a stale/desynced guest cart) — resync from the
+        // server instead of leaving the button looking like it did nothing.
+        await refetch();
+        throw err;
+      }
+    },
+    [refetch]
+  );
 
-  const removeItem = useCallback(async (itemId: string) => {
-    const data = await api.delete<{ cart: CartDTO }>(`/api/cart/items/${itemId}`);
-    setCart(data.cart);
-  }, []);
+  const removeItem = useCallback(
+    async (itemId: string) => {
+      try {
+        const data = await api.delete<{ cart: CartDTO }>(`/api/cart/items/${itemId}`);
+        setCart(data.cart);
+      } catch (err) {
+        await refetch();
+        throw err;
+      }
+    },
+    [refetch]
+  );
 
   const clearCart = useCallback(async () => {
     const data = await api.delete<{ cart: CartDTO }>('/api/cart');

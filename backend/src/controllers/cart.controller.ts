@@ -7,6 +7,7 @@ import { cartService, type CartIdentity } from '../services/cart.service';
 import { isProd } from '../config/env';
 
 const GUEST_CART_COOKIE = 'cartSessionToken';
+const GUEST_CART_HEADER = 'x-cart-token';
 const GUEST_COOKIE_OPTS = {
   httpOnly: true,
   secure: isProd,
@@ -18,10 +19,22 @@ const GUEST_COOKIE_OPTS = {
 };
 
 // Resolves the current request to a cart identity: the logged-in user's cart
-// if authenticated, otherwise a guest cart keyed by a cookie — minting a new
-// guest session token and setting the cookie if one isn't present yet.
+// if authenticated, otherwise a guest cart. Guest identity prefers the
+// X-Cart-Token header (set by the frontend from localStorage) over the
+// cookie: with the frontend and backend on separate domains in production,
+// the guest cookie is a third-party cookie that Safari/Brave/Firefox-strict
+// block by default, which silently mints a fresh empty cart on every request
+// and makes add/remove look "random" per customer. The header works
+// regardless of third-party-cookie policy since it's just first-party
+// localStorage on the frontend's own origin. The cookie path is kept as a
+// fallback for same-site local dev and any client that doesn't send the header.
 function resolveIdentity(req: Request, res: Response): CartIdentity {
   if (req.user) return { userId: req.user.id };
+
+  const headerToken = req.headers[GUEST_CART_HEADER];
+  if (typeof headerToken === 'string' && headerToken) {
+    return { sessionToken: headerToken };
+  }
 
   let token = req.cookies?.[GUEST_CART_COOKIE];
   if (!token) {
@@ -58,7 +71,8 @@ export const clearCart = asyncHandler(async (req: Request, res: Response) => {
 
 export const mergeCart = asyncHandler(async (req: Request, res: Response) => {
   if (!req.user) throw ApiError.unauthorized('Must be logged in to merge carts');
-  const token = req.cookies?.[GUEST_CART_COOKIE];
+  const headerToken = req.headers[GUEST_CART_HEADER];
+  const token = (typeof headerToken === 'string' && headerToken) || req.cookies?.[GUEST_CART_COOKIE];
   if (!token) {
     const cart = await cartService.getCart({ userId: req.user.id });
     return sendSuccess(res, { cart });

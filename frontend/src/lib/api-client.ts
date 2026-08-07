@@ -12,6 +12,41 @@ export function getAccessToken() {
   return accessToken;
 }
 
+// Guest cart identity. In production the frontend (vercel.app) and backend
+// (railway.app) are different domains, so the guest-cart cookie is a
+// third-party cookie — Safari, Firefox (strict), and Brave block those by
+// default, silently minting a brand-new empty cart on every request for
+// affected visitors (add appears to work, but a later remove/update can't
+// find the item because it's now looking at a different cart). A token kept
+// in this origin's own localStorage and sent as a header sidesteps
+// third-party-cookie blocking entirely.
+const GUEST_CART_TOKEN_KEY = 'elaraa_cart_token';
+
+function getGuestCartToken(): string | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    let token = window.localStorage.getItem(GUEST_CART_TOKEN_KEY);
+    if (!token) {
+      token = crypto.randomUUID();
+      window.localStorage.setItem(GUEST_CART_TOKEN_KEY, token);
+    }
+    return token;
+  } catch {
+    // localStorage unavailable (private mode / disabled storage) — fall
+    // back to cookie-only identity for this request.
+    return null;
+  }
+}
+
+export function clearGuestCartToken() {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.removeItem(GUEST_CART_TOKEN_KEY);
+  } catch {
+    // ignore
+  }
+}
+
 export class ApiClientError extends Error {
   status: number;
   errors?: Record<string, string[]>;
@@ -57,6 +92,7 @@ export async function apiFetch<T>(path: string, options: RequestOptions = {}): P
       headers: {
         ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
         ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+        ...(getGuestCartToken() ? { 'X-Cart-Token': getGuestCartToken()! } : {}),
         ...headers,
       },
       body: body !== undefined ? JSON.stringify(body) : undefined,

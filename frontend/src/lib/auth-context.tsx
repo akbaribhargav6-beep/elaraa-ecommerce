@@ -2,7 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import type { UserDTO } from '@elaraa/shared';
-import { api, setAccessToken, ApiClientError } from './api-client';
+import { api, setAccessToken, ApiClientError, clearGuestCartToken } from './api-client';
 
 interface AuthContextValue {
   user: UserDTO | null;
@@ -46,6 +46,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setAccessToken(data.accessToken);
     setUser(data.user);
     await api.post('/api/cart/merge').catch(() => {});
+    clearGuestCartToken();
     window.dispatchEvent(new Event(CART_SHOULD_REFRESH_EVENT));
     return data.user;
   }, []);

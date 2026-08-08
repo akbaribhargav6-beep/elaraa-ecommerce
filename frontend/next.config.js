@@ -9,6 +9,11 @@ const remotePatterns = [
   // Cloudinary-hosted uploads (used in production so photos survive backend
   // redeploys — see backend/src/services/storage/CloudinaryStorageProvider.ts).
   { protocol: 'https', hostname: 'res.cloudinary.com', pathname: '/**' },
+  // Fallback API origin the frontend switches to (see lib/api-client.ts)
+  // when a visitor's DNS resolver hasn't caught up with api.elaraaluxes.com
+  // yet — must be allow-listed too or next/image would refuse a relative
+  // /uploads/** path served from it.
+  { protocol: 'https', hostname: 'elaraa-backend-production.up.railway.app', pathname: '/uploads/**' },
 ];
 
 if (process.env.NEXT_PUBLIC_API_URL) {

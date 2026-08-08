@@ -1,4 +1,24 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
+const PRIMARY_API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
+// api.elaraaluxes.com is a brand-new subdomain — some visitors' DNS
+// resolvers (ISP/router-level, not this app's fault) haven't caught up with
+// it yet and return a stale "domain doesn't exist" answer, which makes every
+// request fail instantly with a network error before it ever reaches
+// Railway. This is the original, long-stable Railway URL the custom domain
+// was pointed at, kept as a fallback so those visitors aren't fully blocked
+// while their resolver catches up.
+const FALLBACK_API_URL = 'https://elaraa-backend-production.up.railway.app';
+
+// Once a request proves the primary origin is unreachable from this client,
+// remember it for the rest of the session instead of eating the DNS-failure
+// latency on every single call.
+let activeApiUrl = PRIMARY_API_URL;
+
+// getUploadUrl/getCategoryImageUrl need the currently-active origin, but are
+// plain functions (not hooks) — a getter keeps them in sync with fallback
+// switches without needing every call site to be rewritten as stateful.
+function currentApiUrl(): string {
+  return activeApiUrl;
+}
 
 // Access token lives in memory only (never localStorage — XSS-safe). The
 // refresh token is an httpOnly cookie the browser sends automatically.
@@ -67,7 +87,7 @@ let refreshPromise: Promise<boolean> | null = null;
 
 async function tryRefresh(): Promise<boolean> {
   if (!refreshPromise) {
-    refreshPromise = fetch(`${API_URL}/api/auth/refresh`, { method: 'POST', credentials: 'include' })
+    refreshPromise = rawFetch(activeApiUrl, '/api/auth/refresh', { method: 'POST' }, undefined, undefined)
       .then(async (res) => {
         if (!res.ok) return false;
         const json = await res.json();
@@ -82,21 +102,46 @@ async function tryRefresh(): Promise<boolean> {
   return refreshPromise;
 }
 
+function rawFetch(
+  origin: string,
+  path: string,
+  rest: RequestInit,
+  body: unknown,
+  headers: HeadersInit | undefined
+): Promise<Response> {
+  return fetch(`${origin}${path}`, {
+    ...rest,
+    credentials: 'include',
+    headers: {
+      ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
+      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+      ...(getGuestCartToken() ? { 'X-Cart-Token': getGuestCartToken()! } : {}),
+      ...headers,
+    },
+    body: body !== undefined ? JSON.stringify(body) : undefined,
+  });
+}
+
 export async function apiFetch<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { body, skipAuthRetry, headers, ...rest } = options;
 
-  const doFetch = () =>
-    fetch(`${API_URL}${path}`, {
-      ...rest,
-      credentials: 'include',
-      headers: {
-        ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
-        ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-        ...(getGuestCartToken() ? { 'X-Cart-Token': getGuestCartToken()! } : {}),
-        ...headers,
-      },
-      body: body !== undefined ? JSON.stringify(body) : undefined,
-    });
+  const doFetch = async () => {
+    try {
+      return await rawFetch(activeApiUrl, path, rest, body, headers);
+    } catch (err) {
+      // A rejected fetch() here means the request never reached the server
+      // at all — DNS resolution failure, connection refused, etc. — not an
+      // HTTP error response (those resolve normally with res.ok === false).
+      // Fall back to the known-stable Railway origin once, and keep using it
+      // for the rest of the session rather than eating this failure again on
+      // every subsequent call.
+      if (activeApiUrl !== FALLBACK_API_URL && PRIMARY_API_URL !== FALLBACK_API_URL) {
+        activeApiUrl = FALLBACK_API_URL;
+        return await rawFetch(activeApiUrl, path, rest, body, headers);
+      }
+      throw err;
+    }
+  };
 
   let res = await doFetch();
 
@@ -128,7 +173,7 @@ export const api = {
 
 export function getUploadUrl(url: string | null | undefined): string {
   if (!url) return '';
-  return url.startsWith('http') ? url : `${API_URL}${url}`;
+  return url.startsWith('http') ? url : `${currentApiUrl()}${url}`;
 }
 
 // Category images can be either a backend-uploaded file (served from the API

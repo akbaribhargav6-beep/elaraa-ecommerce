@@ -5,7 +5,7 @@ import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
 import compression from 'compression';
 import path from 'node:path';
-import { env, isProd } from './config/env';
+import { env, isProd, clientOrigins } from './config/env';
 import { notFoundHandler, errorHandler } from './middlewares/error.middleware';
 import { apiLimiter } from './middlewares/rateLimit.middleware';
 import { apiRouter } from './routes';
@@ -23,7 +23,7 @@ app.set('trust proxy', 1);
 app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
 app.use(
   cors({
-    origin: env.CLIENT_URL,
+    origin: clientOrigins,
     credentials: true,
   })
 );

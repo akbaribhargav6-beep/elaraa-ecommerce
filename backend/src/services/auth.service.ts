@@ -4,7 +4,7 @@ import { ApiError } from '../utils/apiError';
 import { hashPassword, comparePassword } from '../utils/password';
 import { signAccessToken, generateRefreshToken, hashToken, refreshTokenExpiryDate } from '../utils/jwt';
 import { sendMail } from '../config/mailer';
-import { env } from '../config/env';
+import { primaryClientUrl } from '../config/env';
 import { verifyEmailTemplate, resetPasswordTemplate } from '../utils/emailTemplates';
 import type { User } from '@prisma/client';
 
@@ -50,7 +50,7 @@ async function register(input: RegisterInput) {
     },
   });
 
-  const verifyUrl = `${env.CLIENT_URL}/verify-email?token=${emailVerifyToken}`;
+  const verifyUrl = `${primaryClientUrl}/verify-email?token=${emailVerifyToken}`;
   // Not awaited — a slow or unreachable SMTP path must never block the
   // user-facing register response (email verification is soft anyway; see
   // README). Matches the fire-and-forget pattern in order.service.ts.
@@ -135,7 +135,7 @@ async function forgotPassword(email: string) {
     data: { resetToken, resetTokenExpires: new Date(Date.now() + RESET_TOKEN_TTL_MS) },
   });
 
-  const resetUrl = `${env.CLIENT_URL}/reset-password?token=${resetToken}`;
+  const resetUrl = `${primaryClientUrl}/reset-password?token=${resetToken}`;
   sendMail({
     to: user.email,
     subject: 'Reset your ELARAA password',
@@ -185,7 +185,7 @@ async function resendVerification(email: string) {
     data: { emailVerifyToken, emailVerifyExpires: new Date(Date.now() + EMAIL_VERIFY_TTL_MS) },
   });
 
-  const verifyUrl = `${env.CLIENT_URL}/verify-email?token=${emailVerifyToken}`;
+  const verifyUrl = `${primaryClientUrl}/verify-email?token=${emailVerifyToken}`;
   sendMail({
     to: user.email,
     subject: 'Verify your ELARAA account',

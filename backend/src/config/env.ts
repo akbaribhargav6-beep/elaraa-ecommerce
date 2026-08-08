@@ -38,3 +38,10 @@ if (!parsed.success) {
 
 export const env = parsed.data;
 export const isProd = env.NODE_ENV === 'production';
+
+// CLIENT_URL may hold a comma-separated list of allowed origins (e.g. the
+// production custom domain plus a Vercel URL kept as a fallback during
+// cutover). Anything that needs one canonical frontend URL — building links
+// in emails — should use the first entry, not the raw env var.
+export const clientOrigins = env.CLIENT_URL.split(',').map((origin) => origin.trim());
+export const primaryClientUrl = clientOrigins[0];

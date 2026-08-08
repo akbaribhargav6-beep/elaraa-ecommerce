@@ -52,7 +52,7 @@ export default function AboutPage() {
       {/* CINEMATIC BANNER */}
       <section className="px-6 md:px-16 -mt-8 relative z-10 max-w-7xl mx-auto">
         <RevealOnScroll as="div" className="relative aspect-[16/9] md:aspect-[21/9] overflow-hidden shadow-2xl border" style={{ borderColor: 'rgba(43,38,32,.15)' }}>
-          <Image src={getUploadUrl('/uploads/products/enchant/img-5.jpg')} alt="ELARAA artisans at work" fill className="object-cover" priority />
+          <Image src="https://res.cloudinary.com/nvausw3f/image/upload/v1786170498/products/enchant/img-5.jpg" alt="ELARAA artisans at work" fill className="object-cover" priority />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent flex items-end p-6 sm:p-12">
             <div className="text-white space-y-2 max-w-xl">
               <p className="eyebrow text-xs" style={{ color: 'var(--gold)' }}>Jamnagar Atelier District</p>
@@ -70,7 +70,7 @@ export default function AboutPage() {
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
           <RevealOnScroll className="lg:col-span-5 relative">
             <div className="relative aspect-[4/5] overflow-hidden border shadow-xl" style={{ borderColor: 'rgba(43,38,32,.12)' }}>
-              <Image src={getUploadUrl('/uploads/products/luster/img-1.jpg')} alt="ELARAA crafting" fill className="object-cover" />
+              <Image src="https://res.cloudinary.com/nvausw3f/image/upload/v1786170505/products/luster/img-1.jpg" alt="ELARAA crafting" fill className="object-cover" />
             </div>
             <div className="absolute -bottom-6 -right-4 sm:right-6 bg-white/90 backdrop-blur-md p-5 max-w-xs shadow-xl" style={{ border: '1px solid rgba(201,166,107,.4)' }}>
               <p className="serif text-lg italic font-medium">&ldquo;Purity is not a feature; it is our foundation.&rdquo;</p>
@@ -173,9 +173,9 @@ export default function AboutPage() {
           </RevealOnScroll>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
-              { src: '/uploads/products/dazzle/img-1.jpg', alt: 'ELARAA Dazzle earrings', caption: 'The Dazzle Drop Collection' },
-              { src: '/uploads/products/serene/img-1.jpg', alt: 'ELARAA Serene pearl studs', caption: 'Hand Selected Freshwater Pearls' },
-              { src: '/uploads/products/radiance/img-1.jpg', alt: 'ELARAA Radiance studs', caption: 'Premium Anti Tarnish Finish', wide: true },
+              { src: 'https://res.cloudinary.com/nvausw3f/image/upload/v1786170500/products/dazzle/img-1.jpg', alt: 'ELARAA Dazzle earrings', caption: 'The Dazzle Drop Collection' },
+              { src: 'https://res.cloudinary.com/nvausw3f/image/upload/v1786170488/products/serene/img-1.jpg', alt: 'ELARAA Serene pearl studs', caption: 'Hand Selected Freshwater Pearls' },
+              { src: 'https://res.cloudinary.com/nvausw3f/image/upload/v1786170482/products/radiance/img-1.jpg', alt: 'ELARAA Radiance studs', caption: 'Premium Anti Tarnish Finish', wide: true },
             ].map((g) => (
               <RevealOnScroll key={g.src} className={`relative aspect-[4/5] overflow-hidden border ${g.wide ? 'sm:col-span-2 lg:col-span-1' : ''}`} style={{ borderColor: 'rgba(43,38,32,.15)' }}>
                 <Image src={getUploadUrl(g.src)} alt={g.alt} fill className="object-cover" />

@@ -8,6 +8,7 @@ import { api, getUploadUrl } from '@/lib/api-client';
 import { formatPrice } from '@/lib/format';
 import { useCart } from '@/lib/cart-context';
 import { useQuickView } from '@/lib/quick-view-context';
+import { useToast } from '@/lib/toast-context';
 import { Button } from '@/components/ui/Button';
 import { QtyBox } from '@/components/ui/QtyBox';
 
@@ -16,7 +17,9 @@ import { QtyBox } from '@/components/ui/QtyBox';
 export function QuickViewModal() {
   const { activeSlug, closeQuickView } = useQuickView();
   const { addItem } = useCart();
+  const { notify } = useToast();
   const [product, setProduct] = useState<ProductDTO | null>(null);
+  const [loadError, setLoadError] = useState(false);
   const [selectedMetal, setSelectedMetal] = useState<string | undefined>();
   const [qty, setQty] = useState(1);
   const [adding, setAdding] = useState(false);
@@ -24,14 +27,33 @@ export function QuickViewModal() {
   useEffect(() => {
     if (!activeSlug) {
       setProduct(null);
+      setLoadError(false);
       return;
     }
+    // A fetch that never resolves (or rejects with nothing catching it) used
+    // to leave the modal stuck on "Loading…" forever — this is the actual
+    // cause of "Quick View sometimes keeps loading and does not open
+    // properly". The `cancelled` guard also stops a slow, stale response
+    // from a previously-opened product clobbering whichever one is open now
+    // if two Quick Views get triggered in quick succession.
+    let cancelled = false;
+    setProduct(null);
+    setLoadError(false);
     setQty(1);
-    api.get<{ product: ProductDTO }>(`/api/products/${activeSlug}`).then((data) => {
-      setProduct(data.product);
-      const defaultVariant = data.product.variants.find((v) => v.isDefault) ?? data.product.variants[0];
-      setSelectedMetal(defaultVariant?.metalLabel);
-    });
+    api
+      .get<{ product: ProductDTO }>(`/api/products/${activeSlug}`)
+      .then((data) => {
+        if (cancelled) return;
+        setProduct(data.product);
+        const defaultVariant = data.product.variants.find((v) => v.isDefault) ?? data.product.variants[0];
+        setSelectedMetal(defaultVariant?.metalLabel);
+      })
+      .catch(() => {
+        if (!cancelled) setLoadError(true);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [activeSlug]);
 
   useEffect(() => {
@@ -54,9 +76,26 @@ export function QuickViewModal() {
     try {
       await addItem(product.id, selectedVariant.id, qty);
       closeQuickView();
+    } catch {
+      notify("Couldn't add this to your bag — please try again.");
     } finally {
       setAdding(false);
     }
+  }
+
+  function retryLoad() {
+    // Re-triggers the load effect by toggling activeSlug through a no-op
+    // state change isn't possible from here, so just re-run the same fetch.
+    setLoadError(false);
+    setProduct(null);
+    api
+      .get<{ product: ProductDTO }>(`/api/products/${activeSlug}`)
+      .then((data) => {
+        setProduct(data.product);
+        const defaultVariant = data.product.variants.find((v) => v.isDefault) ?? data.product.variants[0];
+        setSelectedMetal(defaultVariant?.metalLabel);
+      })
+      .catch(() => setLoadError(true));
   }
 
   return (
@@ -76,7 +115,14 @@ export function QuickViewModal() {
           ✕
         </button>
 
-        {!product ? (
+        {loadError ? (
+          <div className="sm:col-span-2 p-16 text-center text-sm space-y-4">
+            <p className="opacity-60">Couldn&apos;t load this product.</p>
+            <button onClick={retryLoad} className="btn-luxury btn-gold text-xs px-5 py-2 inline-flex">
+              <span>Try Again</span>
+            </button>
+          </div>
+        ) : !product ? (
           <div className="sm:col-span-2 p-16 text-center text-sm opacity-60">Loading…</div>
         ) : (
           <>

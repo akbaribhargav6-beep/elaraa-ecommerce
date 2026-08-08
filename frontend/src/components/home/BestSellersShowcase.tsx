@@ -1,20 +1,23 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import type { ProductDTO } from '@elaraa/shared';
 import { getUploadUrl } from '@/lib/api-client';
 import { formatPrice } from '@/lib/format';
-import { useCart } from '@/lib/cart-context';
 import { useWishlist } from '@/lib/wishlist-context';
+import { useSafeAddToCart, useSafeWishlistToggle } from '@/lib/use-safe-cart-actions';
 
 function HeroCard({ product, rank }: { product: ProductDTO; rank: number }) {
   const primary = product.images.find((i) => i.isPrimary) ?? product.images[0];
   const secondary = product.images.find((i) => i.id !== primary?.id) ?? primary;
-  const { addItem } = useCart();
-  const { isWishlisted, toggle } = useWishlist();
+  const addToCart = useSafeAddToCart();
+  const toggleWishlist = useSafeWishlistToggle();
+  const { isWishlisted } = useWishlist();
   const defaultVariant = product.variants.find((v) => v.isDefault) ?? product.variants[0];
   const wishlisted = isWishlisted(product.id);
+  const [adding, setAdding] = useState(false);
 
   return (
     <div className="md:col-span-7 group relative bg-white border rounded-sm p-8 flex flex-col justify-between overflow-hidden shadow-lg transition-all duration-700 hover:shadow-2xl" style={{ borderColor: 'rgba(43,38,32,.12)' }}>
@@ -27,7 +30,7 @@ function HeroCard({ product, rank }: { product: ProductDTO; rank: number }) {
           #{rank} Best Seller
         </span>
         <button
-          onClick={() => toggle(product.id, defaultVariant?.id)}
+          onClick={() => toggleWishlist(product.id, defaultVariant?.id)}
           aria-label={wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
           className="w-10 h-10 rounded-full bg-stone-100/80 backdrop-blur-md flex items-center justify-center shadow-sm transition-colors"
           style={{ color: wishlisted ? '#dc2626' : undefined }}
@@ -60,11 +63,19 @@ function HeroCard({ product, rank }: { product: ProductDTO; rank: number }) {
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <button
-            onClick={() => defaultVariant && addItem(product.id, defaultVariant.id, 1)}
-            disabled={!defaultVariant}
+            onClick={async () => {
+              if (!defaultVariant || adding) return;
+              setAdding(true);
+              try {
+                await addToCart(product.id, defaultVariant.id, 1);
+              } finally {
+                setAdding(false);
+              }
+            }}
+            disabled={!defaultVariant || adding}
             className="btn-luxury btn-gold-solid h-11 px-5 justify-center text-[11px] disabled:opacity-40"
           >
-            <span>Quick Add</span>
+            <span>{adding ? 'Adding…' : 'Quick Add'}</span>
           </button>
           <Link href={`/product/${product.slug}`} className="w-11 h-11 border flex items-center justify-center text-lg hover:bg-black hover:text-white transition-colors" style={{ borderColor: 'var(--black)' }}>
             →
@@ -78,10 +89,12 @@ function HeroCard({ product, rank }: { product: ProductDTO; rank: number }) {
 function SupportingCard({ product }: { product: ProductDTO }) {
   const primary = product.images.find((i) => i.isPrimary) ?? product.images[0];
   const secondary = product.images.find((i) => i.id !== primary?.id) ?? primary;
-  const { addItem } = useCart();
-  const { isWishlisted, toggle } = useWishlist();
+  const addToCart = useSafeAddToCart();
+  const toggleWishlist = useSafeWishlistToggle();
+  const { isWishlisted } = useWishlist();
   const defaultVariant = product.variants.find((v) => v.isDefault) ?? product.variants[0];
   const wishlisted = isWishlisted(product.id);
+  const [adding, setAdding] = useState(false);
 
   return (
     <div className="group relative bg-white border rounded-sm p-4 sm:p-5 flex items-center gap-5 transition-all duration-500 hover:shadow-xl" style={{ borderColor: 'rgba(43,38,32,.12)' }}>
@@ -97,7 +110,7 @@ function SupportingCard({ product }: { product: ProductDTO }) {
         <div className="flex items-center justify-between mb-1 gap-2">
           {product.material && <span className="text-[9px] tracking-widest uppercase font-medium truncate" style={{ color: 'var(--gold-deep)' }}>{product.material}</span>}
           <button
-            onClick={() => toggle(product.id, defaultVariant?.id)}
+            onClick={() => toggleWishlist(product.id, defaultVariant?.id)}
             aria-label={wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
             className="text-sm shrink-0 transition-colors"
             style={{ color: wishlisted ? '#dc2626' : undefined }}
@@ -111,11 +124,19 @@ function SupportingCard({ product }: { product: ProductDTO }) {
         <p className="text-sm font-medium mt-0.5">{formatPrice(product.basePrice)}</p>
         <div className="mt-3 flex items-center gap-3">
           <button
-            onClick={() => defaultVariant && addItem(product.id, defaultVariant.id, 1)}
-            disabled={!defaultVariant}
+            onClick={async () => {
+              if (!defaultVariant || adding) return;
+              setAdding(true);
+              try {
+                await addToCart(product.id, defaultVariant.id, 1);
+              } finally {
+                setAdding(false);
+              }
+            }}
+            disabled={!defaultVariant || adding}
             className="btn-luxury py-1.5 px-3.5 text-[10px] tracking-widest disabled:opacity-40"
           >
-            <span>+ Add To Bag</span>
+            <span>{adding ? 'Adding…' : '+ Add To Bag'}</span>
           </button>
           <Link href={`/product/${product.slug}`} className="text-xs opacity-60 hover:opacity-100 underline underline-offset-4">Details</Link>
         </div>

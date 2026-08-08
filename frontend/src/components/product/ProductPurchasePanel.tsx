@@ -6,6 +6,7 @@ import type { ProductDTO } from '@elaraa/shared';
 import { useCart } from '@/lib/cart-context';
 import { useAuth } from '@/lib/auth-context';
 import { useWishlist } from '@/lib/wishlist-context';
+import { useToast } from '@/lib/toast-context';
 import { formatPrice } from '@/lib/format';
 import { QtyBox } from '@/components/ui/QtyBox';
 import { Button } from '@/components/ui/Button';
@@ -19,6 +20,8 @@ export function ProductPurchasePanel({ product }: { product: ProductDTO }) {
   const { addItem } = useCart();
   const { user } = useAuth();
   const { isWishlisted, toggle } = useWishlist();
+  const { notify } = useToast();
+  const [togglingWishlist, setTogglingWishlist] = useState(false);
 
   const metals = useMemo(
     () => [...new Map(product.variants.map((v) => [v.metalLabel, v])).values()],
@@ -75,6 +78,8 @@ export function ProductPurchasePanel({ product }: { product: ProductDTO }) {
     setAdding(true);
     try {
       await addItem(product.id, selectedVariant.id, qty);
+    } catch {
+      notify("Couldn't add this to your bag — please try again.");
     } finally {
       setAdding(false);
     }
@@ -86,17 +91,27 @@ export function ProductPurchasePanel({ product }: { product: ProductDTO }) {
     try {
       await addItem(product.id, selectedVariant.id, qty);
       router.push('/checkout');
+    } catch {
+      notify("Couldn't start checkout — please try again.");
     } finally {
       setBuyingNow(false);
     }
   }
 
-  function handleWishlist() {
+  async function handleWishlist() {
     if (!user) {
       window.location.href = '/login';
       return;
     }
-    toggle(product.id, selectedVariant?.id);
+    if (togglingWishlist) return;
+    setTogglingWishlist(true);
+    try {
+      await toggle(product.id, selectedVariant?.id);
+    } catch {
+      notify('Something went wrong updating your wishlist.');
+    } finally {
+      setTogglingWishlist(false);
+    }
   }
 
   function handleBulkInquiry() {

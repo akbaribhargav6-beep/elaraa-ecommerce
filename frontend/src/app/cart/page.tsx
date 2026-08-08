@@ -10,6 +10,7 @@ import { formatPrice } from '@/lib/format';
 import { Button } from '@/components/ui/Button';
 import { QtyBox } from '@/components/ui/QtyBox';
 import { Footer } from '@/components/layout/Footer';
+import { useToast } from '@/lib/toast-context';
 
 // Matches the free-shipping threshold already used site-wide (footer copy,
 // homepage) rather than the static reference's unrelated hardcoded value.
@@ -24,7 +25,16 @@ interface CouponState {
 
 export default function CartPage() {
   const { cart, isLoading, updateItem, removeItem, addItem } = useCart();
+  const { notify } = useToast();
   const items = cart?.items ?? [];
+
+  function safeUpdate(itemId: string, quantity: number) {
+    updateItem(itemId, quantity).catch(() => notify("Couldn't update quantity — please try again."));
+  }
+
+  function safeRemove(itemId: string) {
+    removeItem(itemId).catch(() => notify("Couldn't remove that item — please try again."));
+  }
   const subtotal = cart?.subtotal ?? 0;
   const remainingForFreeShipping = Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal);
   const shippingProgress = Math.min(100, Math.round((subtotal / FREE_SHIPPING_THRESHOLD) * 100));
@@ -71,7 +81,11 @@ export default function CartPage() {
     if (!upsell) return;
     const defaultVariant = upsell.variants.find((v) => v.isDefault) ?? upsell.variants[0];
     if (!defaultVariant) return;
-    await addItem(upsell.id, defaultVariant.id, 1);
+    try {
+      await addItem(upsell.id, defaultVariant.id, 1);
+    } catch {
+      notify("Couldn't add this to your bag — please try again.");
+    }
   }
 
   return (
@@ -118,8 +132,8 @@ export default function CartPage() {
                         <p className="text-sm font-medium">{formatPrice(item.lineTotal)}</p>
                       </div>
                       <div className="flex items-center justify-between mt-2 pt-2 border-t" style={{ borderColor: 'rgba(43,38,32,.08)' }}>
-                        <QtyBox value={item.quantity} onChange={(q) => updateItem(item.id, q)} max={item.stockQuantity} />
-                        <button onClick={() => removeItem(item.id)} className="text-xs opacity-50 hover:opacity-100 underline">
+                        <QtyBox value={item.quantity} onChange={(q) => safeUpdate(item.id, q)} max={item.stockQuantity} />
+                        <button onClick={() => safeRemove(item.id)} className="text-xs opacity-50 hover:opacity-100 underline">
                           Remove
                         </button>
                       </div>

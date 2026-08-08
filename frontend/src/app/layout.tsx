@@ -5,6 +5,7 @@ import { AuthProvider } from '@/lib/auth-context';
 import { CartProvider } from '@/lib/cart-context';
 import { WishlistProvider } from '@/lib/wishlist-context';
 import { QuickViewProvider } from '@/lib/quick-view-context';
+import { ToastProvider } from '@/lib/toast-context';
 import { GsapLenisProvider } from '@/lib/gsap-lenis-provider';
 import { StorefrontChrome } from '@/components/layout/StorefrontChrome';
 
@@ -42,18 +43,20 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${cormorant.variable} ${jost.variable} ${caveat.variable}`}>
       <body>
-        <AuthProvider>
-          <CartProvider>
-            <WishlistProvider>
-              <QuickViewProvider>
-                <GsapLenisProvider>
-                  <StorefrontChrome />
-                  {children}
-                </GsapLenisProvider>
-              </QuickViewProvider>
-            </WishlistProvider>
-          </CartProvider>
-        </AuthProvider>
+        <ToastProvider>
+          <AuthProvider>
+            <CartProvider>
+              <WishlistProvider>
+                <QuickViewProvider>
+                  <GsapLenisProvider>
+                    <StorefrontChrome />
+                    {children}
+                  </GsapLenisProvider>
+                </QuickViewProvider>
+              </WishlistProvider>
+            </CartProvider>
+          </AuthProvider>
+        </ToastProvider>
       </body>
     </html>
   );

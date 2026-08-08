@@ -6,21 +6,21 @@ import Image from 'next/image';
 import type { ProductDTO } from '@elaraa/shared';
 import { getUploadUrl } from '@/lib/api-client';
 import { formatPrice } from '@/lib/format';
-import { useCart } from '@/lib/cart-context';
+import { useSafeAddToCart } from '@/lib/use-safe-cart-actions';
 import { Button } from '@/components/ui/Button';
 
 export function NecklaceChapter({ product, chapter, reversed }: { product: ProductDTO; chapter: string; reversed?: boolean }) {
-  const { addItem } = useCart();
+  const addToCart = useSafeAddToCart();
   const [adding, setAdding] = useState(false);
   const primary = product.images[0];
   const hover = product.images[2] ?? product.images[1] ?? product.images[0];
   const defaultVariant = product.variants.find((v) => v.isDefault) ?? product.variants[0];
 
   async function handleAdd() {
-    if (!defaultVariant) return;
+    if (!defaultVariant || adding) return;
     setAdding(true);
     try {
-      await addItem(product.id, defaultVariant.id, 1);
+      await addToCart(product.id, defaultVariant.id, 1);
     } finally {
       setAdding(false);
     }

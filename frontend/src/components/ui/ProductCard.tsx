@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import type { ProductDTO } from '@elaraa/shared';
@@ -8,6 +9,7 @@ import { formatPrice } from '@/lib/format';
 import { useCart } from '@/lib/cart-context';
 import { useWishlist } from '@/lib/wishlist-context';
 import { useQuickView } from '@/lib/quick-view-context';
+import { useToast } from '@/lib/toast-context';
 
 // Ports .card-luxury verbatim: primary/secondary image cross-fade on hover,
 // a category badge, a wishlist toggle, a working Quick View modal trigger,
@@ -18,19 +20,41 @@ export function ProductCard({ product }: { product: ProductDTO }) {
   const { addItem } = useCart();
   const { isWishlisted, toggle } = useWishlist();
   const { openQuickView } = useQuickView();
+  const { notify } = useToast();
+  const [adding, setAdding] = useState(false);
+  const [togglingWishlist, setTogglingWishlist] = useState(false);
 
   const defaultVariant = product.variants.find((v) => v.isDefault) ?? product.variants[0];
   const wishlisted = isWishlisted(product.id);
   const categoryLabel = product.categorySlug.charAt(0).toUpperCase() + product.categorySlug.slice(1);
 
-  function handleQuickAdd(e: React.MouseEvent) {
+  async function handleQuickAdd(e: React.MouseEvent) {
     e.preventDefault();
-    if (defaultVariant) addItem(product.id, defaultVariant.id, 1);
+    // Without this guard a fast double-click fires two overlapping requests
+    // — the button previously had no loading state at all, so nothing
+    // stopped that, and no feedback was shown either way.
+    if (!defaultVariant || adding) return;
+    setAdding(true);
+    try {
+      await addItem(product.id, defaultVariant.id, 1);
+    } catch {
+      notify("Couldn't add this to your bag — please try again.");
+    } finally {
+      setAdding(false);
+    }
   }
 
-  function handleWishlistToggle(e: React.MouseEvent) {
+  async function handleWishlistToggle(e: React.MouseEvent) {
     e.preventDefault();
-    toggle(product.id, defaultVariant?.id);
+    if (togglingWishlist) return;
+    setTogglingWishlist(true);
+    try {
+      await toggle(product.id, defaultVariant?.id);
+    } catch {
+      notify('Something went wrong updating your wishlist.');
+    } finally {
+      setTogglingWishlist(false);
+    }
   }
 
   function handleQuickView(e: React.MouseEvent) {
@@ -91,10 +115,10 @@ export function ProductCard({ product }: { product: ProductDTO }) {
       </div>
       <button
         onClick={handleQuickAdd}
-        disabled={!defaultVariant || defaultVariant.stockQuantity <= 0}
+        disabled={!defaultVariant || defaultVariant.stockQuantity <= 0 || adding}
         className="text-[11px] uppercase tracking-wider font-medium mt-2 underline decoration-stone-300 underline-offset-4 hover:opacity-70 disabled:opacity-30"
       >
-        + Bag
+        {adding ? 'Adding…' : '+ Bag'}
       </button>
     </div>
   );

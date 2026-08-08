@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { getUploadUrl } from '@/lib/api-client';
 import { api } from '@/lib/api-client';
 import { formatPrice } from '@/lib/format';
+import { useToast } from '@/lib/toast-context';
 
 interface WishlistItemView {
   id: string;
@@ -19,16 +20,24 @@ interface WishlistItemView {
 
 export default function WishlistPage() {
   const [items, setItems] = useState<WishlistItemView[] | null>(null);
+  const { notify } = useToast();
 
   function load() {
-    api.get<{ items: WishlistItemView[] }>('/api/wishlist').then((data) => setItems(data.items));
+    api
+      .get<{ items: WishlistItemView[] }>('/api/wishlist')
+      .then((data) => setItems(data.items))
+      .catch(() => setItems([]));
   }
 
   useEffect(load, []);
 
   async function handleRemove(id: string) {
-    await api.delete(`/api/wishlist/${id}`);
-    load();
+    try {
+      await api.delete(`/api/wishlist/${id}`);
+      load();
+    } catch {
+      notify("Couldn't remove that item — please try again.");
+    }
   }
 
   return (

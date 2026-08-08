@@ -6,7 +6,7 @@ import Image from 'next/image';
 import type { ProductDTO } from '@elaraa/shared';
 import { getUploadUrl } from '@/lib/api-client';
 import { formatPrice } from '@/lib/format';
-import { useCart } from '@/lib/cart-context';
+import { useSafeAddToCart } from '@/lib/use-safe-cart-actions';
 import { Button } from '@/components/ui/Button';
 
 // Interactive "spotlight stage": click a card on the right to feature it on
@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/Button';
 // entirely by real product data instead of a hardcoded product list.
 export function NewArrivalsSpotlight({ products }: { products: ProductDTO[] }) {
   const [activeIndex, setActiveIndex] = useState(0);
-  const { addItem } = useCart();
+  const addToCart = useSafeAddToCart();
   const [adding, setAdding] = useState(false);
 
   const active = products[activeIndex];
@@ -25,10 +25,10 @@ export function NewArrivalsSpotlight({ products }: { products: ProductDTO[] }) {
   const defaultVariant = active.variants.find((v) => v.isDefault) ?? active.variants[0];
 
   async function handleAdd() {
-    if (!defaultVariant) return;
+    if (!defaultVariant || adding) return;
     setAdding(true);
     try {
-      await addItem(active.id, defaultVariant.id, 1);
+      await addToCart(active.id, defaultVariant.id, 1);
     } finally {
       setAdding(false);
     }

@@ -5,10 +5,20 @@ import Image from 'next/image';
 import { useCart } from '@/lib/cart-context';
 import { getUploadUrl } from '@/lib/api-client';
 import { formatPrice } from '@/lib/format';
+import { useToast } from '@/lib/toast-context';
 
 export function CartDrawer() {
   const { cart, isDrawerOpen, closeDrawer, updateItem, removeItem } = useCart();
+  const { notify } = useToast();
   const items = cart?.items ?? [];
+
+  function safeUpdate(itemId: string, quantity: number) {
+    updateItem(itemId, quantity).catch(() => notify("Couldn't update quantity — please try again."));
+  }
+
+  function safeRemove(itemId: string) {
+    removeItem(itemId).catch(() => notify("Couldn't remove that item — please try again."));
+  }
 
   return (
     <>
@@ -33,14 +43,14 @@ export function CartDrawer() {
                 <p className="text-xs opacity-60 mt-1">{item.variantLabel}</p>
                 <div className="flex items-center justify-between mt-2">
                   <div className="qty-box">
-                    <button type="button" onClick={() => updateItem(item.id, item.quantity - 1)}>−</button>
+                    <button type="button" onClick={() => safeUpdate(item.id, item.quantity - 1)}>−</button>
                     <input type="number" value={item.quantity} readOnly />
-                    <button type="button" onClick={() => updateItem(item.id, item.quantity + 1)}>+</button>
+                    <button type="button" onClick={() => safeUpdate(item.id, item.quantity + 1)}>+</button>
                   </div>
                   <p className="text-xs">{formatPrice(item.lineTotal)}</p>
                 </div>
                 <button
-                  onClick={() => removeItem(item.id)}
+                  onClick={() => safeRemove(item.id)}
                   className="text-[10px] tracking-[.15em] uppercase opacity-50 hover:opacity-100 mt-2"
                 >
                   Remove

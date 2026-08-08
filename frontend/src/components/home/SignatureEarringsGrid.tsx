@@ -1,22 +1,25 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import type { ProductDTO } from '@elaraa/shared';
 import { getUploadUrl } from '@/lib/api-client';
 import { formatPrice } from '@/lib/format';
-import { useCart } from '@/lib/cart-context';
 import { useWishlist } from '@/lib/wishlist-context';
+import { useSafeAddToCart, useSafeWishlistToggle } from '@/lib/use-safe-cart-actions';
 
 const BADGE_LABELS = ['Anti Tarnish', 'Premium Finish', 'Handcrafted', 'Everyday Wear'];
 
 function EarringCard({ product, badge, staggered }: { product: ProductDTO; badge: string; staggered: boolean }) {
   const primary = product.images.find((i) => i.isPrimary) ?? product.images[0];
   const secondary = product.images.find((i) => i.id !== primary?.id) ?? primary;
-  const { addItem } = useCart();
-  const { isWishlisted, toggle } = useWishlist();
+  const addToCart = useSafeAddToCart();
+  const toggleWishlist = useSafeWishlistToggle();
+  const { isWishlisted } = useWishlist();
   const defaultVariant = product.variants.find((v) => v.isDefault) ?? product.variants[0];
   const wishlisted = isWishlisted(product.id);
+  const [adding, setAdding] = useState(false);
 
   return (
     <div
@@ -36,7 +39,7 @@ function EarringCard({ product, badge, staggered }: { product: ProductDTO; badge
           {badge}
         </span>
         <button
-          onClick={() => toggle(product.id, defaultVariant?.id)}
+          onClick={() => toggleWishlist(product.id, defaultVariant?.id)}
           aria-label={wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
           className="absolute top-3 right-3 z-10 w-9 h-9 rounded-full bg-white/80 backdrop-blur-md flex items-center justify-center shadow-sm transition-colors"
           style={{ color: wishlisted ? '#dc2626' : undefined }}
@@ -57,11 +60,19 @@ function EarringCard({ product, badge, staggered }: { product: ProductDTO; badge
       </div>
 
       <button
-        onClick={() => defaultVariant && addItem(product.id, defaultVariant.id, 1)}
-        disabled={!defaultVariant}
+        onClick={async () => {
+          if (!defaultVariant || adding) return;
+          setAdding(true);
+          try {
+            await addToCart(product.id, defaultVariant.id, 1);
+          } finally {
+            setAdding(false);
+          }
+        }}
+        disabled={!defaultVariant || adding}
         className="btn-luxury btn-gold-solid w-full mt-5 justify-center py-2.5 text-[11px] tracking-widest disabled:opacity-40"
       >
-        <span>+ Add To Bag</span>
+        <span>{adding ? 'Adding…' : '+ Add To Bag'}</span>
       </button>
     </div>
   );

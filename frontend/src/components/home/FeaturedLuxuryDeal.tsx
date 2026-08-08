@@ -6,7 +6,7 @@ import Image from 'next/image';
 import type { ProductDTO } from '@elaraa/shared';
 import { getUploadUrl } from '@/lib/api-client';
 import { formatPrice } from '@/lib/format';
-import { useCart } from '@/lib/cart-context';
+import { useSafeAddToCart } from '@/lib/use-safe-cart-actions';
 
 const START_SECONDS = 8 * 3600 + 42 * 60 + 19;
 
@@ -34,7 +34,8 @@ function useDecorativeCountdown() {
 
 export function FeaturedLuxuryDeal({ product }: { product: ProductDTO }) {
   const { hours, mins, secs } = useDecorativeCountdown();
-  const { addItem } = useCart();
+  const addToCart = useSafeAddToCart();
+  const [adding, setAdding] = useState(false);
   const primary = product.images[0];
   const defaultVariant = product.variants.find((v) => v.isDefault) ?? product.variants[0];
   const savings = product.compareAtPrice ? product.compareAtPrice - product.basePrice : 0;
@@ -104,11 +105,19 @@ export function FeaturedLuxuryDeal({ product }: { product: ProductDTO }) {
 
           <div className="pt-2 flex flex-col sm:flex-row items-center gap-4">
             <button
-              onClick={() => defaultVariant && addItem(product.id, defaultVariant.id, 1)}
-              disabled={!defaultVariant}
+              onClick={async () => {
+                if (!defaultVariant || adding) return;
+                setAdding(true);
+                try {
+                  await addToCart(product.id, defaultVariant.id, 1);
+                } finally {
+                  setAdding(false);
+                }
+              }}
+              disabled={!defaultVariant || adding}
               className="btn-luxury btn-gold-solid w-full sm:w-auto h-13 px-8 justify-center text-xs tracking-widest disabled:opacity-40"
             >
-              <span>Add To Bag &middot; {formatPrice(product.basePrice)} →</span>
+              <span>{adding ? 'Adding…' : `Add To Bag · ${formatPrice(product.basePrice)} →`}</span>
             </button>
             <Link href={`/product/${product.slug}`} className="btn-luxury w-full sm:w-auto h-13 px-6 justify-center text-xs">
               <span>View Product Specs</span>

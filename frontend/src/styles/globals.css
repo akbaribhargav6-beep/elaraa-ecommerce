@@ -415,30 +415,6 @@ select { background: transparent; }
 }
 
 /* ══════════════════════════ Homepage Raksha Bandhan promo (distinct from combo page's rb-hero) ══════════════════════════ */
-@keyframes rb2-float-box {
-  0%, 100% { transform: translateY(0) rotate(-1.2deg); }
-  50% { transform: translateY(-14px) rotate(1.2deg); }
-}
-@keyframes rb2-bow-sway {
-  0%, 100% { transform: rotate(-5deg); }
-  50% { transform: rotate(5deg); }
-}
-@keyframes rb2-spin-slow {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-@keyframes rb2-swing {
-  0%, 100% { transform: rotate(-7deg); }
-  50% { transform: rotate(7deg); }
-}
-@keyframes rb2-glow-pulse {
-  0%, 100% { opacity: .5; transform: scale(1); }
-  50% { opacity: .85; transform: scale(1.06); }
-}
-@keyframes rb2-sparkle-twinkle {
-  0%, 100% { opacity: .2; transform: scale(.7); }
-  50% { opacity: 1; transform: scale(1.15); }
-}
 @keyframes rb2-petal-fall {
   0% { transform: translateY(-16px) rotate(0deg); opacity: 0; }
   15% { opacity: .85; }
@@ -474,14 +450,6 @@ select { background: transparent; }
   border-radius: 50%;
   border: 1px dashed rgba(201, 166, 107, .18);
 }
-
-.rb2-glow { animation: rb2-glow-pulse 3.4s ease-in-out infinite; }
-.rb2-ring-rotate { animation: rb2-spin-slow 40s linear infinite; transform-box: fill-box; }
-.rb2-box-float { animation: rb2-float-box 5s ease-in-out infinite; transform-box: fill-box; }
-.rb2-bow-sway { animation: rb2-bow-sway 3.2s ease-in-out infinite; transform-box: fill-box; }
-.rb2-rakhi-swing { animation: rb2-swing 4s ease-in-out infinite; transform-box: fill-box; }
-.rb2-float-ring { animation: rb2-swing 3.6s ease-in-out infinite reverse; transform-box: fill-box; }
-.rb2-sparkle { animation: rb2-sparkle-twinkle 2.2s ease-in-out infinite; transform-box: fill-box; }
 
 .rb2-petal {
   position: absolute;

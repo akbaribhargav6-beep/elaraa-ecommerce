@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { RevealOnScroll } from '@/components/ui/RevealOnScroll';
-import { GiftBoxIllustration } from '@/components/ui/RakshaBandhanMotifs';
+import { RakhiLottie } from '@/components/ui/RakhiLottie';
 
 const PETALS = [
   { left: '8%', duration: 9, delay: 0, size: 10 },
@@ -37,7 +37,7 @@ export function RakshaBandhanPromo() {
 
       <div className="relative z-10 max-w-6xl mx-auto grid md:grid-cols-2 items-center gap-4 sm:gap-10 md:gap-16">
         <RevealOnScroll className="flex justify-center order-1">
-          <GiftBoxIllustration className="w-44 sm:w-72 md:w-full max-w-sm h-auto" />
+          <RakhiLottie className="w-56 sm:w-96 md:w-full max-w-md" />
         </RevealOnScroll>
 
         <div className="order-2 text-center md:text-left">

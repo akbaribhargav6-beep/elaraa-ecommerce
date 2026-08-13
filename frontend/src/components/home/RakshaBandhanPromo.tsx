@@ -17,7 +17,7 @@ const STATS = ['🎁 Pick any 3+ favourites', '✨ One special combo price', '�
 // combo page it's promoting.
 export function RakshaBandhanPromo() {
   return (
-    <section className="rb2-section px-6 py-10 sm:py-16 md:py-24">
+    <section className="rb2-section px-6 pt-24 pb-10 sm:py-16 md:py-24">
       <div className="rb2-rangoli-bg" />
       {PETALS.map((p, i) => (
         <span

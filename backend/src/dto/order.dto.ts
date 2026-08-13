@@ -34,6 +34,8 @@ export function toOrderDTO(order: OrderWithItems): OrderDTO {
     shippingFee: Number(order.shippingFee),
     discountAmount: Number(order.discountAmount),
     taxAmount: Number(order.taxAmount),
+    giftPackaging: order.giftPackaging,
+    giftPackagingFee: Number(order.giftPackagingFee),
     totalAmount: Number(order.totalAmount),
     items,
     placedAt: order.placedAt.toISOString(),

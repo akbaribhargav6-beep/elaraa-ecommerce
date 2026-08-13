@@ -56,7 +56,10 @@ export default function AdminOrdersPage() {
           <tbody>
             {items.map((o) => (
               <tr key={o.orderNumber} className="border-b" style={{ borderColor: 'rgba(43,38,32,.06)' }}>
-                <td className="p-4"><Link href={`/admin/orders/${o.orderNumber}`} className="underline">{o.orderNumber}</Link></td>
+                <td className="p-4">
+                  <Link href={`/admin/orders/${o.orderNumber}`} className="underline">{o.orderNumber}</Link>
+                  {o.giftPackaging && <span className="ml-1.5" title="Gift packaging selected">🎁</span>}
+                </td>
                 <td className="p-4 opacity-60">{o.customerEmail}</td>
                 <td className="p-4 text-xs uppercase">{o.status.replace(/_/g, ' ')}</td>
                 <td className="p-4 text-xs uppercase opacity-60">{o.paymentMethod} · {o.paymentStatus}</td>

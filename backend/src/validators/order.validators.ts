@@ -15,6 +15,7 @@ export const checkoutSchema = z
     paymentMethod: z.literal('COD'),
     notes: z.string().max(500).optional(),
     couponCode: z.string().max(40).optional(),
+    giftPackaging: z.boolean().optional().default(false),
   })
   .refine(
     (data) =>

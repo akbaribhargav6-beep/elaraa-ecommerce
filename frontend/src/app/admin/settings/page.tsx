@@ -16,6 +16,7 @@ const KNOWN_SETTINGS: { key: string; label: string; group: string; placeholder: 
   { key: 'shipping_flat_fee', label: 'Flat Shipping Fee (₹)', group: 'shipping', placeholder: '99' },
   { key: 'free_shipping_threshold', label: 'Free Shipping Threshold (₹)', group: 'shipping', placeholder: '2000' },
   { key: 'gst_rate_percent', label: 'GST Rate (%)', group: 'shipping', placeholder: '3' },
+  { key: 'gift_packaging_fee', label: 'Gift Packaging Fee (₹)', group: 'shipping', placeholder: '49' },
   { key: 'meta_title', label: 'Default Meta Title', group: 'seo', placeholder: 'ELARAA | Premium Fashion Jewellery' },
   { key: 'meta_description', label: 'Default Meta Description', group: 'seo', placeholder: 'Premium fashion jewellery, minimally designed for everyday wear.' },
 ];

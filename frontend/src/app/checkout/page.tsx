@@ -44,6 +44,15 @@ export default function CheckoutPage() {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
+  const [giftPackagingFee, setGiftPackagingFee] = useState(0);
+  const [giftPackaging, setGiftPackaging] = useState(false);
+
+  useEffect(() => {
+    // Admin-configurable — always fetched fresh rather than hardcoded, so a
+    // price change in Settings shows up immediately without a redeploy.
+    api.get<{ giftPackagingFee: number }>('/api/settings').then((data) => setGiftPackagingFee(data.giftPackagingFee));
+  }, []);
+
   useEffect(() => {
     if (!user) return;
     api.get<{ addresses: AddressDTO[] }>('/api/addresses').then((data) => {
@@ -104,8 +113,9 @@ export default function CheckoutPage() {
               paymentMethod: 'COD' as const,
               notes: form.notes,
               couponCode,
+              giftPackaging,
             }
-          : { ...form, paymentMethod: 'COD' as const, couponCode };
+          : { ...form, paymentMethod: 'COD' as const, couponCode, giftPackaging };
 
       const data = await api.post<{ order: OrderDTO }>('/api/orders', body);
       await refetchCart();
@@ -231,6 +241,22 @@ export default function CheckoutPage() {
               </div>
             )}
 
+            <label className="flex items-start gap-2.5 mt-4 pt-4 border-t text-sm cursor-pointer" style={{ borderColor: 'rgba(43,38,32,.1)' }}>
+              <input
+                type="checkbox"
+                checked={giftPackaging}
+                onChange={(e) => setGiftPackaging(e.target.checked)}
+                className="mt-0.5"
+              />
+              <span className="flex-1">
+                <span className="flex items-center justify-between gap-2">
+                  <span>🎁 Add Gift Packaging</span>
+                  <span className="opacity-70">{giftPackagingFee > 0 ? `+${formatPrice(giftPackagingFee)}` : 'Free'}</span>
+                </span>
+                <span className="block text-xs opacity-50 mt-0.5">Wrapped in our signature gift packaging, ready to hand over.</span>
+              </span>
+            </label>
+
             {coupon.status === 'valid' ? (
               <div className="flex items-center justify-between mt-4 text-xs border px-3 py-2" style={{ borderColor: 'rgba(4,120,87,.3)', background: 'rgba(4,120,87,.06)' }}>
                 <span style={{ color: '#047857' }}>✓ {coupon.message}</span>
@@ -255,7 +281,7 @@ export default function CheckoutPage() {
               <p className="text-[11px] mt-2" style={{ color: '#b91c1c' }}>{coupon.message}</p>
             )}
 
-            <p className="text-xs opacity-50 mt-4">Shipping and GST calculated at order placement.</p>
+            <p className="text-xs opacity-50 mt-4">Shipping, GST, and gift packaging (if selected) calculated at order placement.</p>
           </div>
         </div>
       </section>

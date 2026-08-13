@@ -146,6 +146,8 @@ export interface OrderDTO {
   shippingFee: number;
   discountAmount: number;
   taxAmount: number;
+  giftPackaging: boolean;
+  giftPackagingFee: number;
   totalAmount: number;
   items: OrderItemDTO[];
   placedAt: string;

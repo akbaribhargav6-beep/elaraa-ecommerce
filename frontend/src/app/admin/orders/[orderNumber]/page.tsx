@@ -73,6 +73,10 @@ export default function AdminOrderDetailPage() {
           <div className="flex justify-between text-sm mb-1"><span className="opacity-60">Subtotal</span><span>{formatPrice(order.subtotal)}</span></div>
           <div className="flex justify-between text-sm mb-1"><span className="opacity-60">Shipping</span><span>{order.shippingFee === 0 ? 'Free' : formatPrice(order.shippingFee)}</span></div>
           <div className="flex justify-between text-sm mb-1"><span className="opacity-60">GST</span><span>{formatPrice(order.taxAmount)}</span></div>
+          <div className="flex justify-between text-sm mb-1">
+            <span className="opacity-60">🎁 Gift Packaging</span>
+            <span>{order.giftPackaging ? formatPrice(order.giftPackagingFee) : 'Not selected'}</span>
+          </div>
           <div className="flex justify-between text-base font-medium mt-2"><span>Total</span><span>{formatPrice(order.totalAmount)}</span></div>
         </div>
 

@@ -53,7 +53,10 @@ export default function OrderDetailPage() {
         ))}
         <div className="divider-gold my-4" />
         <div className="flex justify-between text-sm mb-2"><span className="opacity-70">Shipping</span><span>{order.shippingFee === 0 ? 'Free' : formatPrice(order.shippingFee)}</span></div>
-        <div className="flex justify-between text-sm mb-4"><span className="opacity-70">GST</span><span>{formatPrice(order.taxAmount)}</span></div>
+        <div className="flex justify-between text-sm mb-2"><span className="opacity-70">GST</span><span>{formatPrice(order.taxAmount)}</span></div>
+        {order.giftPackaging && (
+          <div className="flex justify-between text-sm mb-4"><span className="opacity-70">🎁 Gift Packaging</span><span>{formatPrice(order.giftPackagingFee)}</span></div>
+        )}
         <div className="flex justify-between text-base font-medium"><span>Total</span><span>{formatPrice(order.totalAmount)}</span></div>
       </div>
 

@@ -7,6 +7,7 @@ import { toOrderDTO } from '../dto/order.dto';
 import { sendMail } from '../config/mailer';
 import { orderConfirmationTemplate } from '../utils/emailTemplates';
 import { couponService } from './coupon.service';
+import { getGiftPackagingFee } from './settings.service';
 import type { CartIdentity } from './cart.service';
 
 const FREE_SHIPPING_THRESHOLD = 2000;
@@ -27,6 +28,7 @@ interface CheckoutInput {
   paymentMethod: 'COD';
   notes?: string;
   couponCode?: string;
+  giftPackaging?: boolean;
 }
 
 async function resolveShippingSnapshot(userId: string | undefined, input: CheckoutInput) {
@@ -108,7 +110,13 @@ async function checkout(identity: CartIdentity, input: CheckoutInput) {
     couponId = result.couponId;
   }
 
-  const totalAmount = subtotal + shippingFee + taxAmount - discountAmount;
+  // Snapshot the fee actually charged at checkout time — computed from the
+  // admin-configurable setting, not trusted from the client, so a customer
+  // can't manipulate the request body to pay less (or nothing) for it.
+  const giftPackaging = input.giftPackaging === true;
+  const giftPackagingFee = giftPackaging ? await getGiftPackagingFee() : 0;
+
+  const totalAmount = subtotal + shippingFee + taxAmount + giftPackagingFee - discountAmount;
 
   const orderNumber = generateOrderNumber();
   const provider = getPaymentProvider(input.paymentMethod);
@@ -136,6 +144,8 @@ async function checkout(identity: CartIdentity, input: CheckoutInput) {
         shippingFee,
         discountAmount,
         taxAmount,
+        giftPackaging,
+        giftPackagingFee,
         totalAmount,
         couponId: couponId ?? null,
         notes: input.notes,

@@ -325,6 +325,12 @@ model Order {
   coupon         Coupon? @relation(fields: [couponId], references: [id])
   notes          String?
 
+  // Snapshot of the gift-packaging fee in effect at checkout time — kept
+  // even if the admin later changes the configured price, so past orders
+  // stay historically accurate.
+  giftPackaging    Boolean @default(false)
+  giftPackagingFee Decimal @default(0) @db.Decimal(10, 2)
+
   placedAt  DateTime @default(now())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

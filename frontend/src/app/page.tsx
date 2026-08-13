@@ -10,6 +10,7 @@ import { RevealOnScroll } from '@/components/ui/RevealOnScroll';
 import { NewsletterForm } from '@/components/ui/NewsletterForm';
 import { Footer } from '@/components/layout/Footer';
 import { HeroBanner } from '@/components/home/HeroBanner';
+import { RakshaBandhanPromo } from '@/components/home/RakshaBandhanPromo';
 import { NecklaceChapter } from '@/components/home/NecklaceChapter';
 import { NewArrivalsSpotlight } from '@/components/home/NewArrivalsSpotlight';
 import { TestimonialsGallery } from '@/components/home/TestimonialsGallery';
@@ -39,6 +40,7 @@ export default async function HomePage() {
 
   return (
     <>
+      <RakshaBandhanPromo />
       <HeroBanner />
 
       {/* CATEGORIES */}

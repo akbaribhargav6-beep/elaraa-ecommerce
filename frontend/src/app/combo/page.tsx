@@ -10,6 +10,7 @@ import { useToast } from '@/lib/toast-context';
 import { Eyebrow } from '@/components/ui/Eyebrow';
 import { Footer } from '@/components/layout/Footer';
 import { RevealOnScroll } from '@/components/ui/RevealOnScroll';
+import { RakhiMotif, MandalaRing, FlowerMotif } from '@/components/ui/RakshaBandhanMotifs';
 
 interface Selection {
   productId: string;
@@ -19,59 +20,6 @@ interface Selection {
 }
 
 const CONFETTI_COLORS = ['#C9A66B', '#FFE8B0', '#9C2B3B', '#E8B4BC', '#F8F5F0'];
-
-function RakhiMotif({ size = 64, className = '' }: { size?: number; className?: string }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 64 64" fill="none" className={className}>
-      <path d="M32 4 C 20 14, 20 22, 32 24 C 44 22, 44 14, 32 4 Z" stroke="#FFE8B0" strokeWidth="1.4" opacity="0.85" />
-      <circle cx="32" cy="34" r="13" stroke="#C9A66B" strokeWidth="1.6" opacity="0.9" />
-      <circle cx="32" cy="34" r="7" fill="#C9A66B" opacity="0.35" />
-      <circle cx="32" cy="34" r="3" fill="#FFE8B0" opacity="0.9" />
-      {[0, 60, 120, 180, 240, 300].map((deg) => (
-        <line
-          key={deg}
-          x1="32"
-          y1="34"
-          x2={32 + 20 * Math.cos((deg * Math.PI) / 180)}
-          y2={34 + 20 * Math.sin((deg * Math.PI) / 180)}
-          stroke="#FFE8B0"
-          strokeWidth="0.8"
-          opacity="0.4"
-        />
-      ))}
-    </svg>
-  );
-}
-
-function MandalaRing({ size = 48, className = '' }: { size?: number; className?: string }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 48 48" fill="none" className={className}>
-      <circle cx="24" cy="24" r="20" stroke="#FFE8B0" strokeWidth="0.8" strokeDasharray="2 4" opacity="0.6" />
-      <circle cx="24" cy="24" r="13" stroke="#C9A66B" strokeWidth="1" opacity="0.55" />
-      <circle cx="24" cy="24" r="4" fill="#C9A66B" opacity="0.5" />
-    </svg>
-  );
-}
-
-function FlowerMotif({ size = 40, className = '' }: { size?: number; className?: string }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 40 40" fill="none" className={className}>
-      {[0, 72, 144, 216, 288].map((deg) => (
-        <ellipse
-          key={deg}
-          cx="20"
-          cy="12"
-          rx="4.5"
-          ry="8"
-          fill="#E8B4BC"
-          opacity="0.55"
-          transform={`rotate(${deg} 20 20)`}
-        />
-      ))}
-      <circle cx="20" cy="20" r="3.2" fill="#FFE8B0" opacity="0.9" />
-    </svg>
-  );
-}
 
 function ConfettiBurst({ active }: { active: boolean }) {
   const [pieces, setPieces] = useState<{ id: number; left: number; color: string; delay: number; duration: number; rotate: number }[]>([]);
@@ -340,14 +288,19 @@ export default function ComboPage() {
             )}
 
             <div className="flex flex-col sm:flex-row items-center gap-4">
-              <div className="flex-1 flex items-center gap-3 overflow-x-auto w-full">
+              <div className="flex-1 flex items-center gap-4 overflow-x-auto w-full pt-3 pb-1.5">
                 {selections.map((s) => (
-                  <div key={s.productId} className="rb-thumb relative shrink-0 w-14 h-14 rounded-full overflow-hidden border-2" style={{ borderColor: 'var(--gold)' }}>
-                    {s.imageUrl && <Image src={getUploadUrl(s.imageUrl)} alt={s.productName} fill className="object-cover" sizes="56px" />}
+                  <div key={s.productId} className="rb-thumb relative shrink-0 w-14 h-14 group/thumb">
+                    <div className="w-full h-full rounded-full overflow-hidden border-2" style={{ borderColor: 'var(--gold)' }}>
+                      {s.imageUrl && <Image src={getUploadUrl(s.imageUrl)} alt={s.productName} fill className="object-cover" sizes="56px" />}
+                    </div>
                     <button
+                      type="button"
                       onClick={() => removeSelection(s.productId)}
                       aria-label={`Remove ${s.productName} from combo`}
-                      className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-black text-white text-[10px] flex items-center justify-center shadow-md"
+                      title={`Remove ${s.productName}`}
+                      className="rb-remove-btn absolute -top-2 -right-2 w-6 h-6 rounded-full bg-black text-white text-xs flex items-center justify-center shadow-md border-2 transition-transform hover:scale-110 active:scale-95"
+                      style={{ borderColor: 'var(--ivory)' }}
                     >
                       ✕
                     </button>

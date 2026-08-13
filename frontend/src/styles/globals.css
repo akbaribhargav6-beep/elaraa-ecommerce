@@ -396,6 +396,7 @@ select { background: transparent; }
   box-shadow: 0 -12px 40px rgba(0, 0, 0, .28);
 }
 .rb-thumb { animation: rb-thumb-in .4s cubic-bezier(.22, 1, .36, 1); }
+.rb-remove-btn { animation: rb-pop-in .35s ease; cursor: pointer; }
 .rb-ready-pop { animation: rb-pop-in .5s cubic-bezier(.34, 1.56, .64, 1); }
 .rb-ready-btn { animation: rb-ready-glow 1.8s ease-out 2; }
 

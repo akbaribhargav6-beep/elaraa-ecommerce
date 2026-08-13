@@ -5,11 +5,20 @@ import { ApiError } from '../utils/apiError';
 import { orderService } from '../services/order.service';
 
 const GUEST_CART_COOKIE = 'cartSessionToken';
+const GUEST_CART_HEADER = 'x-cart-token';
 
 export const checkout = asyncHandler(async (req: Request, res: Response) => {
-  const identity = req.user
-    ? { userId: req.user.id }
-    : { sessionToken: req.cookies?.[GUEST_CART_COOKIE] as string | undefined };
+  // Must match cart.controller.ts's resolveIdentity exactly — the header
+  // takes priority there (see the comment on that function for why: the
+  // guest cart cookie is third-party in production and gets blocked by
+  // Safari/Firefox-strict/Brave). Checking the cookie only here meant a
+  // guest whose cart resolved via the header the whole time would hit
+  // "Your cart is empty" the moment they tried to actually place the order.
+  const headerToken = req.headers[GUEST_CART_HEADER];
+  const sessionToken =
+    (typeof headerToken === 'string' && headerToken) || (req.cookies?.[GUEST_CART_COOKIE] as string | undefined);
+
+  const identity = req.user ? { userId: req.user.id } : { sessionToken };
 
   if (!identity.userId && !identity.sessionToken) {
     throw ApiError.badRequest('Your cart is empty');

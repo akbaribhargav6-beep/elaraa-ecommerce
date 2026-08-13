@@ -1,19 +1,24 @@
 import type { Order, OrderItem } from '@prisma/client';
-import type { OrderDTO, OrderItemDTO } from '@elaraa/shared';
+import type { OrderDTO, OrderItemDTO, ComboSelectionItem } from '@elaraa/shared';
 
 type OrderWithItems = Order & { items: OrderItem[] };
 
 export function toOrderDTO(order: OrderWithItems): OrderDTO {
-  const items: OrderItemDTO[] = order.items.map((i) => ({
-    id: i.id,
-    productName: i.productName,
-    variantLabel: i.variantLabel,
-    sku: i.sku,
-    imageUrl: i.imageUrl,
-    unitPrice: Number(i.unitPrice),
-    quantity: i.quantity,
-    lineTotal: Number(i.lineTotal),
-  }));
+  const items: OrderItemDTO[] = order.items.map((i) => {
+    const comboSelection = (i.comboSelection as ComboSelectionItem[] | null) ?? null;
+    return {
+      id: i.id,
+      productName: i.productName,
+      variantLabel: i.variantLabel,
+      sku: i.sku,
+      imageUrl: i.imageUrl,
+      unitPrice: Number(i.unitPrice),
+      quantity: i.quantity,
+      lineTotal: Number(i.lineTotal),
+      isCombo: comboSelection !== null,
+      comboSelection,
+    };
+  });
 
   return {
     id: order.id,

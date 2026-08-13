@@ -54,6 +54,11 @@ export const addItem = asyncHandler(async (req: Request, res: Response) => {
   sendSuccess(res, { cart });
 });
 
+export const addCombo = asyncHandler(async (req: Request, res: Response) => {
+  const cart = await cartService.addCombo(resolveIdentity(req, res), req.body);
+  sendSuccess(res, { cart });
+});
+
 export const updateItem = asyncHandler(async (req: Request, res: Response) => {
   const cart = await cartService.updateItem(resolveIdentity(req, res), req.params.itemId, req.body.quantity);
   sendSuccess(res, { cart });

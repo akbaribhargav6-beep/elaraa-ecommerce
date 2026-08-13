@@ -1,7 +1,10 @@
+import type { Prisma } from '@prisma/client';
 import { prisma } from '../config/db';
 import { ApiError } from '../utils/apiError';
 import { toCartDTO } from '../dto/cart.dto';
-import type { CartDTO } from '@elaraa/shared';
+import { getComboSettings } from './settings.service';
+import { getOrCreateComboAnchor } from './combo.service';
+import type { CartDTO, ComboSelectionItem } from '@elaraa/shared';
 
 export interface CartIdentity {
   userId?: string;
@@ -116,6 +119,91 @@ async function removeItem(identity: CartIdentity, itemId: string): Promise<CartD
   return updateItem(identity, itemId, 0);
 }
 
+interface AddComboInput {
+  selections: { productId: string; variantId: string }[];
+}
+
+// Builds (or rebuilds) the single combo line in this cart. The price is
+// always the currently-configured combo price, looked up here rather than
+// trusted from the client, so a customer can't submit a manipulated total.
+async function addCombo(identity: CartIdentity, input: AddComboInput): Promise<CartDTO> {
+  const settings = await getComboSettings();
+  if (!settings.enabled) throw ApiError.badRequest('Combo sets are not available right now');
+
+  const selections = input.selections ?? [];
+  const uniqueProductIds = new Set(selections.map((s) => s.productId));
+  if (uniqueProductIds.size !== selections.length) {
+    throw ApiError.badRequest('Each product can only be selected once in a combo');
+  }
+  if (selections.length < settings.minProducts) {
+    throw ApiError.badRequest(`Select at least ${settings.minProducts} products for a combo`);
+  }
+
+  const variants = await prisma.productVariant.findMany({
+    where: { id: { in: selections.map((s) => s.variantId) } },
+    include: { product: true },
+  });
+  const variantMap = new Map(variants.map((v) => [v.id, v]));
+
+  for (const sel of selections) {
+    const variant = variantMap.get(sel.variantId);
+    if (!variant || variant.productId !== sel.productId || !variant.isActive) {
+      throw ApiError.badRequest('One of the selected products is no longer available');
+    }
+    if (!variant.product.isComboEligible) {
+      throw ApiError.badRequest(`"${variant.product.name}" is not eligible for combo selection`);
+    }
+  }
+
+  const primaryImages = await prisma.productImage.findMany({
+    where: { productId: { in: selections.map((s) => s.productId) }, isPrimary: true },
+    select: { productId: true, url: true },
+  });
+  const imageByProduct = new Map(primaryImages.map((i) => [i.productId, i.url]));
+
+  const comboSelection: ComboSelectionItem[] = selections.map((sel) => {
+    const variant = variantMap.get(sel.variantId)!;
+    return {
+      productId: sel.productId,
+      productName: variant.product.name,
+      productSlug: variant.product.slug,
+      variantId: sel.variantId,
+      variantLabel: [variant.metalLabel, variant.backType].filter(Boolean).join(' / '),
+      imageUrl: imageByProduct.get(sel.productId) ?? null,
+    };
+  });
+
+  const anchor = await getOrCreateComboAnchor();
+  const cartRow = await getOrCreateCartRow(identity);
+
+  const existingItem = await prisma.cartItem.findUnique({
+    where: { cartId_variantId: { cartId: cartRow.id, variantId: anchor.variantId } },
+  });
+
+  const comboSelectionJson = comboSelection as unknown as Prisma.InputJsonValue;
+
+  if (existingItem) {
+    await prisma.cartItem.update({
+      where: { id: existingItem.id },
+      data: { quantity: 1, priceSnapshot: settings.price, comboSelection: comboSelectionJson },
+    });
+  } else {
+    await prisma.cartItem.create({
+      data: {
+        cartId: cartRow.id,
+        productId: anchor.productId,
+        variantId: anchor.variantId,
+        quantity: 1,
+        priceSnapshot: settings.price,
+        comboSelection: comboSelectionJson,
+      },
+    });
+  }
+
+  const cart = await fullCart(cartRow.id);
+  return withPrimaryImages(cart);
+}
+
 async function clearCart(identity: CartIdentity): Promise<CartDTO> {
   const cartRow = await getOrCreateCartRow(identity);
   await prisma.cartItem.deleteMany({ where: { cartId: cartRow.id } });
@@ -148,6 +236,7 @@ async function mergeGuestIntoUser(userId: string, sessionToken: string): Promise
             variantId: guestItem.variantId,
             quantity: guestItem.quantity,
             priceSnapshot: guestItem.priceSnapshot,
+            comboSelection: guestItem.comboSelection ?? undefined,
           },
         });
       }
@@ -159,4 +248,4 @@ async function mergeGuestIntoUser(userId: string, sessionToken: string): Promise
   return withPrimaryImages(cart);
 }
 
-export const cartService = { getCart, addItem, updateItem, removeItem, clearCart, mergeGuestIntoUser };
+export const cartService = { getCart, addItem, addCombo, updateItem, removeItem, clearCart, mergeGuestIntoUser };

@@ -67,6 +67,7 @@ export interface ProductDTO {
   isFeatured: boolean;
   isNewArrival: boolean;
   isBestSeller: boolean;
+  isComboEligible: boolean;
   avgRating: number;
   reviewCount: number;
   images: ProductImageDTO[];
@@ -81,6 +82,23 @@ export interface ProductListResponse {
   totalPages: number;
 }
 
+// One product the customer chose while building a combo — snapshotted onto
+// the CartItem/OrderItem at the time of selection/checkout.
+export interface ComboSelectionItem {
+  productId: string;
+  productName: string;
+  productSlug: string;
+  variantId: string;
+  variantLabel: string;
+  imageUrl: string | null;
+}
+
+export interface ComboSettingsDTO {
+  enabled: boolean;
+  minProducts: number;
+  price: number;
+}
+
 export interface CartItemDTO {
   id: string;
   productId: string;
@@ -93,6 +111,8 @@ export interface CartItemDTO {
   quantity: number;
   lineTotal: number;
   stockQuantity: number;
+  isCombo: boolean;
+  comboSelection: ComboSelectionItem[] | null;
 }
 
 export interface CartDTO {
@@ -125,6 +145,8 @@ export interface OrderItemDTO {
   unitPrice: number;
   quantity: number;
   lineTotal: number;
+  isCombo: boolean;
+  comboSelection: ComboSelectionItem[] | null;
 }
 
 export interface OrderDTO {

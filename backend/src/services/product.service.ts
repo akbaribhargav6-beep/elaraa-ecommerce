@@ -21,6 +21,7 @@ export interface ProductListParams {
   featured?: boolean;
   newArrival?: boolean;
   bestSeller?: boolean;
+  comboEligible?: boolean;
   page: number;
   limit: number;
 }
@@ -32,6 +33,7 @@ async function list(params: ProductListParams): Promise<ProductListResponse> {
   if (params.featured) where.isFeatured = true;
   if (params.newArrival) where.isNewArrival = true;
   if (params.bestSeller) where.isBestSeller = true;
+  if (params.comboEligible) where.isComboEligible = true;
   if (params.search) {
     const q = params.search;
     const qLower = q.trim().toLowerCase();

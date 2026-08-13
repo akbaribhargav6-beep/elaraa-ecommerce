@@ -9,6 +9,7 @@ import { orderConfirmationTemplate } from '../utils/emailTemplates';
 import { couponService } from './coupon.service';
 import { getGiftPackagingFee } from './settings.service';
 import type { CartIdentity } from './cart.service';
+import type { ComboSelectionItem } from '@elaraa/shared';
 
 const FREE_SHIPPING_THRESHOLD = 2000;
 const FLAT_SHIPPING_FEE = 99;
@@ -73,8 +74,13 @@ async function checkout(identity: CartIdentity, input: CheckoutInput) {
   });
   if (items.length === 0) throw ApiError.badRequest('Your cart is empty');
 
-  // Verify stock before committing to anything.
+  // Verify stock before committing to anything. A combo line's variantId
+  // points at the well-known hidden combo anchor (see combo.service.ts),
+  // whose "stock" isn't real — nothing to check there. Combo sets don't
+  // decrement the individual chosen products' stock either (see the same
+  // skip below); that's a deliberate scope decision, not an oversight.
   for (const item of items) {
+    if (item.comboSelection) continue;
     if (!item.variant.isActive || item.variant.stockQuantity < item.quantity) {
       throw ApiError.badRequest(
         `"${item.product.name}" (${item.variant.metalLabel}) only has ${item.variant.stockQuantity} left in stock`
@@ -150,17 +156,23 @@ async function checkout(identity: CartIdentity, input: CheckoutInput) {
         couponId: couponId ?? null,
         notes: input.notes,
         items: {
-          create: items.map((i) => ({
-            productId: i.productId,
-            variantId: i.variantId,
-            productName: i.product.name,
-            variantLabel: [i.variant.metalLabel, i.variant.backType].filter(Boolean).join(' / '),
-            sku: i.variant.sku,
-            imageUrl: null,
-            unitPrice: i.priceSnapshot,
-            quantity: i.quantity,
-            lineTotal: new Prisma.Decimal(i.priceSnapshot).mul(i.quantity),
-          })),
+          create: items.map((i) => {
+            const comboSelection = i.comboSelection as unknown as ComboSelectionItem[] | null;
+            return {
+              productId: i.productId,
+              variantId: i.variantId,
+              productName: comboSelection ? `Custom Combo Set (${comboSelection.length} items)` : i.product.name,
+              variantLabel: comboSelection
+                ? `${comboSelection.length} products selected`
+                : [i.variant.metalLabel, i.variant.backType].filter(Boolean).join(' / '),
+              sku: i.variant.sku,
+              imageUrl: comboSelection ? (comboSelection[0]?.imageUrl ?? null) : null,
+              unitPrice: i.priceSnapshot,
+              quantity: i.quantity,
+              lineTotal: new Prisma.Decimal(i.priceSnapshot).mul(i.quantity),
+              comboSelection: comboSelection ? (comboSelection as unknown as Prisma.InputJsonValue) : undefined,
+            };
+          }),
         },
         statusHistory: { create: { status: 'PENDING', note: 'Order placed' } },
       },
@@ -168,6 +180,7 @@ async function checkout(identity: CartIdentity, input: CheckoutInput) {
     });
 
     for (const item of items) {
+      if (item.comboSelection) continue;
       await tx.productVariant.update({
         where: { id: item.variantId },
         data: { stockQuantity: { decrement: item.quantity } },
@@ -250,6 +263,7 @@ async function cancelOrder(orderNumber: string, userId: string) {
 
   const updated = await prisma.$transaction(async (tx) => {
     for (const item of order.items) {
+      if (item.comboSelection) continue;
       await tx.productVariant.update({
         where: { id: item.variantId },
         data: { stockQuantity: { increment: item.quantity } },

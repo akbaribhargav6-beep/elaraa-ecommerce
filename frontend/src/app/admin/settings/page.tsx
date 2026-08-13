@@ -10,13 +10,16 @@ interface Setting {
   group: string | null;
 }
 
-const KNOWN_SETTINGS: { key: string; label: string; group: string; placeholder: string }[] = [
+const KNOWN_SETTINGS: { key: string; label: string; group: string; placeholder: string; type?: 'text' | 'checkbox' }[] = [
   { key: 'store_name', label: 'Store Name', group: 'general', placeholder: 'ELARAA' },
   { key: 'support_email', label: 'Support Email', group: 'general', placeholder: 'hello@elaraa.example' },
   { key: 'shipping_flat_fee', label: 'Flat Shipping Fee (₹)', group: 'shipping', placeholder: '99' },
   { key: 'free_shipping_threshold', label: 'Free Shipping Threshold (₹)', group: 'shipping', placeholder: '2000' },
   { key: 'gst_rate_percent', label: 'GST Rate (%)', group: 'shipping', placeholder: '3' },
   { key: 'gift_packaging_fee', label: 'Gift Packaging Fee (₹)', group: 'shipping', placeholder: '49' },
+  { key: 'combo_enabled', label: 'Enable Combo Feature', group: 'combo', placeholder: 'false', type: 'checkbox' },
+  { key: 'combo_min_products', label: 'Minimum Products Required', group: 'combo', placeholder: '3' },
+  { key: 'combo_price', label: 'Combo Price (₹)', group: 'combo', placeholder: '1499' },
   { key: 'meta_title', label: 'Default Meta Title', group: 'seo', placeholder: 'ELARAA | Premium Fashion Jewellery' },
   { key: 'meta_description', label: 'Default Meta Description', group: 'seo', placeholder: 'Premium fashion jewellery, minimally designed for everyday wear.' },
 ];
@@ -46,7 +49,7 @@ export default function AdminSettingsPage() {
     }
   }
 
-  const groups = ['general', 'shipping', 'seo'];
+  const groups = ['general', 'shipping', 'combo', 'seo'];
 
   return (
     <div className="max-w-2xl">
@@ -60,13 +63,24 @@ export default function AdminSettingsPage() {
               <div key={s.key} className="flex items-end gap-3">
                 <div className="flex-1">
                   <label className="text-xs opacity-60 block mb-1">{s.label}</label>
-                  <input
-                    placeholder={s.placeholder}
-                    value={values[s.key] ?? ''}
-                    onChange={(e) => setValues((v) => ({ ...v, [s.key]: e.target.value }))}
-                    className="w-full border p-2 text-sm bg-transparent outline-none"
-                    style={{ borderColor: 'rgba(43,38,32,.2)' }}
-                  />
+                  {s.type === 'checkbox' ? (
+                    <label className="flex items-center gap-2 text-sm py-1.5">
+                      <input
+                        type="checkbox"
+                        checked={(values[s.key] ?? 'false') === 'true'}
+                        onChange={(e) => setValues((v) => ({ ...v, [s.key]: e.target.checked ? 'true' : 'false' }))}
+                      />
+                      {(values[s.key] ?? 'false') === 'true' ? 'Enabled' : 'Disabled'}
+                    </label>
+                  ) : (
+                    <input
+                      placeholder={s.placeholder}
+                      value={values[s.key] ?? ''}
+                      onChange={(e) => setValues((v) => ({ ...v, [s.key]: e.target.value }))}
+                      className="w-full border p-2 text-sm bg-transparent outline-none"
+                      style={{ borderColor: 'rgba(43,38,32,.2)' }}
+                    />
+                  )}
                 </div>
                 <button
                   onClick={() => saveOne(s.key, group)}

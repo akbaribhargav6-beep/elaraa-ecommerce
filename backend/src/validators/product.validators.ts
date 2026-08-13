@@ -10,6 +10,7 @@ export const productListQuerySchema = z.object({
   featured: z.coerce.boolean().optional(),
   newArrival: z.coerce.boolean().optional(),
   bestSeller: z.coerce.boolean().optional(),
+  comboEligible: z.coerce.boolean().optional(),
   page: z.coerce.number().int().positive().default(1),
   limit: z.coerce.number().int().positive().max(60).default(12),
 });

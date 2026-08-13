@@ -47,6 +47,7 @@ export function toProductDTO(product: ProductWithRelations): ProductDTO {
     isFeatured: product.isFeatured,
     isNewArrival: product.isNewArrival,
     isBestSeller: product.isBestSeller,
+    isComboEligible: product.isComboEligible,
     avgRating: Number(product.avgRating),
     reviewCount: product.reviewCount,
     images: product.images

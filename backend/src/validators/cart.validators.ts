@@ -13,3 +13,9 @@ export const updateCartItemSchema = z.object({
 export const cartItemParamsSchema = z.object({
   itemId: z.string().min(1),
 });
+
+export const addComboSchema = z.object({
+  selections: z
+    .array(z.object({ productId: z.string().min(1), variantId: z.string().min(1) }))
+    .min(1, 'Select at least one product'),
+});

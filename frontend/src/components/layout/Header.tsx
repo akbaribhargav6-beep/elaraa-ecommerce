@@ -11,6 +11,7 @@ const DESKTOP_NAV_LINKS = [
   { href: '/shop', label: 'Shop' },
   { href: '/shop?newArrival=true', label: 'New Arrivals' },
   { href: '/shop?bestSeller=true', label: 'Best Seller' },
+  { href: '/combo', label: 'Combo' },
   { href: '/about', label: 'Our Story' },
   { href: '/contact', label: 'Contact' },
 ];
@@ -19,6 +20,7 @@ const MOBILE_NAV_LINKS = [
   { href: '/shop', label: 'Shop All' },
   { href: '/shop?newArrival=true', label: 'New Arrivals' },
   { href: '/shop?bestSeller=true', label: 'Best Seller' },
+  { href: '/combo', label: 'Combo' },
   { href: '/about', label: 'Our Story' },
   { href: '/contact', label: 'Contact' },
   { href: '/policy', label: 'Customer Care' },

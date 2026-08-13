@@ -1,5 +1,5 @@
 import type { Cart, CartItem, Product, ProductVariant } from '@prisma/client';
-import type { CartDTO, CartItemDTO } from '@elaraa/shared';
+import type { CartDTO, CartItemDTO, ComboSelectionItem } from '@elaraa/shared';
 
 type CartItemWithRelations = CartItem & { product: Product; variant: ProductVariant };
 type CartWithItems = Cart & { items: CartItemWithRelations[] };
@@ -9,19 +9,26 @@ function variantLabel(variant: ProductVariant): string {
 }
 
 export function toCartDTO(cart: CartWithItems, primaryImageByProduct: Map<string, string | null>): CartDTO {
-  const items: CartItemDTO[] = cart.items.map((item) => ({
-    id: item.id,
-    productId: item.productId,
-    productName: item.product.name,
-    productSlug: item.product.slug,
-    variantId: item.variantId,
-    variantLabel: variantLabel(item.variant),
-    imageUrl: primaryImageByProduct.get(item.productId) ?? null,
-    unitPrice: Number(item.priceSnapshot),
-    quantity: item.quantity,
-    lineTotal: Number(item.priceSnapshot) * item.quantity,
-    stockQuantity: item.variant.stockQuantity,
-  }));
+  const items: CartItemDTO[] = cart.items.map((item) => {
+    const comboSelection = (item.comboSelection as ComboSelectionItem[] | null) ?? null;
+    return {
+      id: item.id,
+      productId: item.productId,
+      productName: comboSelection ? `Custom Combo Set (${comboSelection.length} items)` : item.product.name,
+      productSlug: item.product.slug,
+      variantId: item.variantId,
+      variantLabel: comboSelection ? `${comboSelection.length} products selected` : variantLabel(item.variant),
+      // A combo line has no image of its own — borrow the first selected
+      // product's photo so it isn't blank in the cart drawer/page.
+      imageUrl: comboSelection ? (comboSelection[0]?.imageUrl ?? null) : (primaryImageByProduct.get(item.productId) ?? null),
+      unitPrice: Number(item.priceSnapshot),
+      quantity: item.quantity,
+      lineTotal: Number(item.priceSnapshot) * item.quantity,
+      stockQuantity: item.variant.stockQuantity,
+      isCombo: comboSelection !== null,
+      comboSelection,
+    };
+  });
 
   return {
     id: cart.id,

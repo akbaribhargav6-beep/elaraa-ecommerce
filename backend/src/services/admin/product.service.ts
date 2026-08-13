@@ -71,6 +71,7 @@ interface ProductInput {
   isFeatured?: boolean;
   isNewArrival?: boolean;
   isBestSeller?: boolean;
+  isComboEligible?: boolean;
 }
 
 async function create(input: ProductInput) {

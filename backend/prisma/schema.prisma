@@ -189,6 +189,8 @@ model Product {
   isFeatured       Boolean   @default(false)
   isNewArrival     Boolean   @default(false)
   isBestSeller     Boolean   @default(false)
+  // Offered as a choosable item on the "build your own combo" page.
+  isComboEligible  Boolean   @default(false)
   avgRating        Decimal   @default(0) @db.Decimal(2, 1)
   reviewCount      Int       @default(0)
   publishedAt      DateTime?
@@ -286,6 +288,12 @@ model CartItem {
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 
+  // Present only for a "build your own combo" line: productId/variantId
+  // above point at a single well-known placeholder Product/Variant (so the
+  // existing FK/unique-constraint shape doesn't need to change), and this
+  // snapshots which real products the customer actually chose.
+  comboSelection Json?
+
   @@unique([cartId, variantId])
 }
 
@@ -358,6 +366,10 @@ model OrderItem {
   quantity     Int
   lineTotal    Decimal        @db.Decimal(10, 2)
   createdAt    DateTime       @default(now())
+
+  // Snapshot of the customer's chosen products, carried over from the
+  // matching CartItem at checkout — see the comment on CartItem.comboSelection.
+  comboSelection Json?
 
   reviews Review[]
 

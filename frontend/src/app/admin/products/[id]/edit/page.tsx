@@ -22,6 +22,7 @@ interface ProductForm {
   isFeatured: boolean;
   isNewArrival: boolean;
   isBestSeller: boolean;
+  isComboEligible: boolean;
 }
 
 function toForm(p: ProductDTO, categoryId: string): ProductForm {
@@ -39,6 +40,7 @@ function toForm(p: ProductDTO, categoryId: string): ProductForm {
     isFeatured: p.isFeatured,
     isNewArrival: p.isNewArrival,
     isBestSeller: p.isBestSeller,
+    isComboEligible: p.isComboEligible,
   };
 }
 
@@ -91,6 +93,7 @@ export default function EditProductPage() {
         isFeatured: form.isFeatured,
         isNewArrival: form.isNewArrival,
         isBestSeller: form.isBestSeller,
+        isComboEligible: form.isComboEligible,
       });
       load();
     } catch (err) {
@@ -175,11 +178,12 @@ export default function EditProductPage() {
 
   if (!product || !form) return <p className="text-sm opacity-60">Loading…</p>;
 
-  const flagFields: { key: keyof Pick<ProductForm, 'isActive' | 'isFeatured' | 'isNewArrival' | 'isBestSeller'>; label: string }[] = [
+  const flagFields: { key: keyof Pick<ProductForm, 'isActive' | 'isFeatured' | 'isNewArrival' | 'isBestSeller' | 'isComboEligible'>; label: string }[] = [
     { key: 'isActive', label: 'Active' },
     { key: 'isFeatured', label: 'Featured' },
     { key: 'isNewArrival', label: 'New Arrival' },
     { key: 'isBestSeller', label: 'Best Seller' },
+    { key: 'isComboEligible', label: 'Combo Eligible' },
   ];
 
   return (

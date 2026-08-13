@@ -59,6 +59,7 @@ export default function AdminOrdersPage() {
                 <td className="p-4">
                   <Link href={`/admin/orders/${o.orderNumber}`} className="underline">{o.orderNumber}</Link>
                   {o.giftPackaging && <span className="ml-1.5" title="Gift packaging selected">🎁</span>}
+                  {o.items.some((i) => i.isCombo) && <span className="ml-1.5" title="Includes a combo set">🧩</span>}
                 </td>
                 <td className="p-4 opacity-60">{o.customerEmail}</td>
                 <td className="p-4 text-xs uppercase">{o.status.replace(/_/g, ' ')}</td>

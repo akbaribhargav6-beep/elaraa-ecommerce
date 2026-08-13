@@ -39,9 +39,14 @@ function OrderConfirmationContent() {
 
           <div className="text-left p-8" style={{ background: 'var(--cream)' }}>
             {order.items.map((item) => (
-              <div key={item.id} className="flex justify-between text-sm mb-3">
-                <span className="opacity-70">{item.productName} ({item.variantLabel}) × {item.quantity}</span>
-                <span>{formatPrice(item.lineTotal)}</span>
+              <div key={item.id} className="mb-3">
+                <div className="flex justify-between text-sm">
+                  <span className="opacity-70">{item.isCombo && '🎁 '}{item.productName} ({item.variantLabel}) × {item.quantity}</span>
+                  <span>{formatPrice(item.lineTotal)}</span>
+                </div>
+                {item.isCombo && item.comboSelection && (
+                  <p className="text-[11px] opacity-50 mt-0.5">{item.comboSelection.map((s) => s.productName).join(', ')}</p>
+                )}
               </div>
             ))}
             <div className="divider-gold my-4" />

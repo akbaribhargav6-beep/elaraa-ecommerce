@@ -64,9 +64,18 @@ export default function AdminOrderDetailPage() {
         <div className="bg-white p-6" style={{ border: '1px solid rgba(43,38,32,.08)' }}>
           <h2 className="serif text-xl mb-4">Items</h2>
           {order.items.map((i) => (
-            <div key={i.id} className="flex justify-between text-sm mb-3">
-              <span className="opacity-70">{i.productName} ({i.variantLabel}) × {i.quantity}</span>
-              <span>{formatPrice(i.lineTotal)}</span>
+            <div key={i.id} className="mb-3">
+              <div className="flex justify-between text-sm">
+                <span className="opacity-70">{i.isCombo && '🎁 '}{i.productName} ({i.variantLabel}) × {i.quantity}</span>
+                <span>{formatPrice(i.lineTotal)}</span>
+              </div>
+              {i.isCombo && i.comboSelection && (
+                <ul className="text-[11px] opacity-60 mt-1 pl-3 list-disc space-y-0.5">
+                  {i.comboSelection.map((s) => (
+                    <li key={s.productId}>{s.productName} — {s.variantLabel}</li>
+                  ))}
+                </ul>
+              )}
             </div>
           ))}
           <div className="divider-gold my-3" />

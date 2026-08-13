@@ -22,6 +22,7 @@ export const createProductSchema = z.object({
   isFeatured: z.boolean().default(false),
   isNewArrival: z.boolean().default(false),
   isBestSeller: z.boolean().default(false),
+  isComboEligible: z.boolean().default(false),
 });
 
 export const updateProductSchema = createProductSchema.partial();

@@ -26,6 +26,7 @@ export default function NewProductPage() {
     isFeatured: false,
     isNewArrival: false,
     isBestSeller: false,
+    isComboEligible: false,
   });
 
   useEffect(() => {
@@ -111,7 +112,7 @@ export default function NewProductPage() {
         </div>
 
         <div className="flex flex-wrap gap-6 text-sm">
-          {(['isActive', 'isFeatured', 'isNewArrival', 'isBestSeller'] as const).map((key) => (
+          {(['isActive', 'isFeatured', 'isNewArrival', 'isBestSeller', 'isComboEligible'] as const).map((key) => (
             <label key={key} className="flex items-center gap-2">
               <input type="checkbox" checked={form[key]} onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.checked }))} />
               {key.replace('is', '')}

@@ -119,15 +119,30 @@ export default function CartPage() {
                     style={{ borderColor: 'rgba(43,38,32,.1)', background: 'rgba(255,255,255,.4)' }}
                   >
                     {item.imageUrl && (
-                      <Link href={`/product/${item.productSlug}`} className="w-20 h-20 sm:w-24 sm:h-24 shrink-0 overflow-hidden border" style={{ borderColor: 'rgba(43,38,32,.1)' }}>
-                        <Image src={getUploadUrl(item.imageUrl)} alt={item.productName} width={96} height={96} className="w-full h-full object-cover" />
-                      </Link>
+                      item.isCombo ? (
+                        <div className="w-20 h-20 sm:w-24 sm:h-24 shrink-0 overflow-hidden border" style={{ borderColor: 'rgba(43,38,32,.1)' }}>
+                          <Image src={getUploadUrl(item.imageUrl)} alt={item.productName} width={96} height={96} className="w-full h-full object-cover" />
+                        </div>
+                      ) : (
+                        <Link href={`/product/${item.productSlug}`} className="w-20 h-20 sm:w-24 sm:h-24 shrink-0 overflow-hidden border" style={{ borderColor: 'rgba(43,38,32,.1)' }}>
+                          <Image src={getUploadUrl(item.imageUrl)} alt={item.productName} width={96} height={96} className="w-full h-full object-cover" />
+                        </Link>
+                      )
                     )}
                     <div className="flex-1 flex flex-col justify-between gap-2">
                       <div className="flex items-start justify-between gap-2">
                         <div>
-                          <Link href={`/product/${item.productSlug}`} className="serif text-lg hover:opacity-70">{item.productName}</Link>
+                          {item.isCombo ? (
+                            <span className="serif text-lg">🎁 {item.productName}</span>
+                          ) : (
+                            <Link href={`/product/${item.productSlug}`} className="serif text-lg hover:opacity-70">{item.productName}</Link>
+                          )}
                           <p className="text-xs opacity-60 mt-1">{item.variantLabel}</p>
+                          {item.isCombo && item.comboSelection && (
+                            <p className="text-[11px] opacity-50 mt-0.5 leading-relaxed max-w-xs">
+                              {item.comboSelection.map((s) => s.productName).join(', ')}
+                            </p>
+                          )}
                         </div>
                         <p className="text-sm font-medium">{formatPrice(item.lineTotal)}</p>
                       </div>

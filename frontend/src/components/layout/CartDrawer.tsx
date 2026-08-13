@@ -39,8 +39,13 @@ export function CartDrawer() {
                 <Image src={getUploadUrl(item.imageUrl)} alt={item.productName} width={76} height={76} className="object-cover" />
               )}
               <div className="flex-1">
-                <h4 className="serif text-base">{item.productName}</h4>
+                <h4 className="serif text-base">{item.isCombo && '🎁 '}{item.productName}</h4>
                 <p className="text-xs opacity-60 mt-1">{item.variantLabel}</p>
+                {item.isCombo && item.comboSelection && (
+                  <p className="text-[11px] opacity-50 mt-0.5 leading-relaxed">
+                    {item.comboSelection.map((s) => s.productName).join(', ')}
+                  </p>
+                )}
                 <div className="flex items-center justify-between mt-2">
                   <div className="qty-box">
                     <button type="button" onClick={() => safeUpdate(item.id, item.quantity - 1)}>−</button>

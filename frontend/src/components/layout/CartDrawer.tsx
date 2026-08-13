@@ -39,26 +39,28 @@ export function CartDrawer() {
                 <Image src={getUploadUrl(item.imageUrl)} alt={item.productName} width={76} height={76} className="object-cover" />
               )}
               <div className="flex-1">
-                <h4 className="serif text-base">{item.isCombo && '🎁 '}{item.productName}</h4>
+                <h4 className="serif text-base">{item.comboGroupId && '🎁 '}{item.productName}</h4>
                 <p className="text-xs opacity-60 mt-1">{item.variantLabel}</p>
-                {item.isCombo && item.comboSelection && (
-                  <p className="text-[11px] opacity-50 mt-0.5 leading-relaxed">
-                    {item.comboSelection.map((s) => s.productName).join(', ')}
-                  </p>
+                {item.comboGroupId && (
+                  <p className="text-[11px] opacity-50 mt-0.5">Part of {item.comboGroupName}</p>
                 )}
                 <div className="flex items-center justify-between mt-2">
-                  <div className="qty-box">
-                    <button type="button" onClick={() => safeUpdate(item.id, item.quantity - 1)}>−</button>
-                    <input type="number" value={item.quantity} readOnly />
-                    <button type="button" onClick={() => safeUpdate(item.id, item.quantity + 1)}>+</button>
-                  </div>
+                  {item.comboGroupId ? (
+                    <span className="text-xs opacity-60">Qty 1</span>
+                  ) : (
+                    <div className="qty-box">
+                      <button type="button" onClick={() => safeUpdate(item.id, item.quantity - 1)}>−</button>
+                      <input type="number" value={item.quantity} readOnly />
+                      <button type="button" onClick={() => safeUpdate(item.id, item.quantity + 1)}>+</button>
+                    </div>
+                  )}
                   <p className="text-xs">{formatPrice(item.lineTotal)}</p>
                 </div>
                 <button
                   onClick={() => safeRemove(item.id)}
                   className="text-[10px] tracking-[.15em] uppercase opacity-50 hover:opacity-100 mt-2"
                 >
-                  Remove
+                  {item.comboGroupId ? 'Remove Combo' : 'Remove'}
                 </button>
               </div>
             </div>
@@ -66,9 +68,19 @@ export function CartDrawer() {
         </div>
 
         <div className="px-6 py-6 border-t" style={{ borderColor: 'rgba(43,38,32,.1)' }}>
-          <div className="flex justify-between text-sm mb-4">
-            <span className="opacity-70">Subtotal</span>
+          <div className="flex justify-between text-sm mb-2">
+            <span className="opacity-70">Products Total</span>
             <span>{formatPrice(cart?.subtotal ?? 0)}</span>
+          </div>
+          {(cart?.comboDiscount ?? 0) > 0 && (
+            <div className="flex justify-between text-sm mb-2">
+              <span className="opacity-70">🎁 Combo Discount</span>
+              <span style={{ color: '#047857' }}>−{formatPrice(cart!.comboDiscount)}</span>
+            </div>
+          )}
+          <div className="flex justify-between text-sm mb-4 pt-2 border-t" style={{ borderColor: 'rgba(43,38,32,.08)' }}>
+            <span className="opacity-70">Subtotal</span>
+            <span className="font-medium">{formatPrice((cart?.subtotal ?? 0) - (cart?.comboDiscount ?? 0))}</span>
           </div>
           <Link href="/checkout" onClick={closeDrawer} className="btn-luxury btn-gold-solid w-full justify-center mb-3">
             <span>Checkout →</span>

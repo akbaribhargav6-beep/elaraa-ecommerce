@@ -45,18 +45,37 @@ export default function OrderDetailPage() {
       </div>
 
       <div className="p-6 mb-8" style={{ background: 'var(--cream)' }}>
-        {order.items.map((item) => (
+        {order.comboGroups.map((group) => {
+          const groupItems = order.items.filter((i) => i.comboGroupId === group.groupId);
+          return (
+            <div key={group.groupId} className="mb-4 p-3" style={{ border: '1px solid var(--gold-deep)', background: 'rgba(255,255,255,.5)' }}>
+              <p className="text-sm font-medium mb-2">🎁 {group.name}</p>
+              {groupItems.map((item, i) => (
+                <div key={item.id} className="flex justify-between text-xs mb-1.5">
+                  <span className="opacity-70">{i + 1}. {item.productName} ({item.variantLabel})</span>
+                  <span>{formatPrice(item.lineTotal)}</span>
+                </div>
+              ))}
+              <div className="divider-gold my-2" />
+              <div className="flex justify-between text-[11px] mb-1"><span className="opacity-60">Products Total</span><span>{formatPrice(group.originalTotal)}</span></div>
+              <div className="flex justify-between text-[11px] mb-1"><span className="opacity-60">Combo Discount</span><span style={{ color: '#047857' }}>−{formatPrice(group.discount)}</span></div>
+              <div className="flex justify-between text-xs font-medium"><span>Combo Price</span><span>{formatPrice(group.comboPrice)}</span></div>
+            </div>
+          );
+        })}
+        {order.items.filter((item) => !item.comboGroupId).map((item) => (
           <div key={item.id} className="mb-3">
             <div className="flex justify-between text-sm">
-              <span className="opacity-70">{item.isCombo && '🎁 '}{item.productName} ({item.variantLabel}) × {item.quantity}</span>
+              <span className="opacity-70">{item.productName} ({item.variantLabel}) × {item.quantity}</span>
               <span>{formatPrice(item.lineTotal)}</span>
             </div>
-            {item.isCombo && item.comboSelection && (
-              <p className="text-[11px] opacity-50 mt-0.5">{item.comboSelection.map((s) => s.productName).join(', ')}</p>
-            )}
           </div>
         ))}
         <div className="divider-gold my-4" />
+        <div className="flex justify-between text-sm mb-2"><span className="opacity-70">Products Total</span><span>{formatPrice(order.subtotal)}</span></div>
+        {order.comboDiscount > 0 && (
+          <div className="flex justify-between text-sm mb-2"><span className="opacity-70">🎁 Combo Discount</span><span style={{ color: '#047857' }}>−{formatPrice(order.comboDiscount)}</span></div>
+        )}
         <div className="flex justify-between text-sm mb-2"><span className="opacity-70">Shipping</span><span>{order.shippingFee === 0 ? 'Free' : formatPrice(order.shippingFee)}</span></div>
         <div className="flex justify-between text-sm mb-2"><span className="opacity-70">GST</span><span>{formatPrice(order.taxAmount)}</span></div>
         {order.giftPackaging && (

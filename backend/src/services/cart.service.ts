@@ -1,10 +1,9 @@
-import type { Prisma } from '@prisma/client';
+import crypto from 'node:crypto';
 import { prisma } from '../config/db';
 import { ApiError } from '../utils/apiError';
 import { toCartDTO } from '../dto/cart.dto';
 import { getComboSettings } from './settings.service';
-import { getOrCreateComboAnchor } from './combo.service';
-import type { CartDTO, ComboSelectionItem } from '@elaraa/shared';
+import type { CartDTO } from '@elaraa/shared';
 
 export interface CartIdentity {
   userId?: string;
@@ -68,7 +67,7 @@ async function addItem(identity: CartIdentity, input: AddItemInput): Promise<Car
 
   const cartRow = await getOrCreateCartRow(identity);
   const existingItem = await prisma.cartItem.findUnique({
-    where: { cartId_variantId: { cartId: cartRow.id, variantId: input.variantId } },
+    where: { cartId_variantId_comboGroupId: { cartId: cartRow.id, variantId: input.variantId, comboGroupId: '' } },
   });
 
   const price = variant.priceOverride ?? variant.product.basePrice;
@@ -96,12 +95,21 @@ async function addItem(identity: CartIdentity, input: AddItemInput): Promise<Car
   return withPrimaryImages(cart);
 }
 
+// A combo item's quantity is fixed at one — the whole group is one bundle,
+// not N of it — and removing/zeroing any one member removes every item in
+// its comboGroupId, since a partial combo is never a valid, correctly-priced
+// state.
 async function updateItem(identity: CartIdentity, itemId: string, quantity: number): Promise<CartDTO> {
   const cartRow = await getOrCreateCartRow(identity);
   const item = await prisma.cartItem.findUnique({ where: { id: itemId } });
   if (!item || item.cartId !== cartRow.id) throw ApiError.notFound('Cart item not found');
 
-  if (quantity <= 0) {
+  if (item.comboGroupId) {
+    if (quantity > 0) {
+      throw ApiError.badRequest('Combo items are fixed at one each — remove the whole combo to change your selection.');
+    }
+    await prisma.cartItem.deleteMany({ where: { cartId: cartRow.id, comboGroupId: item.comboGroupId } });
+  } else if (quantity <= 0) {
     await prisma.cartItem.delete({ where: { id: itemId } });
   } else {
     const variant = await prisma.productVariant.findUniqueOrThrow({ where: { id: item.variantId } });
@@ -123,9 +131,11 @@ interface AddComboInput {
   selections: { productId: string; variantId: string }[];
 }
 
-// Builds (or rebuilds) the single combo line in this cart. The price is
-// always the currently-configured combo price, looked up here rather than
-// trusted from the client, so a customer can't submit a manipulated total.
+// Adds the customer's chosen products as real, individually-priced cart
+// lines, all sharing one freshly-generated comboGroupId so they stay
+// grouped for discount calculation and removal — the combo price is always
+// the currently-configured value, looked up here rather than trusted from
+// the client, so a customer can't submit a manipulated total.
 async function addCombo(identity: CartIdentity, input: AddComboInput): Promise<CartDTO> {
   const settings = await getComboSettings();
   if (!settings.enabled) throw ApiError.badRequest('Combo sets are not available right now');
@@ -155,50 +165,27 @@ async function addCombo(identity: CartIdentity, input: AddComboInput): Promise<C
     }
   }
 
-  const primaryImages = await prisma.productImage.findMany({
-    where: { productId: { in: selections.map((s) => s.productId) }, isPrimary: true },
-    select: { productId: true, url: true },
-  });
-  const imageByProduct = new Map(primaryImages.map((i) => [i.productId, i.url]));
-
-  const comboSelection: ComboSelectionItem[] = selections.map((sel) => {
-    const variant = variantMap.get(sel.variantId)!;
-    return {
-      productId: sel.productId,
-      productName: variant.product.name,
-      productSlug: variant.product.slug,
-      variantId: sel.variantId,
-      variantLabel: [variant.metalLabel, variant.backType].filter(Boolean).join(' / '),
-      imageUrl: imageByProduct.get(sel.productId) ?? null,
-    };
-  });
-
-  const anchor = await getOrCreateComboAnchor();
   const cartRow = await getOrCreateCartRow(identity);
+  const comboGroupId = crypto.randomUUID();
 
-  const existingItem = await prisma.cartItem.findUnique({
-    where: { cartId_variantId: { cartId: cartRow.id, variantId: anchor.variantId } },
-  });
-
-  const comboSelectionJson = comboSelection as unknown as Prisma.InputJsonValue;
-
-  if (existingItem) {
-    await prisma.cartItem.update({
-      where: { id: existingItem.id },
-      data: { quantity: 1, priceSnapshot: settings.price, comboSelection: comboSelectionJson },
-    });
-  } else {
-    await prisma.cartItem.create({
-      data: {
-        cartId: cartRow.id,
-        productId: anchor.productId,
-        variantId: anchor.variantId,
-        quantity: 1,
-        priceSnapshot: settings.price,
-        comboSelection: comboSelectionJson,
-      },
-    });
-  }
+  await prisma.$transaction(
+    selections.map((sel) => {
+      const variant = variantMap.get(sel.variantId)!;
+      const price = variant.priceOverride ?? variant.product.basePrice;
+      return prisma.cartItem.create({
+        data: {
+          cartId: cartRow.id,
+          productId: sel.productId,
+          variantId: sel.variantId,
+          quantity: 1,
+          priceSnapshot: price,
+          comboGroupId,
+          comboGroupName: settings.name,
+          comboGroupPrice: settings.price,
+        },
+      });
+    })
+  );
 
   const cart = await fullCart(cartRow.id);
   return withPrimaryImages(cart);
@@ -213,7 +200,8 @@ async function clearCart(identity: CartIdentity): Promise<CartDTO> {
 
 // Called right after login — folds a guest cart (identified by the
 // pre-login sessionToken cookie) into the now-authenticated user's cart,
-// combining quantities for variants present in both.
+// combining quantities for non-combo variants present in both. Combo items
+// carry their comboGroupId over so the whole group survives the merge intact.
 async function mergeGuestIntoUser(userId: string, sessionToken: string): Promise<CartDTO> {
   const guestCart = await prisma.cart.findUnique({ where: { sessionToken }, include: { items: true } });
   const userCartRow = await getOrCreateCartRow({ userId });
@@ -221,7 +209,13 @@ async function mergeGuestIntoUser(userId: string, sessionToken: string): Promise
   if (guestCart && guestCart.id !== userCartRow.id) {
     for (const guestItem of guestCart.items) {
       const existing = await prisma.cartItem.findUnique({
-        where: { cartId_variantId: { cartId: userCartRow.id, variantId: guestItem.variantId } },
+        where: {
+          cartId_variantId_comboGroupId: {
+            cartId: userCartRow.id,
+            variantId: guestItem.variantId,
+            comboGroupId: guestItem.comboGroupId,
+          },
+        },
       });
       if (existing) {
         await prisma.cartItem.update({
@@ -236,7 +230,9 @@ async function mergeGuestIntoUser(userId: string, sessionToken: string): Promise
             variantId: guestItem.variantId,
             quantity: guestItem.quantity,
             priceSnapshot: guestItem.priceSnapshot,
-            comboSelection: guestItem.comboSelection ?? undefined,
+            comboGroupId: guestItem.comboGroupId,
+            comboGroupName: guestItem.comboGroupName,
+            comboGroupPrice: guestItem.comboGroupPrice,
           },
         });
       }

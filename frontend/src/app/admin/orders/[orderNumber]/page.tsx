@@ -63,23 +63,42 @@ export default function AdminOrderDetailPage() {
       <div className="grid md:grid-cols-2 gap-8">
         <div className="bg-white p-6" style={{ border: '1px solid rgba(43,38,32,.08)' }}>
           <h2 className="serif text-xl mb-4">Items</h2>
-          {order.items.map((i) => (
-            <div key={i.id} className="mb-3">
-              <div className="flex justify-between text-sm">
-                <span className="opacity-70">{i.isCombo && '🎁 '}{i.productName} ({i.variantLabel}) × {i.quantity}</span>
-                <span>{formatPrice(i.lineTotal)}</span>
-              </div>
-              {i.isCombo && i.comboSelection && (
-                <ul className="text-[11px] opacity-60 mt-1 pl-3 list-disc space-y-0.5">
-                  {i.comboSelection.map((s) => (
-                    <li key={s.productId}>{s.productName} — {s.variantLabel}</li>
+
+          {order.comboGroups.map((group) => {
+            const groupItems = order.items.filter((i) => i.comboGroupId === group.groupId);
+            return (
+              <div key={group.groupId} className="mb-4 p-3" style={{ border: '1px solid var(--gold-deep)', background: 'rgba(201,166,107,.06)' }}>
+                <p className="text-sm font-medium mb-2">🎁 {group.name} — Combo Order</p>
+                <ul className="text-xs space-y-1 mb-2">
+                  {groupItems.map((i) => (
+                    <li key={i.id} className="flex justify-between">
+                      <span className="opacity-70">{i.productName} ({i.variantLabel})</span>
+                      <span>{formatPrice(i.lineTotal)}</span>
+                    </li>
                   ))}
                 </ul>
-              )}
+                <div className="divider-gold my-2" />
+                <div className="flex justify-between text-[11px] mb-1"><span className="opacity-60">Original Total</span><span>{formatPrice(group.originalTotal)}</span></div>
+                <div className="flex justify-between text-[11px] mb-1"><span className="opacity-60">Combo Discount</span><span style={{ color: '#047857' }}>−{formatPrice(group.discount)}</span></div>
+                <div className="flex justify-between text-xs font-medium"><span>Combo Price</span><span>{formatPrice(group.comboPrice)}</span></div>
+              </div>
+            );
+          })}
+
+          {order.items.filter((i) => !i.comboGroupId).map((i) => (
+            <div key={i.id} className="mb-3">
+              <div className="flex justify-between text-sm">
+                <span className="opacity-70">{i.productName} ({i.variantLabel}) × {i.quantity}</span>
+                <span>{formatPrice(i.lineTotal)}</span>
+              </div>
             </div>
           ))}
+
           <div className="divider-gold my-3" />
           <div className="flex justify-between text-sm mb-1"><span className="opacity-60">Subtotal</span><span>{formatPrice(order.subtotal)}</span></div>
+          {order.comboDiscount > 0 && (
+            <div className="flex justify-between text-sm mb-1"><span className="opacity-60">🎁 Combo Discount</span><span style={{ color: '#047857' }}>−{formatPrice(order.comboDiscount)}</span></div>
+          )}
           <div className="flex justify-between text-sm mb-1"><span className="opacity-60">Shipping</span><span>{order.shippingFee === 0 ? 'Free' : formatPrice(order.shippingFee)}</span></div>
           <div className="flex justify-between text-sm mb-1"><span className="opacity-60">GST</span><span>{formatPrice(order.taxAmount)}</span></div>
           <div className="flex justify-between text-sm mb-1">

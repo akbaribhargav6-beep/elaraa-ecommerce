@@ -3,7 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import type { CartDTO } from '@elaraa/shared';
 import { api } from './api-client';
-import { CART_SHOULD_REFRESH_EVENT } from './auth-context';
+import { CART_SHOULD_REFRESH_EVENT, useAuth } from './auth-context';
 
 interface CartContextValue {
   cart: CartDTO | null;
@@ -18,11 +18,20 @@ interface CartContextValue {
   refetch: () => Promise<void>;
 }
 
-const EMPTY_CART: CartDTO = { id: '', items: [], subtotal: 0, itemCount: 0 };
+const EMPTY_CART: CartDTO = { id: '', items: [], subtotal: 0, itemCount: 0, comboGroups: [], comboDiscount: 0 };
 
 const CartContext = createContext<CartContextValue | null>(null);
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
+  // AuthProvider's silent session-restore (POST /api/auth/refresh) and this
+  // provider's own initial cart fetch both fire on mount independently. If
+  // the cart fetch went out first, it would carry no Authorization header
+  // yet — the backend would resolve it as an unauthenticated guest and hand
+  // back (or create) a throwaway guest cart instead of the signed-in user's
+  // real one. Waiting for auth's isLoading to clear first guarantees the
+  // access token is already set (or definitively absent) before the first
+  // cart request goes out.
+  const { isLoading: authLoading } = useAuth();
   const [cart, setCart] = useState<CartDTO | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -39,11 +48,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
+    if (authLoading) return;
     refetch();
     const handler = () => refetch();
     window.addEventListener(CART_SHOULD_REFRESH_EVENT, handler);
     return () => window.removeEventListener(CART_SHOULD_REFRESH_EVENT, handler);
-  }, [refetch]);
+  }, [authLoading, refetch]);
 
   const addItem = useCallback(
     async (productId: string, variantId: string, quantity = 1) => {

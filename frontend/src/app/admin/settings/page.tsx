@@ -17,9 +17,6 @@ const KNOWN_SETTINGS: { key: string; label: string; group: string; placeholder: 
   { key: 'free_shipping_threshold', label: 'Free Shipping Threshold (₹)', group: 'shipping', placeholder: '2000' },
   { key: 'gst_rate_percent', label: 'GST Rate (%)', group: 'shipping', placeholder: '3' },
   { key: 'gift_packaging_fee', label: 'Gift Packaging Fee (₹)', group: 'shipping', placeholder: '49' },
-  { key: 'combo_enabled', label: 'Enable Combo Feature', group: 'combo', placeholder: 'false', type: 'checkbox' },
-  { key: 'combo_min_products', label: 'Minimum Products Required', group: 'combo', placeholder: '3' },
-  { key: 'combo_price', label: 'Combo Price (₹)', group: 'combo', placeholder: '1499' },
   { key: 'meta_title', label: 'Default Meta Title', group: 'seo', placeholder: 'ELARAA | Premium Fashion Jewellery' },
   { key: 'meta_description', label: 'Default Meta Description', group: 'seo', placeholder: 'Premium fashion jewellery, minimally designed for everyday wear.' },
 ];
@@ -49,7 +46,7 @@ export default function AdminSettingsPage() {
     }
   }
 
-  const groups = ['general', 'shipping', 'combo', 'seo'];
+  const groups = ['general', 'shipping', 'seo'];
 
   return (
     <div className="max-w-2xl">

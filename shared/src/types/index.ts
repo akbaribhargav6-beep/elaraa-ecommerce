@@ -82,21 +82,25 @@ export interface ProductListResponse {
   totalPages: number;
 }
 
-// One product the customer chose while building a combo — snapshotted onto
-// the CartItem/OrderItem at the time of selection/checkout.
-export interface ComboSelectionItem {
-  productId: string;
-  productName: string;
-  productSlug: string;
-  variantId: string;
-  variantLabel: string;
-  imageUrl: string | null;
-}
-
 export interface ComboSettingsDTO {
   enabled: boolean;
+  name: string;
   minProducts: number;
   price: number;
+}
+
+// A set of cart/order items purchased together as one "build your own
+// combo" bundle — the individual products stay visible and individually
+// priced, but the group's total is discounted down to the admin-configured
+// combo price. originalTotal/discount are derived from the member items,
+// not stored directly.
+export interface ComboGroupDTO {
+  groupId: string;
+  name: string;
+  originalTotal: number;
+  comboPrice: number;
+  discount: number;
+  itemIds: string[];
 }
 
 export interface CartItemDTO {
@@ -111,8 +115,8 @@ export interface CartItemDTO {
   quantity: number;
   lineTotal: number;
   stockQuantity: number;
-  isCombo: boolean;
-  comboSelection: ComboSelectionItem[] | null;
+  comboGroupId: string | null;
+  comboGroupName: string | null;
 }
 
 export interface CartDTO {
@@ -120,6 +124,8 @@ export interface CartDTO {
   items: CartItemDTO[];
   subtotal: number;
   itemCount: number;
+  comboGroups: ComboGroupDTO[];
+  comboDiscount: number;
 }
 
 export interface AddressDTO {
@@ -145,8 +151,8 @@ export interface OrderItemDTO {
   unitPrice: number;
   quantity: number;
   lineTotal: number;
-  isCombo: boolean;
-  comboSelection: ComboSelectionItem[] | null;
+  comboGroupId: string | null;
+  comboGroupName: string | null;
 }
 
 export interface OrderDTO {
@@ -170,6 +176,8 @@ export interface OrderDTO {
   taxAmount: number;
   giftPackaging: boolean;
   giftPackagingFee: number;
+  comboDiscount: number;
+  comboGroups: ComboGroupDTO[];
   totalAmount: number;
   items: OrderItemDTO[];
   placedAt: string;

@@ -68,7 +68,6 @@ async function updateStatus(orderNumber: string, adminUserId: string, input: { s
   const updated = await prisma.$transaction(async (tx) => {
     if (shouldRestock) {
       for (const item of order.items) {
-        if (item.comboSelection) continue;
         await tx.productVariant.update({
           where: { id: item.variantId },
           data: { stockQuantity: { increment: item.quantity } },

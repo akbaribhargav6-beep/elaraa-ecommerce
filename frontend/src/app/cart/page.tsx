@@ -43,7 +43,9 @@ export default function CartPage() {
   const [coupon, setCoupon] = useState<CouponState>({ status: 'idle', code: '', discountAmount: 0, message: '' });
   const [upsell, setUpsell] = useState<ProductDTO | null>(null);
 
-  const total = Math.max(0, subtotal - coupon.discountAmount);
+  const comboDiscount = cart?.comboDiscount ?? 0;
+  const comboGroups = cart?.comboGroups ?? [];
+  const total = Math.max(0, subtotal - coupon.discountAmount - comboDiscount);
 
   useEffect(() => {
     if (items.length === 0) {
@@ -112,37 +114,60 @@ export default function CartPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
             <div className="md:col-span-2 space-y-6 sm:space-y-8">
               <div className="space-y-6">
-                {items.map((item) => (
+                {comboGroups.map((group) => {
+                  const groupItems = items.filter((i) => i.comboGroupId === group.groupId);
+                  return (
+                    <div key={group.groupId} className="p-4" style={{ border: '1px solid var(--gold-deep)', background: 'rgba(201,166,107,.06)' }}>
+                      <div className="flex items-center justify-between mb-3">
+                        <h3 className="serif text-lg">🎁 {group.name}</h3>
+                        <button
+                          onClick={() => safeRemove(group.itemIds[0])}
+                          className="text-xs opacity-50 hover:opacity-100 underline shrink-0"
+                        >
+                          Remove Combo
+                        </button>
+                      </div>
+                      <div className="space-y-2 mb-3">
+                        {groupItems.map((item, i) => (
+                          <div key={item.id} className="flex justify-between text-sm">
+                            <span className="opacity-70">{i + 1}. {item.productName} ({item.variantLabel})</span>
+                            <span>{formatPrice(item.lineTotal)}</span>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="divider-gold my-3" />
+                      <div className="flex justify-between text-xs mb-1.5">
+                        <span className="opacity-60">Products Total</span>
+                        <span>{formatPrice(group.originalTotal)}</span>
+                      </div>
+                      <div className="flex justify-between text-xs mb-1.5">
+                        <span className="opacity-60">Combo Discount</span>
+                        <span style={{ color: '#047857' }}>−{formatPrice(group.discount)}</span>
+                      </div>
+                      <div className="flex justify-between text-sm font-medium">
+                        <span>Combo Price</span>
+                        <span>{formatPrice(group.comboPrice)}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {items.filter((item) => !item.comboGroupId).map((item) => (
                   <div
                     key={item.id}
                     className="flex flex-col sm:flex-row gap-4 sm:gap-5 pb-6 border-b p-4"
                     style={{ borderColor: 'rgba(43,38,32,.1)', background: 'rgba(255,255,255,.4)' }}
                   >
                     {item.imageUrl && (
-                      item.isCombo ? (
-                        <div className="w-20 h-20 sm:w-24 sm:h-24 shrink-0 overflow-hidden border" style={{ borderColor: 'rgba(43,38,32,.1)' }}>
-                          <Image src={getUploadUrl(item.imageUrl)} alt={item.productName} width={96} height={96} className="w-full h-full object-cover" />
-                        </div>
-                      ) : (
-                        <Link href={`/product/${item.productSlug}`} className="w-20 h-20 sm:w-24 sm:h-24 shrink-0 overflow-hidden border" style={{ borderColor: 'rgba(43,38,32,.1)' }}>
-                          <Image src={getUploadUrl(item.imageUrl)} alt={item.productName} width={96} height={96} className="w-full h-full object-cover" />
-                        </Link>
-                      )
+                      <Link href={`/product/${item.productSlug}`} className="w-20 h-20 sm:w-24 sm:h-24 shrink-0 overflow-hidden border" style={{ borderColor: 'rgba(43,38,32,.1)' }}>
+                        <Image src={getUploadUrl(item.imageUrl)} alt={item.productName} width={96} height={96} className="w-full h-full object-cover" />
+                      </Link>
                     )}
                     <div className="flex-1 flex flex-col justify-between gap-2">
                       <div className="flex items-start justify-between gap-2">
                         <div>
-                          {item.isCombo ? (
-                            <span className="serif text-lg">🎁 {item.productName}</span>
-                          ) : (
-                            <Link href={`/product/${item.productSlug}`} className="serif text-lg hover:opacity-70">{item.productName}</Link>
-                          )}
+                          <Link href={`/product/${item.productSlug}`} className="serif text-lg hover:opacity-70">{item.productName}</Link>
                           <p className="text-xs opacity-60 mt-1">{item.variantLabel}</p>
-                          {item.isCombo && item.comboSelection && (
-                            <p className="text-[11px] opacity-50 mt-0.5 leading-relaxed max-w-xs">
-                              {item.comboSelection.map((s) => s.productName).join(', ')}
-                            </p>
-                          )}
                         </div>
                         <p className="text-sm font-medium">{formatPrice(item.lineTotal)}</p>
                       </div>
@@ -192,9 +217,15 @@ export default function CartPage() {
 
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between">
-                  <span className="opacity-70">Subtotal</span>
+                  <span className="opacity-70">Products Total</span>
                   <span className="font-medium">{formatPrice(subtotal)}</span>
                 </div>
+                {comboDiscount > 0 && (
+                  <div className="flex justify-between">
+                    <span className="opacity-70">🎁 Combo Discount</span>
+                    <span className="font-medium" style={{ color: '#047857' }}>−{formatPrice(comboDiscount)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between">
                   <span className="opacity-70">Shipping</span>
                   <span className="font-medium" style={{ color: remainingForFreeShipping > 0 ? undefined : '#047857' }}>

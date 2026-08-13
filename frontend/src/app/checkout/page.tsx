@@ -146,7 +146,8 @@ export default function CheckoutPage() {
   // subtotal → discount → gift charge, not the final invoiced amount.
   const discountAmount = coupon.status === 'valid' ? coupon.discountAmount : 0;
   const giftCharge = giftPackaging ? giftPackagingFee : 0;
-  const estimatedTotal = Math.max(0, cart.subtotal - discountAmount + giftCharge);
+  const estimatedTotal = Math.max(0, cart.subtotal - cart.comboDiscount - discountAmount + giftCharge);
+  const standaloneItems = cart.items.filter((item) => !item.comboGroupId);
 
   return (
     <>
@@ -230,7 +231,27 @@ export default function CheckoutPage() {
 
           <div className="h-fit p-8" style={{ background: 'var(--cream)' }}>
             <h2 className="serif text-xl mb-6">Order Summary</h2>
-            {cart.items.map((item) => (
+
+            {cart.comboGroups.map((group) => {
+              const groupItems = cart.items.filter((i) => i.comboGroupId === group.groupId);
+              return (
+                <div key={group.groupId} className="mb-4 p-3" style={{ border: '1px solid var(--gold-deep)', background: 'rgba(201,166,107,.06)' }}>
+                  <p className="text-sm font-medium mb-2">🎁 {group.name}</p>
+                  {groupItems.map((item, i) => (
+                    <div key={item.id} className="flex justify-between text-xs mb-1.5">
+                      <span className="opacity-70">{i + 1}. {item.productName}</span>
+                      <span>{formatPrice(item.lineTotal)}</span>
+                    </div>
+                  ))}
+                  <div className="divider-gold my-2" />
+                  <div className="flex justify-between text-[11px] mb-1"><span className="opacity-60">Products Total</span><span>{formatPrice(group.originalTotal)}</span></div>
+                  <div className="flex justify-between text-[11px] mb-1"><span className="opacity-60">Combo Discount</span><span style={{ color: '#047857' }}>−{formatPrice(group.discount)}</span></div>
+                  <div className="flex justify-between text-xs font-medium"><span>Combo Price</span><span>{formatPrice(group.comboPrice)}</span></div>
+                </div>
+              );
+            })}
+
+            {standaloneItems.map((item) => (
               <div key={item.id} className="flex justify-between text-sm mb-3">
                 <span className="opacity-70">{item.productName} × {item.quantity}</span>
                 <span>{formatPrice(item.lineTotal)}</span>
@@ -238,9 +259,15 @@ export default function CheckoutPage() {
             ))}
             <div className="divider-gold my-4" />
             <div className="flex justify-between text-base">
-              <span>Subtotal</span>
+              <span>Products Total</span>
               <span>{formatPrice(cart.subtotal)}</span>
             </div>
+            {cart.comboDiscount > 0 && (
+              <div className="flex justify-between text-sm mt-2">
+                <span className="opacity-70">🎁 Combo Discount</span>
+                <span className="font-medium" style={{ color: '#047857' }}>−{formatPrice(cart.comboDiscount)}</span>
+              </div>
+            )}
             {coupon.status === 'valid' && (
               <div className="flex justify-between text-sm mt-2">
                 <span className="opacity-70">Coupon ({coupon.code})</span>

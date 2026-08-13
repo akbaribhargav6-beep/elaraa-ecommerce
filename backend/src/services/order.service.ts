@@ -9,11 +9,31 @@ import { orderConfirmationTemplate } from '../utils/emailTemplates';
 import { couponService } from './coupon.service';
 import { getGiftPackagingFee } from './settings.service';
 import type { CartIdentity } from './cart.service';
-import type { ComboSelectionItem } from '@elaraa/shared';
 
 const FREE_SHIPPING_THRESHOLD = 2000;
 const FLAT_SHIPPING_FEE = 99;
 const GST_RATE = 0.03; // 3% GST on gold jewellery in India
+
+// Sums (individual price total − combo price) across each distinct combo
+// group present in the cart — mirrors dto/order.dto.ts's buildComboGroups,
+// but runs pre-checkout against raw CartItem rows so it can feed totalAmount
+// before the Order/OrderItem rows exist.
+function computeComboDiscount(
+  items: { comboGroupId: string; comboGroupPrice: unknown; priceSnapshot: unknown; quantity: number }[]
+): number {
+  const totals = new Map<string, { original: number; comboPrice: number }>();
+  for (const item of items) {
+    if (!item.comboGroupId) continue;
+    const entry = totals.get(item.comboGroupId) ?? { original: 0, comboPrice: Number(item.comboGroupPrice ?? 0) };
+    entry.original += Number(item.priceSnapshot) * item.quantity;
+    totals.set(item.comboGroupId, entry);
+  }
+  let discount = 0;
+  for (const { original, comboPrice } of totals.values()) {
+    discount += Math.max(0, original - comboPrice);
+  }
+  return discount;
+}
 
 interface CheckoutInput {
   customerEmail: string;
@@ -74,13 +94,10 @@ async function checkout(identity: CartIdentity, input: CheckoutInput) {
   });
   if (items.length === 0) throw ApiError.badRequest('Your cart is empty');
 
-  // Verify stock before committing to anything. A combo line's variantId
-  // points at the well-known hidden combo anchor (see combo.service.ts),
-  // whose "stock" isn't real — nothing to check there. Combo sets don't
-  // decrement the individual chosen products' stock either (see the same
-  // skip below); that's a deliberate scope decision, not an oversight.
+  // Verify stock before committing to anything — combo items are now real
+  // products/variants too, so they're checked (and later decremented)
+  // exactly like any other line.
   for (const item of items) {
-    if (item.comboSelection) continue;
     if (!item.variant.isActive || item.variant.stockQuantity < item.quantity) {
       throw ApiError.badRequest(
         `"${item.product.name}" (${item.variant.metalLabel}) only has ${item.variant.stockQuantity} left in stock`
@@ -91,6 +108,7 @@ async function checkout(identity: CartIdentity, input: CheckoutInput) {
   const shipping = await resolveShippingSnapshot(identity.userId, input);
 
   const subtotal = items.reduce((sum, i) => sum + Number(i.priceSnapshot) * i.quantity, 0);
+  const comboDiscount = computeComboDiscount(items);
   const shippingFee = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : FLAT_SHIPPING_FEE;
   const taxAmount = Math.round(subtotal * GST_RATE * 100) / 100;
 
@@ -122,7 +140,7 @@ async function checkout(identity: CartIdentity, input: CheckoutInput) {
   const giftPackaging = input.giftPackaging === true;
   const giftPackagingFee = giftPackaging ? await getGiftPackagingFee() : 0;
 
-  const totalAmount = subtotal + shippingFee + taxAmount + giftPackagingFee - discountAmount;
+  const totalAmount = subtotal + shippingFee + taxAmount + giftPackagingFee - discountAmount - comboDiscount;
 
   const orderNumber = generateOrderNumber();
   const provider = getPaymentProvider(input.paymentMethod);
@@ -156,23 +174,20 @@ async function checkout(identity: CartIdentity, input: CheckoutInput) {
         couponId: couponId ?? null,
         notes: input.notes,
         items: {
-          create: items.map((i) => {
-            const comboSelection = i.comboSelection as unknown as ComboSelectionItem[] | null;
-            return {
-              productId: i.productId,
-              variantId: i.variantId,
-              productName: comboSelection ? `Custom Combo Set (${comboSelection.length} items)` : i.product.name,
-              variantLabel: comboSelection
-                ? `${comboSelection.length} products selected`
-                : [i.variant.metalLabel, i.variant.backType].filter(Boolean).join(' / '),
-              sku: i.variant.sku,
-              imageUrl: comboSelection ? (comboSelection[0]?.imageUrl ?? null) : null,
-              unitPrice: i.priceSnapshot,
-              quantity: i.quantity,
-              lineTotal: new Prisma.Decimal(i.priceSnapshot).mul(i.quantity),
-              comboSelection: comboSelection ? (comboSelection as unknown as Prisma.InputJsonValue) : undefined,
-            };
-          }),
+          create: items.map((i) => ({
+            productId: i.productId,
+            variantId: i.variantId,
+            productName: i.product.name,
+            variantLabel: [i.variant.metalLabel, i.variant.backType].filter(Boolean).join(' / '),
+            sku: i.variant.sku,
+            imageUrl: null,
+            unitPrice: i.priceSnapshot,
+            quantity: i.quantity,
+            lineTotal: new Prisma.Decimal(i.priceSnapshot).mul(i.quantity),
+            comboGroupId: i.comboGroupId,
+            comboGroupName: i.comboGroupName,
+            comboGroupPrice: i.comboGroupPrice,
+          })),
         },
         statusHistory: { create: { status: 'PENDING', note: 'Order placed' } },
       },
@@ -180,7 +195,6 @@ async function checkout(identity: CartIdentity, input: CheckoutInput) {
     });
 
     for (const item of items) {
-      if (item.comboSelection) continue;
       await tx.productVariant.update({
         where: { id: item.variantId },
         data: { stockQuantity: { decrement: item.quantity } },
@@ -263,7 +277,6 @@ async function cancelOrder(orderNumber: string, userId: string) {
 
   const updated = await prisma.$transaction(async (tx) => {
     for (const item of order.items) {
-      if (item.comboSelection) continue;
       await tx.productVariant.update({
         where: { id: item.variantId },
         data: { stockQuantity: { increment: item.quantity } },

@@ -32,6 +32,7 @@ const NAV_GROUPS = [
       { href: '/admin/coupons', label: 'Coupons' },
       { href: '/admin/discounts', label: 'Discounts' },
       { href: '/admin/banners', label: 'Banners' },
+      { href: '/admin/combo', label: 'Combo Management' },
     ],
   },
   {

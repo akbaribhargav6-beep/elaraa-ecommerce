@@ -1,6 +1,4 @@
-import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
-import { RakhiMotif, MandalaRing } from '@/components/ui/RakshaBandhanMotifs';
 
 // Replace these two files to change the hero banner — no markup changes
 // needed as long as the new images keep the same aspect ratios.
@@ -30,16 +28,6 @@ export function HeroBanner() {
         />
       </picture>
 
-      {/* Raksha Bandhan campaign accents — decorative only, ties this banner
-          visually to RakshaBandhanPromo directly above it without touching
-          the underlying photography. */}
-      <div className="rb-float-el hidden sm:block" style={{ top: '8%', left: '4%', animationDelay: '.4s' }}>
-        <RakhiMotif size={44} />
-      </div>
-      <div className="rb-float-el rb-float-b hidden sm:block" style={{ top: '10%', right: '5%', animationDelay: '.1s' }}>
-        <MandalaRing size={38} />
-      </div>
-
       <DesktopHeroContent />
       <MobileHeroContent />
     </section>
@@ -52,7 +40,6 @@ function DesktopHeroContent() {
   return (
     <div className="hidden lg:flex absolute inset-0 items-center justify-center px-8 bg-gradient-to-t from-[#1A1714]/85 via-[#1A1714]/40 to-[#1A1714]/20">
       <div className="text-center max-w-2xl mx-auto z-10 pt-16">
-        <p className="eyebrow text-[#D8B77E] tracking-[0.3em] text-xs uppercase mb-3">🪢 Raksha Bandhan Collection</p>
         <h1 className="serif font-light text-white leading-[1.08] text-5xl xl:text-7xl mb-6">
           Wear Light.
           <br />
@@ -71,12 +58,6 @@ function DesktopHeroContent() {
             Our Story
           </Button>
         </div>
-        <Link
-          href="/combo"
-          className="inline-flex items-center gap-2 mt-6 text-xs tracking-[.15em] uppercase text-[#FFE8B0] hover:text-white transition-colors"
-        >
-          🎁 Create a Raksha Bandhan Combo →
-        </Link>
       </div>
       <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5 opacity-60 text-stone-300">
         <span className="text-[9px] tracking-[.3em] uppercase">Scroll</span>
@@ -92,7 +73,6 @@ function MobileHeroContent() {
   return (
     <div className="flex lg:hidden absolute inset-0 items-end justify-center px-6 pb-14 pt-20 bg-gradient-to-b from-[#1A1714]/40 via-[#1A1714]/50 to-[#1A1714]/85">
       <div className="text-center max-w-sm mx-auto z-10">
-        <p className="eyebrow text-[#D8B77E] tracking-[0.25em] text-[10px] uppercase mb-2">🪢 Raksha Bandhan Collection</p>
         <h1 className="serif font-light text-white leading-[1.1] text-3xl sm:text-4xl mb-4">
           Wear Light.
           <br />
@@ -110,12 +90,6 @@ function MobileHeroContent() {
             Our Story
           </Button>
         </div>
-        <Link
-          href="/combo"
-          className="inline-flex items-center gap-1.5 mt-5 text-[11px] tracking-[.12em] uppercase text-[#FFE8B0]"
-        >
-          🎁 Create a Raksha Bandhan Combo →
-        </Link>
       </div>
       <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 opacity-50 text-stone-300">
         <div className="w-[1px] h-5 bg-[#D8B77E]" />

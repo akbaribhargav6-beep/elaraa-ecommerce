@@ -51,7 +51,7 @@ export function RakshaBandhanPromo() {
           </RevealOnScroll>
           <RevealOnScroll delay={0.2}>
             <p className="text-xs sm:text-base opacity-70 max-w-md mx-auto md:mx-0 mb-5 sm:mb-7 leading-relaxed">
-              Choose your favourite products and create a special gift for your loved ones — priced as one
+              Choose your favourite products and create a special gift for your loved ones, priced as one
               beautiful combo, not the sum of its parts.
             </p>
           </RevealOnScroll>

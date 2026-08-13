@@ -22,6 +22,7 @@ html, body {
   background: var(--ivory);
   color: var(--charcoal);
   overflow-x: hidden;
+  scroll-behavior: smooth;
 }
 
 body {
@@ -239,6 +240,177 @@ select { background: transparent; }
   border: 1px solid var(--gold-deep);
   display: flex; align-items: center; justify-content: center;
   font-size: .75rem; color: var(--gold-deep);
+}
+
+/* ══════════════════════════ Raksha Bandhan Combo Page ══════════════════════════ */
+:root {
+  --rb-maroon-deep: #3E0C17;
+  --rb-maroon: #6B1B2B;
+  --rb-red: #9C2B3B;
+  --rb-rose: #E8B4BC;
+  --rb-blush: #F7E4E0;
+}
+
+@keyframes rb-float {
+  0%, 100% { transform: translateY(0) rotate(-3deg); }
+  50% { transform: translateY(-16px) rotate(3deg); }
+}
+@keyframes rb-float-slow {
+  0%, 100% { transform: translateY(0) rotate(2deg); }
+  50% { transform: translateY(-10px) rotate(-2deg); }
+}
+@keyframes rb-sparkle {
+  0%, 100% { opacity: .25; transform: scale(.75); }
+  50% { opacity: 1; transform: scale(1.15); }
+}
+@keyframes rb-pop-in {
+  0% { opacity: 0; transform: scale(.5); }
+  65% { opacity: 1; transform: scale(1.08); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes rb-thumb-in {
+  0% { opacity: 0; transform: translateY(16px) scale(.5); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes rb-pulse-select {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.045); }
+  100% { transform: scale(1); }
+}
+@keyframes rb-bar-shimmer {
+  0% { background-position: 0% 0; }
+  100% { background-position: 200% 0; }
+}
+@keyframes rb-confetti-fall {
+  0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; }
+  85% { opacity: 1; }
+  100% { transform: translateY(108vh) rotate(560deg); opacity: 0; }
+}
+@keyframes rb-ready-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(201, 166, 107, .55); }
+  50% { box-shadow: 0 0 0 8px rgba(201, 166, 107, 0); }
+}
+
+.rb-hero {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, var(--rb-maroon-deep), var(--rb-maroon) 48%, var(--gold-deep) 130%);
+  color: var(--ivory);
+}
+.rb-hero-pattern {
+  position: absolute;
+  inset: 0;
+  opacity: .12;
+  background-image: radial-gradient(circle, rgba(255, 255, 255, .55) 1px, transparent 1.6px);
+  background-size: 26px 26px;
+  pointer-events: none;
+}
+.rb-hero-vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 30%, rgba(255, 232, 176, .14), transparent 60%);
+  pointer-events: none;
+}
+.rb-float-el { position: absolute; pointer-events: none; animation: rb-float 6.5s ease-in-out infinite; }
+.rb-float-el.rb-float-b { animation: rb-float-slow 8s ease-in-out infinite; }
+.rb-sparkle-el { position: absolute; pointer-events: none; animation: rb-sparkle 2.4s ease-in-out infinite; color: #FFE8B0; }
+
+.rb-hero-title em {
+  font-style: normal;
+  background: linear-gradient(90deg, var(--gold), #FFE8B0, var(--gold));
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: shimmer 4s ease-in-out infinite;
+}
+
+.rb-wave { display: block; width: 100%; height: auto; }
+
+.rb-card {
+  position: relative;
+  transition: transform .4s cubic-bezier(.22, 1, .36, 1), box-shadow .4s ease, border-color .4s ease;
+}
+.rb-card:hover { transform: translateY(-5px); box-shadow: 0 16px 34px rgba(107, 27, 43, .14); }
+.rb-card-selected {
+  border-color: var(--gold-deep) !important;
+  box-shadow: 0 0 0 2px var(--gold-deep), 0 16px 34px rgba(107, 27, 43, .18) !important;
+}
+.rb-card-pulse { animation: rb-pulse-select .45s ease; }
+.rb-card-badge {
+  position: absolute;
+  top: -9px;
+  right: -9px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--rb-maroon), var(--gold-deep));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 13px;
+  box-shadow: 0 4px 10px rgba(62, 12, 23, .35);
+  animation: rb-pop-in .4s ease;
+  z-index: 2;
+}
+
+.rb-progress-track {
+  height: 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .22);
+  overflow: hidden;
+}
+.rb-progress-track-light {
+  height: 7px;
+  border-radius: 999px;
+  background: rgba(107, 27, 43, .1);
+  overflow: hidden;
+}
+.rb-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--gold-deep), var(--gold), #FFE8B0, var(--gold));
+  background-size: 200% 100%;
+  animation: rb-bar-shimmer 2.2s linear infinite;
+  transition: width .6s cubic-bezier(.22, 1, .36, 1);
+}
+
+.rb-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .3);
+  transition: background .4s ease, transform .4s ease, box-shadow .4s ease;
+}
+.rb-dot-filled {
+  background: var(--gold);
+  transform: scale(1.3);
+  box-shadow: 0 0 8px rgba(201, 166, 107, .85);
+}
+
+.rb-combo-box {
+  background: linear-gradient(115deg, var(--rb-maroon-deep), var(--rb-maroon) 55%, var(--gold-deep) 145%);
+  color: var(--ivory);
+  border-top: 2px solid var(--gold);
+  box-shadow: 0 -12px 40px rgba(0, 0, 0, .28);
+}
+.rb-thumb { animation: rb-thumb-in .4s cubic-bezier(.22, 1, .36, 1); }
+.rb-ready-pop { animation: rb-pop-in .5s cubic-bezier(.34, 1.56, .64, 1); }
+.rb-ready-btn { animation: rb-ready-glow 1.8s ease-out 2; }
+
+.rb-confetti-piece {
+  position: fixed;
+  top: -20px;
+  width: 8px;
+  height: 14px;
+  border-radius: 2px;
+  opacity: 0;
+  animation-name: rb-confetti-fall;
+  animation-timing-function: cubic-bezier(.4, 0, .7, 1);
+  animation-fill-mode: forwards;
+  pointer-events: none;
+  z-index: 200;
 }
 
 /* ══════════════════════════ Mini cart drawer ══════════════════════════ */

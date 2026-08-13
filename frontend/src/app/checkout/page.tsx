@@ -141,6 +141,13 @@ export default function CheckoutPage() {
     );
   }
 
+  // Shipping and GST aren't estimated here (they depend on server-side
+  // rules resolved at order placement — see the note below), so this is
+  // subtotal → discount → gift charge, not the final invoiced amount.
+  const discountAmount = coupon.status === 'valid' ? coupon.discountAmount : 0;
+  const giftCharge = giftPackaging ? giftPackagingFee : 0;
+  const estimatedTotal = Math.max(0, cart.subtotal - discountAmount + giftCharge);
+
   return (
     <>
       <div className="pt-28" />
@@ -257,6 +264,12 @@ export default function CheckoutPage() {
               </span>
             </label>
 
+            <div className="divider-gold my-4" />
+            <div className="flex justify-between text-base sm:text-lg">
+              <span className="serif font-medium">Total Amount</span>
+              <span className="serif font-medium">{formatPrice(estimatedTotal)}</span>
+            </div>
+
             {coupon.status === 'valid' ? (
               <div className="flex items-center justify-between mt-4 text-xs border px-3 py-2" style={{ borderColor: 'rgba(4,120,87,.3)', background: 'rgba(4,120,87,.06)' }}>
                 <span style={{ color: '#047857' }}>✓ {coupon.message}</span>
@@ -281,7 +294,7 @@ export default function CheckoutPage() {
               <p className="text-[11px] mt-2" style={{ color: '#b91c1c' }}>{coupon.message}</p>
             )}
 
-            <p className="text-xs opacity-50 mt-4">Shipping, GST, and gift packaging (if selected) calculated at order placement.</p>
+            <p className="text-xs opacity-50 mt-4">Shipping and GST are calculated at order placement and added to the total above.</p>
           </div>
         </div>
       </section>

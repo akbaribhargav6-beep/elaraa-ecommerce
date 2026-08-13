@@ -1,52 +1,71 @@
 import Link from 'next/link';
 import { RevealOnScroll } from '@/components/ui/RevealOnScroll';
-import { RakhiMotif, MandalaRing, FlowerMotif } from '@/components/ui/RakshaBandhanMotifs';
+import { GiftBoxIllustration } from '@/components/ui/RakshaBandhanMotifs';
 
-// Sits above the main Hero Banner — a compact, festive strip whose only job
-// is to funnel customers to /combo during the Raksha Bandhan window. Reuses
-// the .rb-hero design language (and its motifs/keyframes) already shipped
-// for the /combo page, so the two feel like one campaign without a second
-// design system to maintain.
+const PETALS = [
+  { left: '8%', duration: 9, delay: 0, size: 10 },
+  { left: '22%', duration: 11, delay: 2.4, size: 8 },
+  { left: '78%', duration: 10, delay: 1.1, size: 9 },
+  { left: '90%', duration: 12, delay: 3.6, size: 7 },
+];
+
+const STATS = ['🎁 Pick any 3+ favourites', '✨ One special combo price', '💛 A gift they will remember'];
+
+// A deliberately different centerpiece from the /combo page's own maroon
+// .rb-hero — a blush/ivory editorial split with an illustrated gift box +
+// rakhi thread, so the homepage doesn't read as a smaller repeat of the
+// combo page it's promoting.
 export function RakshaBandhanPromo() {
   return (
-    <section className="rb-hero relative px-6 py-12 sm:py-14 md:py-16 text-center">
-      <div className="rb-hero-pattern" />
-      <div className="rb-hero-vignette" />
+    <section className="rb2-section px-6 py-10 sm:py-16 md:py-24">
+      <div className="rb2-rangoli-bg" />
+      {PETALS.map((p, i) => (
+        <span
+          key={i}
+          className="rb2-petal"
+          style={{
+            left: p.left,
+            width: p.size,
+            height: p.size * 1.4,
+            borderRadius: '50% 50% 50% 0',
+            background: i % 2 === 0 ? '#E8B4BC' : '#FFE8B0',
+            animationDuration: `${p.duration}s`,
+            animationDelay: `${p.delay}s`,
+          }}
+        />
+      ))}
 
-      <div className="rb-float-el" style={{ top: '10%', left: '5%', animationDelay: '0s' }}>
-        <RakhiMotif size={40} className="hidden sm:block" />
-      </div>
-      <div className="rb-float-el rb-float-b" style={{ top: '14%', right: '6%', animationDelay: '.5s' }}>
-        <RakhiMotif size={52} />
-      </div>
-      <div className="rb-float-el" style={{ bottom: '10%', left: '9%', animationDelay: '1s' }}>
-        <FlowerMotif size={28} className="hidden sm:block" />
-      </div>
-      <div className="rb-float-el rb-float-b" style={{ bottom: '8%', right: '11%', animationDelay: '.2s' }}>
-        <MandalaRing size={34} className="hidden sm:block" />
-      </div>
-      <div className="rb-sparkle-el" style={{ top: '25%', left: '20%', fontSize: 12, animationDelay: '0s' }}>✦</div>
-      <div className="rb-sparkle-el" style={{ top: '60%', right: '22%', fontSize: 14, animationDelay: '.7s' }}>✦</div>
+      <div className="relative z-10 max-w-6xl mx-auto grid md:grid-cols-2 items-center gap-4 sm:gap-10 md:gap-16">
+        <RevealOnScroll className="flex justify-center order-1">
+          <GiftBoxIllustration className="w-44 sm:w-72 md:w-full max-w-sm h-auto" />
+        </RevealOnScroll>
 
-      <div className="relative z-10 max-w-xl mx-auto">
-        <RevealOnScroll>
-          <p className="eyebrow" style={{ color: '#FFE8B0' }}>🪢 Raksha Bandhan · 2026</p>
-        </RevealOnScroll>
-        <RevealOnScroll delay={0.1}>
-          <h2 className="rb-hero-title serif text-2xl sm:text-3xl md:text-4xl mt-3 mb-3 leading-[1.15]">
-            Create a Special <em>Raksha Bandhan</em> Combo
-          </h2>
-        </RevealOnScroll>
-        <RevealOnScroll delay={0.2}>
-          <p className="text-xs sm:text-sm opacity-85 max-w-sm mx-auto mb-7 font-handwriting" style={{ fontSize: '1.15rem' }}>
-            Choose your favourite products and create a special gift for your loved ones.
-          </p>
-        </RevealOnScroll>
-        <RevealOnScroll delay={0.3}>
-          <Link href="/combo" className="btn-luxury btn-gold-solid">
-            <span>Create Your Combo →</span>
-          </Link>
-        </RevealOnScroll>
+        <div className="order-2 text-center md:text-left">
+          <RevealOnScroll>
+            <span className="rb2-badge">🪢 Raksha Bandhan · 2026</span>
+          </RevealOnScroll>
+          <RevealOnScroll delay={0.1}>
+            <h2 className="rb2-heading serif text-2xl sm:text-4xl md:text-5xl mt-3 sm:mt-5 mb-3 sm:mb-4 leading-[1.15]">
+              Celebrate the Bond with a <em>Handpicked Combo</em>
+            </h2>
+          </RevealOnScroll>
+          <RevealOnScroll delay={0.2}>
+            <p className="text-xs sm:text-base opacity-70 max-w-md mx-auto md:mx-0 mb-5 sm:mb-7 leading-relaxed">
+              Choose your favourite products and create a special gift for your loved ones — priced as one
+              beautiful combo, not the sum of its parts.
+            </p>
+          </RevealOnScroll>
+          <RevealOnScroll delay={0.3}>
+            <Link href="/combo" className="rb2-cta">
+              <span className="relative z-10">Build Your Combo →</span>
+            </Link>
+          </RevealOnScroll>
+          <RevealOnScroll delay={0.4} className="flex flex-wrap justify-center md:justify-start gap-2 sm:gap-2.5 mt-5 sm:mt-7">
+            {STATS.map((s) => (
+              <span key={s} className="rb2-chip">{s}</span>
+            ))}
+          </RevealOnScroll>
+        </div>
       </div>
     </section>
   );

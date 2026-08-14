@@ -4,6 +4,13 @@ const config: Config = {
   content: ['./src/**/*.{js,ts,jsx,tsx,mdx}'],
   theme: {
     extend: {
+      // The Header's nav links (7 items) + dead-centered logo need more
+      // room than any stock breakpoint gives before they start crowding
+      // each other — measured the real collision point rather than
+      // guessing, see the comment above Header's nav-link classes.
+      screens: {
+        'header-desktop': '1600px',
+      },
       colors: {
         ivory: '#F8F5F0',
         cream: '#EFE9DE',

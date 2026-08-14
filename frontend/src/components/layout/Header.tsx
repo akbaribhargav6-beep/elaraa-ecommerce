@@ -30,6 +30,16 @@ const MOBILE_NAV_LINKS = [
 // (independent of the width of either side), search/bag icons right.
 // Mobile: hamburger left opens a slide-out drawer with the same nav links,
 // logo stays centered, search/bag icons stay right.
+//
+// The desktop layout switches on the custom `header-desktop` breakpoint
+// (1600px, see tailwind.config.ts) instead of the stock `md` (768px).
+// With 7 nav links at this tracking/gap, the links block runs almost
+// 690px wide — comfortably clear of the centered logo on a wide desktop
+// window, but colliding with it well before 768px and still uncomfortably
+// close even at typical laptop widths (measured the real collision point
+// rather than guessing). Every width at or below 1600px now gets the
+// already-correct mobile hamburger layout instead of a cramped in-between
+// state.
 export function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -59,14 +69,14 @@ export function Header() {
         <div className="flex items-center gap-6 md:gap-8">
           <button
             onClick={() => setMobileMenuOpen(true)}
-            className="md:hidden flex items-center justify-center w-10 h-10 -ml-2 hover:opacity-60"
+            className="header-desktop:hidden flex items-center justify-center w-10 h-10 -ml-2 hover:opacity-60"
             aria-label="Open menu"
           >
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
-          <div className="hidden md:flex items-center gap-8 text-xs tracking-[.2em] uppercase font-sans">
+          <div className="hidden header-desktop:flex items-center gap-8 text-xs tracking-[.2em] uppercase font-sans">
             {DESKTOP_NAV_LINKS.map((link) => (
               <Link key={link.label} href={link.href} className="hover:opacity-60">
                 {link.label}
@@ -117,12 +127,12 @@ export function Header() {
       {/* Mobile nav drawer */}
       <div
         onClick={() => setMobileMenuOpen(false)}
-        className={`fixed inset-0 bg-[#17140F]/50 backdrop-blur-sm z-[98] transition-opacity duration-300 md:hidden ${
+        className={`fixed inset-0 bg-[#17140F]/50 backdrop-blur-sm z-[98] transition-opacity duration-300 header-desktop:hidden ${
           mobileMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
         }`}
       />
       <aside
-        className={`fixed top-0 left-0 h-full w-[85%] max-w-[320px] z-[99] flex flex-col justify-between shadow-2xl transition-transform duration-500 ease-out md:hidden ${
+        className={`fixed top-0 left-0 h-full w-[85%] max-w-[320px] z-[99] flex flex-col justify-between shadow-2xl transition-transform duration-500 ease-out header-desktop:hidden ${
           mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
         style={{ background: 'var(--ivory)', borderRight: '1px solid rgba(201,166,107,.3)' }}

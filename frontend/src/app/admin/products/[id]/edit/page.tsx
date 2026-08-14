@@ -51,7 +51,7 @@ export default function EditProductPage() {
   const [form, setForm] = useState<ProductForm | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const [newVariant, setNewVariant] = useState({ sku: '', metalLabel: '', metalHex: '#C9A66B', backType: '', stockQuantity: '0' });
+  const [newVariant, setNewVariant] = useState({ sku: '', metalLabel: '', metalHex: '#C9A66B', backType: '', size: '', stockQuantity: '0' });
   const [uploadProgress, setUploadProgress] = useState<{ done: number; total: number } | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const uploading = uploadProgress !== null;
@@ -109,7 +109,7 @@ export default function EditProductPage() {
       ...newVariant,
       stockQuantity: Number(newVariant.stockQuantity),
     });
-    setNewVariant({ sku: '', metalLabel: '', metalHex: '#C9A66B', backType: '', stockQuantity: '0' });
+    setNewVariant({ sku: '', metalLabel: '', metalHex: '#C9A66B', backType: '', size: '', stockQuantity: '0' });
     load();
   }
 
@@ -301,6 +301,7 @@ export default function EditProductPage() {
               <th className="py-2 font-normal opacity-60">SKU</th>
               <th className="py-2 font-normal opacity-60">Metal</th>
               <th className="py-2 font-normal opacity-60">Back Type</th>
+              <th className="py-2 font-normal opacity-60">Size</th>
               <th className="py-2 font-normal opacity-60">Stock</th>
               <th className="py-2 font-normal opacity-60">Status</th>
               <th className="py-2 font-normal opacity-60"></th>
@@ -315,6 +316,7 @@ export default function EditProductPage() {
                   {v.metalLabel}
                 </td>
                 <td className="py-2 opacity-60">{v.backType ?? '—'}</td>
+                <td className="py-2 opacity-60">{v.size ?? '—'}</td>
                 <td className="py-2">{v.stockQuantity}</td>
                 <td className="py-2">
                   <button onClick={() => toggleVariantActive(v.id, v.isActive)} className="text-xs uppercase" style={{ color: v.isActive ? 'var(--gold-deep)' : '#999' }}>
@@ -327,14 +329,16 @@ export default function EditProductPage() {
           </tbody>
         </table>
 
-        <form onSubmit={addVariant} className="grid sm:grid-cols-5 gap-3 items-end">
+        <form onSubmit={addVariant} className="grid sm:grid-cols-6 gap-3 items-end">
           <input required placeholder="SKU" value={newVariant.sku} onChange={(e) => setNewVariant((v) => ({ ...v, sku: e.target.value }))} className="border p-2 text-xs bg-transparent outline-none" style={inputStyle} />
           <input required placeholder="Metal label" value={newVariant.metalLabel} onChange={(e) => setNewVariant((v) => ({ ...v, metalLabel: e.target.value }))} className="border p-2 text-xs bg-transparent outline-none" style={inputStyle} />
           <input type="color" value={newVariant.metalHex} onChange={(e) => setNewVariant((v) => ({ ...v, metalHex: e.target.value }))} className="border p-1 h-9" style={inputStyle} />
           <input placeholder="Back type" value={newVariant.backType} onChange={(e) => setNewVariant((v) => ({ ...v, backType: e.target.value }))} className="border p-2 text-xs bg-transparent outline-none" style={inputStyle} />
+          <input placeholder="Size (e.g. S, M, L or 6, 7, 8)" value={newVariant.size} onChange={(e) => setNewVariant((v) => ({ ...v, size: e.target.value }))} className="border p-2 text-xs bg-transparent outline-none" style={inputStyle} />
           <input type="number" min="0" placeholder="Stock" value={newVariant.stockQuantity} onChange={(e) => setNewVariant((v) => ({ ...v, stockQuantity: e.target.value }))} className="border p-2 text-xs bg-transparent outline-none" style={inputStyle} />
-          <button className="text-xs underline sm:col-span-5 w-fit">+ Add Variant</button>
+          <button className="text-xs underline sm:col-span-6 w-fit">+ Add Variant</button>
         </form>
+        <p className="text-[11px] opacity-50 mt-2">Leave Size blank for products that don&apos;t need one (e.g. earrings) — Back Type works the same way.</p>
       </div>
     </div>
   );

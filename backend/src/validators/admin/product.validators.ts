@@ -32,6 +32,7 @@ export const createVariantSchema = z.object({
   metalLabel: z.string().min(1),
   metalHex: z.string().optional(),
   backType: z.string().optional(),
+  size: z.string().optional(),
   priceOverride: z.coerce.number().positive().optional(),
   stockQuantity: z.coerce.number().int().min(0).default(0),
   isDefault: z.boolean().default(false),

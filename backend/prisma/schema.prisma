@@ -218,6 +218,10 @@ model ProductVariant {
   metalLabel    String
   metalHex      String?
   backType      String?
+  // Optional third variant axis — not every product needs a size (most
+  // earrings don't), so this stays nullable like backType rather than
+  // becoming a mandatory field across the whole catalog.
+  size          String?
   priceOverride Decimal? @db.Decimal(10, 2)
   stockQuantity Int      @default(0)
   isDefault     Boolean  @default(false)

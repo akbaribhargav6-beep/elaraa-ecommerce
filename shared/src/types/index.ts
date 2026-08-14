@@ -46,6 +46,7 @@ export interface ProductVariantDTO {
   metalLabel: string;
   metalHex: string | null;
   backType: string | null;
+  size: string | null;
   price: number;
   stockQuantity: number;
   isDefault: boolean;

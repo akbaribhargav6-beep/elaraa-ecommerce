@@ -5,7 +5,7 @@ type CartItemWithRelations = CartItem & { product: Product; variant: ProductVari
 type CartWithItems = Cart & { items: CartItemWithRelations[] };
 
 function variantLabel(variant: ProductVariant): string {
-  return [variant.metalLabel, variant.backType].filter(Boolean).join(' / ');
+  return [variant.metalLabel, variant.backType, variant.size].filter(Boolean).join(' / ');
 }
 
 function buildComboGroups(items: CartItemWithRelations[]): ComboGroupDTO[] {

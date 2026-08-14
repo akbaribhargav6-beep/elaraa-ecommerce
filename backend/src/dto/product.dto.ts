@@ -24,6 +24,7 @@ export function toVariantDTO(v: ProductVariant): ProductVariantDTO {
     metalLabel: v.metalLabel,
     metalHex: v.metalHex,
     backType: v.backType,
+    size: v.size,
     price: Number(v.priceOverride ?? 0) || 0,
     stockQuantity: v.stockQuantity,
     isDefault: v.isDefault,

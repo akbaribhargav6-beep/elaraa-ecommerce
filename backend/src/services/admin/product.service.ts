@@ -121,6 +121,7 @@ interface VariantInput {
   metalLabel: string;
   metalHex?: string;
   backType?: string;
+  size?: string;
   priceOverride?: number;
   stockQuantity: number;
   isDefault?: boolean;

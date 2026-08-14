@@ -19,7 +19,7 @@ async function list(userId: string) {
     imageUrl: item.product.images[0]?.url ?? null,
     price: Number(item.variant?.priceOverride ?? item.product.basePrice),
     variantId: item.variantId,
-    variantLabel: item.variant ? [item.variant.metalLabel, item.variant.backType].filter(Boolean).join(' / ') : null,
+    variantLabel: item.variant ? [item.variant.metalLabel, item.variant.backType, item.variant.size].filter(Boolean).join(' / ') : null,
     inStock: item.variant ? item.variant.stockQuantity > 0 : true,
     createdAt: item.createdAt.toISOString(),
   }));

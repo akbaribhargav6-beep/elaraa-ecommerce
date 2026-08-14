@@ -100,7 +100,7 @@ async function checkout(identity: CartIdentity, input: CheckoutInput) {
   for (const item of items) {
     if (!item.variant.isActive || item.variant.stockQuantity < item.quantity) {
       throw ApiError.badRequest(
-        `"${item.product.name}" (${item.variant.metalLabel}) only has ${item.variant.stockQuantity} left in stock`
+        `"${item.product.name}" (${[item.variant.metalLabel, item.variant.size].filter(Boolean).join(', ')}) only has ${item.variant.stockQuantity} left in stock`
       );
     }
   }
@@ -178,7 +178,7 @@ async function checkout(identity: CartIdentity, input: CheckoutInput) {
             productId: i.productId,
             variantId: i.variantId,
             productName: i.product.name,
-            variantLabel: [i.variant.metalLabel, i.variant.backType].filter(Boolean).join(' / '),
+            variantLabel: [i.variant.metalLabel, i.variant.backType, i.variant.size].filter(Boolean).join(' / '),
             sku: i.variant.sku,
             imageUrl: null,
             unitPrice: i.priceSnapshot,

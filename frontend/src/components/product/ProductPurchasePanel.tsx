@@ -41,11 +41,32 @@ export function ProductPurchasePanel({ product }: { product: ProductDTO }) {
     ],
     [product.variants, selectedMetal]
   );
-  const [selectedBackType, setSelectedBackType] = useState<string | undefined>(
-    defaultVariant?.backType ?? backTypes[0]
+  // Variants store "no back type"/"no size" as null (Prisma), but a fresh
+  // useState default falls through to undefined — normalizing both selection
+  // states to `string | null` keeps every `v.backType === selectedBackType`
+  // comparison meaningful for products that don't use that axis at all,
+  // instead of comparing null to undefined and silently never matching.
+  const [selectedBackType, setSelectedBackType] = useState<string | null>(
+    defaultVariant?.backType ?? backTypes[0] ?? null
   );
 
+  const sizes = useMemo(
+    () => [
+      ...new Set(
+        product.variants
+          .filter((v) => v.metalLabel === selectedMetal && v.backType === selectedBackType)
+          .map((v) => v.size)
+          .filter((s): s is string => Boolean(s))
+      ),
+    ],
+    [product.variants, selectedMetal, selectedBackType]
+  );
+  const [selectedSize, setSelectedSize] = useState<string | null>(defaultVariant?.size ?? sizes[0] ?? null);
+
   const selectedVariant =
+    product.variants.find(
+      (v) => v.metalLabel === selectedMetal && v.backType === selectedBackType && v.size === selectedSize
+    ) ??
     product.variants.find((v) => v.metalLabel === selectedMetal && v.backType === selectedBackType) ??
     product.variants.find((v) => v.metalLabel === selectedMetal) ??
     defaultVariant;
@@ -66,10 +87,29 @@ export function ProductPurchasePanel({ product }: { product: ProductDTO }) {
 
   function selectMetal(metalLabel: string) {
     setSelectedMetal(metalLabel);
-    const stillValid = product.variants.some((v) => v.metalLabel === metalLabel && v.backType === selectedBackType);
-    if (!stillValid) {
-      const firstBackType = product.variants.find((v) => v.metalLabel === metalLabel)?.backType;
-      setSelectedBackType(firstBackType ?? undefined);
+    const stillValidBackType = product.variants.some((v) => v.metalLabel === metalLabel && v.backType === selectedBackType);
+    const nextBackType = stillValidBackType
+      ? selectedBackType
+      : (product.variants.find((v) => v.metalLabel === metalLabel)?.backType ?? null);
+    if (!stillValidBackType) setSelectedBackType(nextBackType);
+
+    const stillValidSize = product.variants.some(
+      (v) => v.metalLabel === metalLabel && v.backType === nextBackType && v.size === selectedSize
+    );
+    if (!stillValidSize) {
+      const firstSize = product.variants.find((v) => v.metalLabel === metalLabel && v.backType === nextBackType)?.size;
+      setSelectedSize(firstSize ?? null);
+    }
+  }
+
+  function selectBackType(backType: string) {
+    setSelectedBackType(backType);
+    const stillValidSize = product.variants.some(
+      (v) => v.metalLabel === selectedMetal && v.backType === backType && v.size === selectedSize
+    );
+    if (!stillValidSize) {
+      const firstSize = product.variants.find((v) => v.metalLabel === selectedMetal && v.backType === backType)?.size;
+      setSelectedSize(firstSize ?? null);
     }
   }
 
@@ -226,7 +266,7 @@ export function ProductPurchasePanel({ product }: { product: ProductDTO }) {
               return (
                 <button
                   key={bt}
-                  onClick={() => setSelectedBackType(bt)}
+                  onClick={() => selectBackType(bt)}
                   className="py-2.5 px-4 text-xs tracking-wider border font-medium transition-colors"
                   style={
                     bt === selectedBackType
@@ -239,6 +279,30 @@ export function ProductPurchasePanel({ product }: { product: ProductDTO }) {
                 </button>
               );
             })}
+          </div>
+        </div>
+      )}
+
+      {sizes.length > 0 && (
+        <div className="mt-6">
+          <p className="text-xs tracking-[.2em] uppercase opacity-60 mb-3">
+            Size: <span className="opacity-100">{selectedSize}</span>
+          </p>
+          <div className="grid grid-cols-4 gap-3">
+            {sizes.map((sz) => (
+              <button
+                key={sz}
+                onClick={() => setSelectedSize(sz)}
+                className="py-2.5 px-3 text-xs tracking-wider border font-medium transition-colors"
+                style={
+                  sz === selectedSize
+                    ? { borderColor: 'var(--black)', background: 'var(--black)', color: 'var(--ivory)' }
+                    : { borderColor: 'rgba(43,38,32,.3)' }
+                }
+              >
+                {sz}
+              </button>
+            ))}
           </div>
         </div>
       )}

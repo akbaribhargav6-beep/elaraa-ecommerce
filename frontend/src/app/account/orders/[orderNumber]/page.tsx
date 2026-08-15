@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import type { OrderDTO } from '@elaraa/shared';
-import { api, ApiClientError } from '@/lib/api-client';
+import { api, ApiClientError, getAccessToken } from '@/lib/api-client';
 import { formatPrice } from '@/lib/format';
 import { Button } from '@/components/ui/Button';
 
@@ -23,6 +23,22 @@ export default function OrderDetailPage() {
   }
 
   useEffect(load, [params.orderNumber]);
+
+  async function downloadInvoice() {
+    if (!order) return;
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/${order.orderNumber}/invoice`, {
+      credentials: 'include',
+      headers: { Authorization: `Bearer ${getAccessToken()}` },
+    });
+    if (!res.ok) return;
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${order.orderNumber}.pdf`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
 
   async function handleCancel() {
     setCancelling(true);
@@ -91,11 +107,14 @@ export default function OrderDetailPage() {
         <p>{order.shipCity}, {order.shipState} {order.shipPostalCode}</p>
       </div>
 
-      {CANCELLABLE.has(order.status) && (
-        <Button variant="gold" onClick={handleCancel} disabled={cancelling}>
-          {cancelling ? 'Cancelling…' : 'Cancel Order'}
-        </Button>
-      )}
+      <div className="flex items-center gap-4">
+        <Button variant="gold" onClick={downloadInvoice}>Download Invoice</Button>
+        {CANCELLABLE.has(order.status) && (
+          <Button onClick={handleCancel} disabled={cancelling}>
+            {cancelling ? 'Cancelling…' : 'Cancel Order'}
+          </Button>
+        )}
+      </div>
     </div>
   );
 }

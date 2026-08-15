@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useState } from 'react';
 import type { OrderDTO } from '@elaraa/shared';
 import { useParams, useSearchParams } from 'next/navigation';
-import { api, ApiClientError } from '@/lib/api-client';
+import { api, ApiClientError, getAccessToken } from '@/lib/api-client';
 import { formatPrice } from '@/lib/format';
 import { Eyebrow } from '@/components/ui/Eyebrow';
 import { Button } from '@/components/ui/Button';
@@ -23,6 +23,23 @@ function OrderConfirmationContent() {
       .then((data) => setOrder(data.order))
       .catch((err) => setError(err instanceof ApiClientError ? err.message : 'Order not found'));
   }, [params.orderNumber, email]);
+
+  async function downloadInvoice() {
+    if (!order) return;
+    const query = email ? `?email=${encodeURIComponent(email)}` : '';
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/${order.orderNumber}/invoice${query}`, {
+      credentials: 'include',
+      headers: { Authorization: `Bearer ${getAccessToken()}` },
+    });
+    if (!res.ok) return;
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${order.orderNumber}.pdf`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
 
   return (
     <>
@@ -85,9 +102,10 @@ function OrderConfirmationContent() {
             </p>
           </div>
 
-          <div className="flex items-center justify-center gap-6 mt-10">
+          <div className="flex items-center justify-center gap-6 mt-10 flex-wrap">
             <Button href="/shop">Continue Shopping</Button>
             <Button href="/account/orders" variant="gold">View Orders</Button>
+            <Button onClick={downloadInvoice} variant="gold">Download Invoice</Button>
           </div>
         </>
       )}

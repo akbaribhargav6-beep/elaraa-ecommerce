@@ -21,6 +21,9 @@
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down"
   },
+  "overrides": {
+    "tar": "^7.5.22"
+  },
   "allowScripts": {
     "@prisma/client@6.19.3": true,
     "@prisma/engines@6.19.3": true,

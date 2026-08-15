@@ -8,6 +8,7 @@ import { sendMail } from '../config/mailer';
 import { orderConfirmationTemplate } from '../utils/emailTemplates';
 import { couponService } from './coupon.service';
 import { getGiftPackagingFee } from './settings.service';
+import { createInvoiceFromOrderInTx } from './invoice.service';
 import type { CartIdentity } from './cart.service';
 
 const FREE_SHIPPING_THRESHOLD = 2000;
@@ -107,6 +108,14 @@ async function checkout(identity: CartIdentity, input: CheckoutInput) {
 
   const shipping = await resolveShippingSnapshot(identity.userId, input);
 
+  // Each OrderItem snapshots its own image so admin/invoice views don't need
+  // a live join back to a product that may later change its photos.
+  const primaryImages = await prisma.productImage.findMany({
+    where: { productId: { in: [...new Set(items.map((i) => i.productId))] }, isPrimary: true },
+    select: { productId: true, url: true },
+  });
+  const imageByProduct = new Map(primaryImages.map((img) => [img.productId, img.url]));
+
   const subtotal = items.reduce((sum, i) => sum + Number(i.priceSnapshot) * i.quantity, 0);
   const comboDiscount = computeComboDiscount(items);
   const shippingFee = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : FLAT_SHIPPING_FEE;
@@ -180,7 +189,7 @@ async function checkout(identity: CartIdentity, input: CheckoutInput) {
             productName: i.product.name,
             variantLabel: [i.variant.metalLabel, i.variant.backType, i.variant.size].filter(Boolean).join(' / '),
             sku: i.variant.sku,
-            imageUrl: null,
+            imageUrl: imageByProduct.get(i.productId) ?? null,
             unitPrice: i.priceSnapshot,
             quantity: i.quantity,
             lineTotal: new Prisma.Decimal(i.priceSnapshot).mul(i.quantity),
@@ -220,6 +229,12 @@ async function checkout(identity: CartIdentity, input: CheckoutInput) {
         await tx.couponUsage.create({ data: { couponId, userId: identity.userId, orderId: created.id } });
       }
     }
+
+    // Auto-generates the invoice in the same transaction as the order, so
+    // numbering and order creation commit together — a checkout that fails
+    // never claims an invoice number, and a placed order is never left
+    // without one.
+    await createInvoiceFromOrderInTx(tx, created);
 
     return created;
   });
@@ -267,6 +282,20 @@ async function getByOrderNumber(orderNumber: string, userId?: string, guestEmail
   return toOrderDTO(order);
 }
 
+// Same ownership rule as getByOrderNumber, but returns just the internal id
+// — used by the invoice download route, which needs the id to look up (or
+// lazily create) the Invoice without paying for a full items include.
+async function resolveOrderAccess(orderNumber: string, userId?: string, guestEmail?: string): Promise<{ id: string }> {
+  const order = await prisma.order.findUnique({ where: { orderNumber }, select: { id: true, userId: true, customerEmail: true } });
+  if (!order) throw ApiError.notFound('Order not found');
+
+  const ownedByUser = userId && order.userId === userId;
+  const ownedByGuest = !order.userId && guestEmail && order.customerEmail.toLowerCase() === guestEmail.toLowerCase();
+  if (!ownedByUser && !ownedByGuest) throw ApiError.forbidden("You don't have access to this order");
+
+  return { id: order.id };
+}
+
 async function cancelOrder(orderNumber: string, userId: string) {
   const order = await prisma.order.findUnique({ where: { orderNumber }, include: { items: true } });
   if (!order) throw ApiError.notFound('Order not found');
@@ -304,4 +333,4 @@ async function cancelOrder(orderNumber: string, userId: string) {
   return toOrderDTO(updated);
 }
 
-export const orderService = { checkout, getHistory, getByOrderNumber, cancelOrder };
+export const orderService = { checkout, getHistory, getByOrderNumber, resolveOrderAccess, cancelOrder };

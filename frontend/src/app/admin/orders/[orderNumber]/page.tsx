@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
+import Image from 'next/image';
 import type { OrderDTO, OrderStatus } from '@elaraa/shared';
-import { api, ApiClientError } from '@/lib/api-client';
+import { api, ApiClientError, getAccessToken, getUploadUrl } from '@/lib/api-client';
 import { formatPrice } from '@/lib/format';
 
 const STATUSES: OrderStatus[] = [
@@ -36,6 +37,22 @@ export default function AdminOrderDetailPage() {
   }
   useEffect(load, [params.orderNumber]);
 
+  async function downloadInvoice() {
+    if (!order) return;
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/orders/${order.orderNumber}/invoice`, {
+      credentials: 'include',
+      headers: { Authorization: `Bearer ${getAccessToken()}` },
+    });
+    if (!res.ok) return;
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${order.orderNumber}.pdf`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   async function updateStatus(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
@@ -55,9 +72,12 @@ export default function AdminOrderDetailPage() {
 
   return (
     <div className="max-w-3xl space-y-8">
-      <div>
-        <h1 className="serif text-3xl">{order.orderNumber}</h1>
-        <p className="text-sm opacity-60 mt-1">Placed {new Date(order.placedAt).toLocaleString()}</p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="serif text-3xl">{order.orderNumber}</h1>
+          <p className="text-sm opacity-60 mt-1">Placed {new Date(order.placedAt).toLocaleString()}</p>
+        </div>
+        <button onClick={downloadInvoice} className="btn-luxury btn-gold-solid text-xs"><span>Download Invoice</span></button>
       </div>
 
       <div className="grid md:grid-cols-2 gap-8">
@@ -69,11 +89,23 @@ export default function AdminOrderDetailPage() {
             return (
               <div key={group.groupId} className="mb-4 p-3" style={{ border: '1px solid var(--gold-deep)', background: 'rgba(201,166,107,.06)' }}>
                 <p className="text-sm font-medium mb-2">🎁 {group.name} — Combo Order</p>
-                <ul className="text-xs space-y-1 mb-2">
+                <ul className="text-xs space-y-2 mb-2">
                   {groupItems.map((i) => (
-                    <li key={i.id} className="flex justify-between">
-                      <span className="opacity-70">{i.productName} ({i.variantLabel})</span>
-                      <span>{formatPrice(i.lineTotal)}</span>
+                    <li key={i.id} className="flex items-center gap-2">
+                      <div className="relative w-9 h-9 shrink-0 rounded-sm overflow-hidden bg-cream border" style={{ borderColor: 'rgba(43,38,32,.1)' }}>
+                        {i.imageUrl ? (
+                          <Image src={getUploadUrl(i.imageUrl)} alt={i.productName} fill className="object-cover" unoptimized />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-[8px] opacity-40">No image</div>
+                        )}
+                      </div>
+                      <div className="flex-1 flex justify-between items-center">
+                        <span className="opacity-70">
+                          {i.productName} ({i.variantLabel})
+                          <span className="block opacity-50">SKU: {i.sku} · Qty {i.quantity} · {formatPrice(i.unitPrice)} each</span>
+                        </span>
+                        <span>{formatPrice(i.lineTotal)}</span>
+                      </div>
                     </li>
                   ))}
                 </ul>
@@ -86,9 +118,19 @@ export default function AdminOrderDetailPage() {
           })}
 
           {order.items.filter((i) => !i.comboGroupId).map((i) => (
-            <div key={i.id} className="mb-3">
-              <div className="flex justify-between text-sm">
-                <span className="opacity-70">{i.productName} ({i.variantLabel}) × {i.quantity}</span>
+            <div key={i.id} className="mb-3 flex items-center gap-3">
+              <div className="relative w-11 h-11 shrink-0 rounded-sm overflow-hidden bg-cream border" style={{ borderColor: 'rgba(43,38,32,.1)' }}>
+                {i.imageUrl ? (
+                  <Image src={getUploadUrl(i.imageUrl)} alt={i.productName} fill className="object-cover" unoptimized />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-[8px] opacity-40">No image</div>
+                )}
+              </div>
+              <div className="flex-1 flex justify-between text-sm">
+                <span className="opacity-70">
+                  {i.productName} ({i.variantLabel}) × {i.quantity}
+                  <span className="block text-xs opacity-50">SKU: {i.sku} · {formatPrice(i.unitPrice)} each</span>
+                </span>
                 <span>{formatPrice(i.lineTotal)}</span>
               </div>
             </div>

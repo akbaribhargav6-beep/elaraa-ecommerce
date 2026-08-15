@@ -14,6 +14,8 @@ import { adminBannersRouter } from './banners.routes';
 import { adminNewsletterRouter } from './newsletter.routes';
 import { adminContactRouter } from './contact.routes';
 import { adminSettingsRouter } from './settings.routes';
+import { adminInvoiceSettingsRouter } from './invoiceSettings.routes';
+import { adminInvoicesRouter } from './invoices.routes';
 
 export const adminRouter = Router();
 
@@ -33,3 +35,5 @@ adminRouter.use('/banners', adminBannersRouter);
 adminRouter.use('/newsletter', adminNewsletterRouter);
 adminRouter.use('/contact', adminContactRouter);
 adminRouter.use('/settings', adminSettingsRouter);
+adminRouter.use('/invoice-settings', adminInvoiceSettingsRouter);
+adminRouter.use('/invoices', adminInvoicesRouter);

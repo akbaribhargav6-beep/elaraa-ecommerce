@@ -184,6 +184,109 @@ export interface OrderDTO {
   placedAt: string;
 }
 
+// ══════════════════════════ INVOICES ══════════════════════════
+
+export type InvoiceType = 'ORDER' | 'MANUAL';
+export type InvoiceStatus = 'DRAFT' | 'FINALIZED' | 'CANCELLED';
+
+export interface InvoiceItemDTO {
+  id: string;
+  productName: string;
+  sku: string | null;
+  quantity: number;
+  unitPrice: number;
+  discountAmount: number;
+  lineTotal: number;
+}
+
+// What InvoiceSettingsDTO looked like at the moment a given invoice was
+// generated — see the schema comment on InvoiceSettings for why this is a
+// per-invoice snapshot rather than a live read of current settings.
+export interface InvoiceCompanySnapshotDTO {
+  companyName: string;
+  companyLogoUrl: string | null;
+  addressLine1: string;
+  addressLine2: string | null;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+  phone: string;
+  email: string;
+  gstNumber: string | null;
+  website: string | null;
+  footerMessage: string | null;
+}
+
+export interface InvoiceDTO {
+  id: string;
+  invoiceNumber: string;
+  type: InvoiceType;
+  status: InvoiceStatus;
+  orderId: string | null;
+  orderNumber: string | null;
+  customerName: string;
+  companyNameOnInvoice: string | null;
+  customerEmail: string | null;
+  customerPhone: string | null;
+  billingAddress: string;
+  shippingAddress: string | null;
+  company: InvoiceCompanySnapshotDTO;
+  items: InvoiceItemDTO[];
+  subtotal: number;
+  discountAmount: number;
+  taxAmount: number;
+  shippingFee: number;
+  totalAmount: number;
+  paymentMethod: string | null;
+  paymentStatus: string | null;
+  orderStatus: string | null;
+  notes: string | null;
+  termsAndConditions: string | null;
+  invoiceDate: string;
+  finalizedAt: string | null;
+  createdAt: string;
+  shareUrl: string;
+}
+
+export interface InvoiceListItemDTO {
+  id: string;
+  invoiceNumber: string;
+  type: InvoiceType;
+  status: InvoiceStatus;
+  customerName: string;
+  customerEmail: string | null;
+  orderNumber: string | null;
+  totalAmount: number;
+  invoiceDate: string;
+}
+
+export interface InvoiceListResponse {
+  items: InvoiceListItemDTO[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface InvoiceSettingsDTO {
+  companyName: string;
+  companyLogoUrl: string | null;
+  addressLine1: string;
+  addressLine2: string | null;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+  phone: string;
+  email: string;
+  gstNumber: string | null;
+  website: string | null;
+  invoicePrefix: string;
+  termsAndConditions: string | null;
+  footerMessage: string | null;
+}
+
 export interface UserDTO {
   id: string;
   email: string;

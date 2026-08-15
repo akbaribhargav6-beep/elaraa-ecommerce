@@ -104,4 +104,13 @@ async function getStatusHistory(orderNumber: string) {
   return prisma.orderStatusHistory.findMany({ where: { orderId: order.id }, orderBy: { createdAt: 'asc' } });
 }
 
-export const adminOrderService = { list, getByOrderNumber, updateStatus, getStatusHistory };
+// Used by the admin order-detail "Download Invoice" button — the admin
+// panel is already gated by requireAuth + requireAdmin, so this skips the
+// ownership check the customer-facing route needs.
+async function getOrderIdByNumber(orderNumber: string): Promise<string> {
+  const order = await prisma.order.findUnique({ where: { orderNumber }, select: { id: true } });
+  if (!order) throw ApiError.notFound('Order not found');
+  return order.id;
+}
+
+export const adminOrderService = { list, getByOrderNumber, updateStatus, getStatusHistory, getOrderIdByNumber };

@@ -89,6 +89,17 @@ enum PostStatus {
   PUBLISHED
 }
 
+enum InvoiceType {
+  ORDER
+  MANUAL
+}
+
+enum InvoiceStatus {
+  DRAFT
+  FINALIZED
+  CANCELLED
+}
+
 // ══════════════════════════ AUTH / USER ══════════════════════════
 
 model User {
@@ -355,6 +366,7 @@ model Order {
   items         OrderItem[]
   statusHistory OrderStatusHistory[]
   couponUsages  CouponUsage[]
+  invoice       Invoice?
 
   @@index([userId])
 }
@@ -397,6 +409,110 @@ model OrderStatusHistory {
   createdAt       DateTime    @default(now())
 
   @@index([orderId])
+}
+
+// ══════════════════════════ INVOICES ══════════════════════════
+
+// Singleton (single row) — company/branding details used on every generated
+// invoice PDF. Read fresh at invoice-CREATION time and snapshotted onto the
+// Invoice itself (see Invoice.companySnapshot), so a later logo/address
+// change only affects invoices generated afterwards, never rewrites history.
+model InvoiceSettings {
+  id                 String   @id @default(cuid())
+  companyName        String   @default("")
+  companyLogoUrl     String?
+  addressLine1       String   @default("")
+  addressLine2       String?
+  city               String   @default("")
+  state              String   @default("")
+  postalCode         String   @default("")
+  country            String   @default("India")
+  phone              String   @default("")
+  email              String   @default("")
+  gstNumber          String?
+  website            String?
+  invoicePrefix      String   @default("INV-")
+  // Next sequence number to assign — incremented atomically inside the same
+  // transaction as invoice creation so two concurrent invoices can never
+  // collide on the same number.
+  nextInvoiceSeq     Int      @default(1)
+  termsAndConditions String?  @db.Text
+  footerMessage      String?
+  updatedAt          DateTime @updatedAt
+}
+
+// One unified invoice record for both flows this system supports — checkout
+// auto-generates one per Order, and admins can create one manually with no
+// backing Order at all. Every downstream consumer (PDF renderer, admin list,
+// customer download) works off this single shape rather than branching on
+// where the invoice came from.
+model Invoice {
+  id            String        @id @default(cuid())
+  invoiceNumber String        @unique
+  type          InvoiceType
+  status        InvoiceStatus @default(FINALIZED)
+  // Unguessable token for the public, unauthenticated share link (used by
+  // the "Send via WhatsApp" flow) — never expose the raw id for that route.
+  accessToken   String        @unique
+
+  orderId String? @unique
+  order   Order?  @relation(fields: [orderId], references: [id])
+
+  // Recipient snapshot — always populated whether sourced from an Order or
+  // typed in manually, so the invoice is fully self-contained.
+  customerName         String
+  companyNameOnInvoice String?
+  customerEmail        String?
+  customerPhone        String?
+  billingAddress       String  @db.Text
+  shippingAddress      String? @db.Text
+
+  // InvoiceSettings as they existed the moment this invoice was generated —
+  // see the comment on that model for why this is a snapshot, not a live FK.
+  companySnapshot Json
+
+  subtotal       Decimal @db.Decimal(10, 2)
+  discountAmount Decimal @default(0) @db.Decimal(10, 2)
+  taxAmount      Decimal @default(0) @db.Decimal(10, 2)
+  shippingFee    Decimal @default(0) @db.Decimal(10, 2)
+  totalAmount    Decimal @db.Decimal(10, 2)
+
+  paymentMethod String?
+  paymentStatus String?
+  orderStatus   String?
+
+  notes              String? @db.Text
+  termsAndConditions String? @db.Text
+
+  invoiceDate     DateTime  @default(now())
+  finalizedAt     DateTime?
+  createdByUserId String?
+
+  items InvoiceItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([customerEmail])
+  @@index([invoiceDate])
+  @@index([status])
+}
+
+model InvoiceItem {
+  id             String  @id @default(cuid())
+  invoiceId      String
+  invoice        Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  productName    String
+  // Snapshotted at invoice-creation time — a later SKU change on the
+  // product/variant must never alter an already-issued invoice.
+  sku            String?
+  quantity       Int     @default(1)
+  unitPrice      Decimal @db.Decimal(10, 2)
+  discountAmount Decimal @default(0) @db.Decimal(10, 2)
+  lineTotal      Decimal @db.Decimal(10, 2)
+  sortOrder      Int     @default(0)
+
+  @@index([invoiceId])
 }
 
 // ══════════════════════════ WISHLIST / REVIEWS ══════════════════════════

@@ -43,6 +43,13 @@ const NAV_GROUPS = [
     ],
   },
   {
+    label: 'Invoicing',
+    items: [
+      { href: '/admin/invoices', label: 'Invoices' },
+      { href: '/admin/invoice-settings', label: 'Invoice Settings' },
+    ],
+  },
+  {
     label: 'System',
     items: [{ href: '/admin/settings', label: 'Settings' }],
   },

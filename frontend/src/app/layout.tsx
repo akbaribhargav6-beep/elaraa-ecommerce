@@ -8,6 +8,7 @@ import { QuickViewProvider } from '@/lib/quick-view-context';
 import { ToastProvider } from '@/lib/toast-context';
 import { GsapLenisProvider } from '@/lib/gsap-lenis-provider';
 import { StorefrontChrome } from '@/components/layout/StorefrontChrome';
+import { MetaPixel } from '@/components/analytics/MetaPixel';
 
 const cormorant = Cormorant_Garamond({
   subsets: ['latin'],
@@ -43,6 +44,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${cormorant.variable} ${jost.variable} ${caveat.variable}`}>
       <body>
+        <MetaPixel />
         <ToastProvider>
           <AuthProvider>
             <CartProvider>

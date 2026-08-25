@@ -52,3 +52,34 @@ export function orderConfirmationTemplate(
      <p style="font-size:12px;color:#8a8072;">We'll email you again once your order ships.</p>`
   );
 }
+
+export function adminNewOrderTemplate(
+  orderNumber: string,
+  customerName: string,
+  customerEmail: string,
+  customerPhone: string,
+  items: { productName: string; variantLabel: string; quantity: number; lineTotal: number }[],
+  totalAmount: number,
+  paymentMethod: string,
+  adminOrderUrl: string
+) {
+  const rows = items
+    .map(
+      (i) => `<tr>
+        <td style="padding:8px 0;font-size:13px;">${i.productName} <span style="color:#8a8072;">(${i.variantLabel}) × ${i.quantity}</span></td>
+        <td style="padding:8px 0;font-size:13px;text-align:right;">₹${i.lineTotal.toLocaleString('en-IN')}</td>
+      </tr>`
+    )
+    .join('');
+
+  return wrap(
+    'New order received',
+    `<p><strong>${orderNumber}</strong> — ₹${totalAmount.toLocaleString('en-IN')} (${paymentMethod})</p>
+     <p style="font-size:13px;color:#8a8072;margin:4px 0;">${customerName} · ${customerEmail} · ${customerPhone}</p>
+     <table style="width:100%;border-collapse:collapse;margin:20px 0;border-top:1px solid rgba(43,38,32,.15);padding-top:12px;">
+       ${rows}
+       <tr><td style="padding-top:16px;font-weight:bold;">Total</td><td style="padding-top:16px;font-weight:bold;text-align:right;">₹${totalAmount.toLocaleString('en-IN')}</td></tr>
+     </table>
+     ${buttonHtml(adminOrderUrl, 'View Order')}`
+  );
+}

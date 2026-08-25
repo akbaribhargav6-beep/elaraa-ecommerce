@@ -5,7 +5,8 @@ import { generateOrderNumber } from '../utils/orderNumber';
 import { getPaymentProvider } from './payment';
 import { toOrderDTO } from '../dto/order.dto';
 import { sendMail } from '../config/mailer';
-import { orderConfirmationTemplate } from '../utils/emailTemplates';
+import { orderConfirmationTemplate, adminNewOrderTemplate } from '../utils/emailTemplates';
+import { env, primaryClientUrl } from '../config/env';
 import { couponService } from './coupon.service';
 import { getGiftPackagingFee } from './settings.service';
 import { createInvoiceFromOrderInTx } from './invoice.service';
@@ -245,6 +246,23 @@ async function checkout(identity: CartIdentity, input: CheckoutInput) {
     subject: `Order confirmed — ${orderNumber}`,
     html: orderConfirmationTemplate(shipping.shipFullName, orderNumber, dto.items, dto.totalAmount),
   }).catch((err) => console.error('Failed to send order confirmation email:', err));
+
+  // Best-effort — a notification failure must never block or roll back a
+  // placed order, so this runs after checkout has already fully committed.
+  sendMail({
+    to: env.ADMIN_NOTIFICATION_EMAIL,
+    subject: `New order — ${orderNumber} (₹${dto.totalAmount.toLocaleString('en-IN')})`,
+    html: adminNewOrderTemplate(
+      orderNumber,
+      shipping.shipFullName,
+      dto.customerEmail,
+      dto.customerPhone,
+      dto.items,
+      dto.totalAmount,
+      dto.paymentMethod,
+      `${primaryClientUrl}/admin/orders/${orderNumber}`
+    ),
+  }).catch((err) => console.error('Failed to send admin order notification email:', err));
 
   return dto;
 }

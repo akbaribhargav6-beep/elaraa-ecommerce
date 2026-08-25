@@ -20,6 +20,7 @@ const envSchema = z.object({
   SMTP_USER: z.string().optional(),
   SMTP_PASS: z.string().optional(),
   MAIL_FROM: z.string().default('ELARAA <no-reply@elaraa.example>'),
+  ADMIN_NOTIFICATION_EMAIL: z.string().default('elaraaluxes@gmail.com'),
 
   UPLOAD_DIR: z.string().default('uploads'),
   STORAGE_PROVIDER: z.enum(['local', 's3', 'cloudinary']).default('local'),

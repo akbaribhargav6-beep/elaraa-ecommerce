@@ -19,6 +19,11 @@ const envSchema = z.object({
   SMTP_PORT: z.coerce.number().optional(),
   SMTP_USER: z.string().optional(),
   SMTP_PASS: z.string().optional(),
+  // HTTP-API email provider — used in preference to SMTP when set. Needed
+  // because most PaaS hosts (Railway included) block outbound SMTP ports
+  // entirely, so a real SMTP_HOST/PORT/USER/PASS still can't deliver mail
+  // there; Resend's API goes over plain HTTPS instead.
+  RESEND_API_KEY: z.string().optional(),
   MAIL_FROM: z.string().default('ELARAA <no-reply@elaraa.example>'),
   ADMIN_NOTIFICATION_EMAIL: z.string().default('elaraaluxes@gmail.com'),
 

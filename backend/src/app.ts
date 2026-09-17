@@ -28,7 +28,18 @@ app.use(
   })
 );
 app.use(compression());
-app.use(express.json({ limit: '2mb' }));
+// Captures the raw request bytes alongside normal JSON parsing — the
+// Razorpay webhook handler needs the exact raw body to verify its HMAC
+// signature (re-serializing the parsed object wouldn't byte-for-byte match
+// what Razorpay actually signed).
+app.use(
+  express.json({
+    limit: '2mb',
+    verify: (req, _res, buf) => {
+      (req as express.Request & { rawBody?: Buffer }).rawBody = buf;
+    },
+  })
+);
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(morgan(isProd ? 'combined' : 'dev'));

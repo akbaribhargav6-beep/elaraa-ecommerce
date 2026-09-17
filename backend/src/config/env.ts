@@ -27,6 +27,13 @@ const envSchema = z.object({
   MAIL_FROM: z.string().default('ELARAA <no-reply@elaraa.example>'),
   ADMIN_NOTIFICATION_EMAIL: z.string().default('elaraaluxes@gmail.com'),
 
+  RAZORPAY_KEY_ID: z.string().optional(),
+  RAZORPAY_KEY_SECRET: z.string().optional(),
+  // Separate secret configured in the Razorpay Dashboard's webhook settings
+  // (not the API key secret) — signs the webhook payload so /api/payments/
+  // razorpay/webhook can verify a request genuinely came from Razorpay.
+  RAZORPAY_WEBHOOK_SECRET: z.string().optional(),
+
   UPLOAD_DIR: z.string().default('uploads'),
   STORAGE_PROVIDER: z.enum(['local', 's3', 'cloudinary']).default('local'),
   CLOUDINARY_CLOUD_NAME: z.string().optional(),

@@ -12,7 +12,7 @@ export const checkoutSchema = z
     shipState: z.string().optional(),
     shipPostalCode: z.string().optional(),
     shipCountry: z.string().default('India'),
-    paymentMethod: z.literal('COD'),
+    paymentMethod: z.enum(['COD', 'RAZORPAY']),
     notes: z.string().max(500).optional(),
     couponCode: z.string().max(40).optional(),
     giftPackaging: z.boolean().optional().default(false),
@@ -31,4 +31,10 @@ export const orderNumberParamSchema = z.object({
 export const orderHistoryQuerySchema = z.object({
   page: z.coerce.number().int().positive().default(1),
   limit: z.coerce.number().int().positive().max(50).default(10),
+});
+
+export const verifyRazorpayPaymentSchema = z.object({
+  razorpay_order_id: z.string().min(1),
+  razorpay_payment_id: z.string().min(1),
+  razorpay_signature: z.string().min(1),
 });

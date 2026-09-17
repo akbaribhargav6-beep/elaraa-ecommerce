@@ -12,6 +12,7 @@ import { couponRouter } from './coupon.routes';
 import { stockNotificationRouter } from './stockNotification.routes';
 import { settingsRouter } from './settings.routes';
 import { invoiceRouter } from './invoice.routes';
+import { paymentRouter } from './payment.routes';
 import { adminRouter } from './admin/index';
 
 export const apiRouter = Router();
@@ -29,4 +30,5 @@ apiRouter.use('/coupons', couponRouter);
 apiRouter.use('/stock-notifications', stockNotificationRouter);
 apiRouter.use('/settings', settingsRouter);
 apiRouter.use('/invoices', invoiceRouter);
+apiRouter.use('/payments', paymentRouter);
 apiRouter.use('/admin', adminRouter);

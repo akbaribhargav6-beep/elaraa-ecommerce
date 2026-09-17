@@ -1,4 +1,5 @@
 import { Prisma } from '@prisma/client';
+import type { OrderDTO } from '@elaraa/shared';
 import { prisma } from '../config/db';
 import { ApiError } from '../utils/apiError';
 import { generateOrderNumber } from '../utils/orderNumber';
@@ -10,6 +11,7 @@ import { env, primaryClientUrl } from '../config/env';
 import { couponService } from './coupon.service';
 import { getGiftPackagingFee } from './settings.service';
 import { createInvoiceFromOrderInTx } from './invoice.service';
+import { verifyHmacSha256 } from '../utils/verifyHmac';
 import type { CartIdentity } from './cart.service';
 
 const FREE_SHIPPING_THRESHOLD = 2000;
@@ -48,10 +50,38 @@ interface CheckoutInput {
   shipState?: string;
   shipPostalCode?: string;
   shipCountry: string;
-  paymentMethod: 'COD';
+  paymentMethod: 'COD' | 'RAZORPAY';
   notes?: string;
   couponCode?: string;
   giftPackaging?: boolean;
+}
+
+// Shared by both the COD path (sent right at checkout, since there's
+// nothing left to wait for) and the Razorpay path (sent only once payment
+// is actually verified — see verifyRazorpayPayment below).
+function sendOrderPlacedEmails(dto: OrderDTO) {
+  sendMail({
+    to: dto.customerEmail,
+    subject: `Order confirmed — ${dto.orderNumber}`,
+    html: orderConfirmationTemplate(dto.shipFullName, dto.orderNumber, dto.items, dto.totalAmount),
+  }).catch((err) => console.error('Failed to send order confirmation email:', err));
+
+  // Best-effort — a notification failure must never block or roll back a
+  // placed order, so this runs after checkout has already fully committed.
+  sendMail({
+    to: env.ADMIN_NOTIFICATION_EMAIL,
+    subject: `New order — ${dto.orderNumber} (₹${dto.totalAmount.toLocaleString('en-IN')})`,
+    html: adminNewOrderTemplate(
+      dto.orderNumber,
+      dto.shipFullName,
+      dto.customerEmail,
+      dto.customerPhone,
+      dto.items,
+      dto.totalAmount,
+      dto.paymentMethod,
+      `${primaryClientUrl}/admin/orders/${dto.orderNumber}`
+    ),
+  }).catch((err) => console.error('Failed to send admin order notification email:', err));
 }
 
 async function resolveShippingSnapshot(userId: string | undefined, input: CheckoutInput) {
@@ -154,7 +184,11 @@ async function checkout(identity: CartIdentity, input: CheckoutInput) {
 
   const orderNumber = generateOrderNumber();
   const provider = getPaymentProvider(input.paymentMethod);
-  const { paymentStatus } = await provider.initiate({ orderNumber, amount: totalAmount, customerEmail: input.customerEmail });
+  const { paymentStatus, providerRef, clientPayload } = await provider.initiate({
+    orderNumber,
+    amount: totalAmount,
+    customerEmail: input.customerEmail,
+  });
 
   const order = await prisma.$transaction(async (tx) => {
     const created = await tx.order.create({
@@ -164,6 +198,7 @@ async function checkout(identity: CartIdentity, input: CheckoutInput) {
         status: 'PENDING',
         paymentMethod: input.paymentMethod,
         paymentStatus,
+        paymentProviderRef: providerRef ?? null,
         customerEmail: input.customerEmail,
         customerPhone: input.customerPhone,
         shippingAddressId: shipping.shippingAddressId,
@@ -241,30 +276,96 @@ async function checkout(identity: CartIdentity, input: CheckoutInput) {
   });
 
   const dto = toOrderDTO(order);
-  await sendMail({
-    to: input.customerEmail,
-    subject: `Order confirmed — ${orderNumber}`,
-    html: orderConfirmationTemplate(shipping.shipFullName, orderNumber, dto.items, dto.totalAmount),
-  }).catch((err) => console.error('Failed to send order confirmation email:', err));
 
-  // Best-effort — a notification failure must never block or roll back a
-  // placed order, so this runs after checkout has already fully committed.
-  sendMail({
-    to: env.ADMIN_NOTIFICATION_EMAIL,
-    subject: `New order — ${orderNumber} (₹${dto.totalAmount.toLocaleString('en-IN')})`,
-    html: adminNewOrderTemplate(
-      orderNumber,
-      shipping.shipFullName,
-      dto.customerEmail,
-      dto.customerPhone,
-      dto.items,
-      dto.totalAmount,
-      dto.paymentMethod,
-      `${primaryClientUrl}/admin/orders/${orderNumber}`
-    ),
-  }).catch((err) => console.error('Failed to send admin order notification email:', err));
+  // COD has nothing left to wait for, so its emails go out immediately.
+  // Razorpay orders are still unpaid at this point (initiate() only opened
+  // a payment session) — their emails are deferred to verifyRazorpayPayment
+  // or the webhook, once money has actually moved.
+  if (input.paymentMethod === 'COD') {
+    sendOrderPlacedEmails(dto);
+  }
 
+  return { order: dto, razorpay: clientPayload as { razorpayOrderId: string; keyId: string; amount: number; currency: string } | undefined };
+}
+
+// Marks a Razorpay order paid and sends the placed-order emails — shared by
+// the frontend's post-checkout verify call and the webhook below, so
+// whichever fires first does the work and the other is a no-op. Razorpay
+// can deliver the webhook before, after, or in place of the browser's own
+// verify request (e.g. the customer closes the tab right after paying), so
+// neither caller can assume it's the only one that will run this.
+async function finalizeRazorpayPayment(razorpayOrderId: string, razorpayPaymentId: string) {
+  const order = await prisma.order.findFirst({
+    where: { paymentMethod: 'RAZORPAY', paymentProviderRef: razorpayOrderId },
+    include: { items: true },
+  });
+  if (!order) throw ApiError.notFound('Order not found for this payment');
+  if (order.paymentStatus === 'PAID') return toOrderDTO(order);
+
+  // paymentProviderRef stays the Razorpay order id — it's the lookup key
+  // both this function's own idempotency check and a same-order webhook
+  // retry rely on. The payment id goes in the status note instead; nothing
+  // else needs it looked up later.
+  const status = order.status === 'PENDING' ? 'CONFIRMED' : order.status;
+  const updated = await prisma.order.update({
+    where: { id: order.id },
+    data: {
+      paymentStatus: 'PAID',
+      status,
+      statusHistory: { create: { status, note: `Payment received via Razorpay (payment_id: ${razorpayPaymentId})` } },
+    },
+    include: { items: true },
+  });
+
+  const dto = toOrderDTO(updated);
+  sendOrderPlacedEmails(dto);
   return dto;
+}
+
+// Called by the browser immediately after Razorpay's Checkout.js reports
+// success. The signature can only have been produced by Razorpay (it's
+// keyed with RAZORPAY_KEY_SECRET, never exposed to the client), so this
+// alone is proof the payment happened — no separate ownership check needed.
+async function verifyRazorpayPayment(input: {
+  razorpay_order_id: string;
+  razorpay_payment_id: string;
+  razorpay_signature: string;
+}) {
+  if (!env.RAZORPAY_KEY_SECRET) throw ApiError.badRequest('Online payment is not configured');
+
+  const signedPayload = `${input.razorpay_order_id}|${input.razorpay_payment_id}`;
+  if (!verifyHmacSha256(signedPayload, env.RAZORPAY_KEY_SECRET, input.razorpay_signature)) {
+    throw ApiError.badRequest('Payment verification failed');
+  }
+
+  return finalizeRazorpayPayment(input.razorpay_order_id, input.razorpay_payment_id);
+}
+
+// The webhook is the authoritative confirmation path — recommended by
+// Razorpay over relying on the frontend callback alone, since a customer
+// can pay successfully and then lose connection/close the tab before the
+// browser ever calls verifyRazorpayPayment, which would otherwise leave a
+// genuinely-paid order stuck as unpaid forever.
+async function handleRazorpayWebhookEvent(event: string, payload: { payment: { entity: { id: string; order_id: string } } }) {
+  const { id: paymentId, order_id: razorpayOrderId } = payload.payment.entity;
+
+  if (event === 'payment.captured') {
+    await finalizeRazorpayPayment(razorpayOrderId, paymentId);
+    return;
+  }
+
+  if (event === 'payment.failed') {
+    const order = await prisma.order.findFirst({ where: { paymentMethod: 'RAZORPAY', paymentProviderRef: razorpayOrderId } });
+    if (order && order.paymentStatus === 'PENDING') {
+      await prisma.order.update({
+        where: { id: order.id },
+        data: {
+          paymentStatus: 'FAILED',
+          statusHistory: { create: { status: order.status, note: 'Razorpay payment failed' } },
+        },
+      });
+    }
+  }
 }
 
 async function getHistory(userId: string, page: number, limit: number) {
@@ -351,4 +452,12 @@ async function cancelOrder(orderNumber: string, userId: string) {
   return toOrderDTO(updated);
 }
 
-export const orderService = { checkout, getHistory, getByOrderNumber, resolveOrderAccess, cancelOrder };
+export const orderService = {
+  checkout,
+  getHistory,
+  getByOrderNumber,
+  resolveOrderAccess,
+  cancelOrder,
+  verifyRazorpayPayment,
+  handleRazorpayWebhookEvent,
+};

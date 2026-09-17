@@ -24,9 +24,14 @@ export const checkout = asyncHandler(async (req: Request, res: Response) => {
     throw ApiError.badRequest('Your cart is empty');
   }
 
-  const order = await orderService.checkout(identity, req.body);
+  const { order, razorpay } = await orderService.checkout(identity, req.body);
   if (!req.user) res.clearCookie(GUEST_CART_COOKIE, { path: '/' });
-  sendCreated(res, { order });
+  sendCreated(res, { order, razorpay });
+});
+
+export const verifyPayment = asyncHandler(async (req: Request, res: Response) => {
+  const order = await orderService.verifyRazorpayPayment(req.body);
+  sendSuccess(res, { order });
 });
 
 export const getHistory = asyncHandler(async (req: Request, res: Response) => {

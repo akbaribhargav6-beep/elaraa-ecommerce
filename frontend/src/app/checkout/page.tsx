@@ -7,8 +7,14 @@ import { useCart } from '@/lib/cart-context';
 import { useAuth } from '@/lib/auth-context';
 import { api, ApiClientError } from '@/lib/api-client';
 import { formatPrice } from '@/lib/format';
+import { loadRazorpayScript } from '@/lib/loadRazorpayScript';
 import { Eyebrow } from '@/components/ui/Eyebrow';
 import { Button } from '@/components/ui/Button';
+
+interface CheckoutResponse {
+  order: OrderDTO;
+  razorpay?: { razorpayOrderId: string; keyId: string; amount: number; currency: string };
+}
 
 interface CouponState {
   status: 'idle' | 'checking' | 'valid' | 'invalid';
@@ -43,6 +49,7 @@ export default function CheckoutPage() {
   });
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<'COD' | 'RAZORPAY'>('COD');
 
   const [giftPackagingFee, setGiftPackagingFee] = useState(0);
   const [giftPackaging, setGiftPackaging] = useState(false);
@@ -97,6 +104,55 @@ export default function CheckoutPage() {
     setCoupon({ status: 'idle', code: '', discountAmount: 0, message: '' });
   }
 
+  async function goToConfirmation(order: OrderDTO) {
+    await refetchCart();
+    router.push(`/checkout/confirmation/${order.orderNumber}?email=${encodeURIComponent(order.customerEmail)}`);
+  }
+
+  async function payWithRazorpay(data: CheckoutResponse) {
+    if (!data.razorpay) {
+      setError('Online payment could not be started. Please try again.');
+      setSubmitting(false);
+      return;
+    }
+    try {
+      await loadRazorpayScript();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not load the payment gateway.');
+      setSubmitting(false);
+      return;
+    }
+
+    const razorpay = new window.Razorpay!({
+      key: data.razorpay.keyId,
+      amount: data.razorpay.amount,
+      currency: data.razorpay.currency,
+      name: 'ELARAA',
+      description: `Order ${data.order.orderNumber}`,
+      order_id: data.razorpay.razorpayOrderId,
+      prefill: { name: form.shipFullName || undefined, email: form.customerEmail, contact: form.customerPhone },
+      theme: { color: '#A8823D' },
+      handler: async (response) => {
+        try {
+          await api.post('/api/orders/verify-payment', response);
+          await goToConfirmation(data.order);
+        } catch {
+          setError(
+            `We received your payment but couldn't confirm it automatically. Please contact us with your order number ${data.order.orderNumber} — we'll sort it out right away.`
+          );
+          setSubmitting(false);
+        }
+      },
+      modal: {
+        ondismiss: () => {
+          setError('Payment was not completed, so your order is still unpaid. You can try placing it again.');
+          setSubmitting(false);
+        },
+      },
+    });
+    razorpay.open();
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
@@ -110,19 +166,22 @@ export default function CheckoutPage() {
               customerPhone: form.customerPhone,
               shippingAddressId: selectedAddressId,
               shipCountry: form.shipCountry,
-              paymentMethod: 'COD' as const,
+              paymentMethod,
               notes: form.notes,
               couponCode,
               giftPackaging,
             }
-          : { ...form, paymentMethod: 'COD' as const, couponCode, giftPackaging };
+          : { ...form, paymentMethod, couponCode, giftPackaging };
 
-      const data = await api.post<{ order: OrderDTO }>('/api/orders', body);
-      await refetchCart();
-      router.push(`/checkout/confirmation/${data.order.orderNumber}?email=${encodeURIComponent(data.order.customerEmail)}`);
+      const data = await api.post<CheckoutResponse>('/api/orders', body);
+
+      if (paymentMethod === 'RAZORPAY') {
+        await payWithRazorpay(data);
+      } else {
+        await goToConfirmation(data.order);
+      }
     } catch (err) {
       setError(err instanceof ApiClientError ? err.message : 'Something went wrong placing your order.');
-    } finally {
       setSubmitting(false);
     }
   }
@@ -207,10 +266,24 @@ export default function CheckoutPage() {
                 <span className="step-num">3</span>
                 <h2 className="serif text-xl">Payment</h2>
               </div>
-              <label className="flex items-center gap-3 border px-4 py-3 text-sm cursor-pointer" style={{ borderColor: 'var(--gold-deep)' }}>
-                <input type="radio" name="pay" checked readOnly /> Cash on Delivery
-              </label>
-              <p className="text-xs opacity-50 mt-2">Online payment is coming soon. For now, pay when your order arrives.</p>
+              <div className="space-y-3">
+                <label
+                  className="flex items-center gap-3 border px-4 py-3 text-sm cursor-pointer"
+                  style={{ borderColor: paymentMethod === 'RAZORPAY' ? 'var(--gold-deep)' : 'rgba(43,38,32,.2)' }}
+                >
+                  <input type="radio" name="pay" checked={paymentMethod === 'RAZORPAY'} onChange={() => setPaymentMethod('RAZORPAY')} />
+                  <span className="flex-1">
+                    Pay Online <span className="opacity-60">— Card, UPI, Netbanking &amp; more</span>
+                  </span>
+                </label>
+                <label
+                  className="flex items-center gap-3 border px-4 py-3 text-sm cursor-pointer"
+                  style={{ borderColor: paymentMethod === 'COD' ? 'var(--gold-deep)' : 'rgba(43,38,32,.2)' }}
+                >
+                  <input type="radio" name="pay" checked={paymentMethod === 'COD'} onChange={() => setPaymentMethod('COD')} />
+                  Cash on Delivery
+                </label>
+              </div>
             </div>
 
             <textarea
@@ -225,7 +298,7 @@ export default function CheckoutPage() {
             {error && <p className="text-sm text-red-700">{error}</p>}
 
             <Button variant="gold-solid" className="w-full justify-center" disabled={submitting}>
-              {submitting ? 'Placing Order…' : 'Place Order'}
+              {submitting ? 'Placing Order…' : paymentMethod === 'RAZORPAY' ? 'Proceed to Pay' : 'Place Order'}
             </Button>
           </form>
 

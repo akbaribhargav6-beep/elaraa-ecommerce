@@ -1,0 +1,13 @@
+{
+  "name": "elaraa-shopify-migration",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Exports the live ELARAA catalog and builds Shopify import CSVs",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "fetch": "node src/fetch-live.mjs",
+    "build": "node src/build-products-csv.mjs && node src/build-redirects-csv.mjs",
+    "test": "node --test"
+  }
+}

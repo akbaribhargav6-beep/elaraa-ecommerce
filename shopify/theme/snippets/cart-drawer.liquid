@@ -1,0 +1,61 @@
+{% comment %}
+  Mini cart drawer — ported from frontend/src/components/layout/CartDrawer.tsx.
+  Server-renders the current cart so there is no empty flash; src/js/cart-drawer.mjs
+  takes over for opening, quantity changes and removal via the Ajax Cart API.
+  #cartOverlay / #cartDrawer styles live in assets/elaraa.css.
+{% endcomment %}
+<script type="application/json" data-cart-json>{{ cart | json }}</script>
+
+<div id="cartOverlay" aria-hidden="true"></div>
+<aside id="cartDrawer" aria-label="Shopping bag" aria-hidden="true">
+  <div class="flex items-center justify-between px-6 py-5 border-b" style="border-color: rgba(43,38,32,.1)">
+    <h2 class="serif text-xl">Your Bag</h2>
+    <button type="button" data-drawer-close class="text-lg opacity-60 hover:opacity-100" aria-label="Close cart">✕</button>
+  </div>
+
+  <div class="flex-1 overflow-y-auto px-6" data-drawer-items>
+    {%- if cart.item_count == 0 -%}
+      <p class="text-sm opacity-60 py-10 text-center">Your bag is empty.</p>
+    {%- else -%}
+      {%- for item in cart.items -%}
+        <div class="cart-drawer-item" data-line-key="{{ item.key }}">
+          {%- if item.image -%}
+            {{ item.image | image_url: width: 152 | image_tag: alt: item.product.title, width: 76, height: 76, class: 'object-cover', loading: 'lazy' }}
+          {%- endif -%}
+          <div class="flex-1">
+            <h4 class="serif text-base"><a href="{{ item.url }}">{{ item.product.title }}</a></h4>
+            {%- unless item.variant.title == 'Default Title' -%}
+              <p class="text-xs opacity-60 mt-1">{{ item.variant.title }}</p>
+            {%- endunless -%}
+            <div class="flex items-center justify-between mt-2">
+              <div class="qty-box">
+                <button type="button" data-qty-change="-1" aria-label="Decrease quantity">−</button>
+                <input type="number" value="{{ item.quantity }}" readonly aria-label="Quantity">
+                <button type="button" data-qty-change="1" aria-label="Increase quantity">+</button>
+              </div>
+              <p class="text-xs">{{ item.final_line_price | money_without_trailing_zeros }}</p>
+            </div>
+            <button type="button" data-line-remove class="text-[10px] tracking-[.15em] uppercase opacity-50 hover:opacity-100 mt-2">Remove</button>
+          </div>
+        </div>
+      {%- endfor -%}
+    {%- endif -%}
+  </div>
+
+  <div class="px-6 py-6 border-t" style="border-color: rgba(43,38,32,.1)">
+    <div class="flex justify-between text-sm mb-2">
+      <span class="opacity-70">Products Total</span>
+      <span data-drawer-products-total>{{ cart.items_subtotal_price | money_without_trailing_zeros }}</span>
+    </div>
+    <div class="flex justify-between text-sm mb-4 pt-2 border-t" style="border-color: rgba(43,38,32,.08)">
+      <span class="opacity-70">Subtotal</span>
+      <span class="font-medium" data-drawer-subtotal>{{ cart.total_price | money_without_trailing_zeros }}</span>
+    </div>
+    <a href="{{ routes.cart_url }}/checkout" data-drawer-close class="btn-luxury btn-gold-solid w-full justify-center mb-3">
+      <span>Checkout →</span>
+    </a>
+    <a href="{{ routes.cart_url }}" data-drawer-close class="block text-center text-xs tracking-[.15em] uppercase opacity-60 hover:opacity-100">
+      View Full Bag
+    </a>
+  </div>
+</aside>

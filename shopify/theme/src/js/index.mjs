@@ -3,12 +3,16 @@
 // its module here.
 import { formatPrice } from './money.mjs';
 import { initMotion } from './motion.mjs';
+import { initHeader } from './header.mjs';
 
 const ELARAA = (window.ELARAA = window.ELARAA || { settings: {}, cart: {}, routes: {} });
 ELARAA.formatPrice = formatPrice;
 
 function boot() {
   initMotion(ELARAA.settings);
+  initHeader(ELARAA.routes);
+  // The theme editor re-renders a section in place; re-bind the header then.
+  document.addEventListener('shopify:section:load', () => initHeader(ELARAA.routes));
 }
 
 if (document.readyState === 'loading') {

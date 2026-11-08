@@ -1,0 +1,182 @@
+{% comment %}
+  Storefront header — ported from frontend/src/components/layout/Header.tsx.
+  Desktop (≥1600px, the `header-desktop` breakpoint): nav links left, logo
+  dead-centred, search + bag right. Below that: hamburger → slide-out drawer.
+  Behaviour lives in src/js/header.mjs.
+{% endcomment %}
+{%- liquid
+  assign main_menu = section.settings.main_menu
+  assign mobile_menu = section.settings.mobile_menu
+  assign all_url = routes.all_products_collection_url
+-%}
+
+<div data-elaraa-header data-section-id="{{ section.id }}">
+  <nav class="nav-fixed px-4 sm:px-6 md:px-12 py-3.5 md:py-5 flex items-center justify-between" aria-label="Primary">
+    {%- comment -%} Left: mobile hamburger + desktop nav links {%- endcomment -%}
+    <div class="flex items-center gap-6 md:gap-8">
+      <button
+        type="button"
+        data-menu-open
+        aria-expanded="false"
+        aria-controls="ElaraaMobileDrawer"
+        aria-label="Open menu"
+        class="header-desktop:hidden flex items-center justify-center w-10 h-10 -ml-2 hover:opacity-60"
+      >
+        {% render 'icon', name: 'menu', size: 22 %}
+      </button>
+      <div class="hidden header-desktop:flex items-center gap-8 text-xs tracking-[.2em] uppercase font-sans">
+        {%- if main_menu != blank -%}
+          {%- for link in main_menu.links -%}
+            <a href="{{ link.url }}" class="hover:opacity-60{% if link.active %} opacity-60{% endif %}">{{ link.title }}</a>
+          {%- endfor -%}
+        {%- else -%}
+          <a href="{{ routes.root_url }}" class="hover:opacity-60">Home</a>
+          <a href="{{ all_url }}" class="hover:opacity-60">Shop</a>
+          <a href="{{ routes.collections_url }}/new-arrivals" class="hover:opacity-60">New Arrivals</a>
+          <a href="{{ routes.collections_url }}/best-sellers" class="hover:opacity-60">Best Seller</a>
+          <a href="{{ pages.about.url | default: '/pages/about' }}" class="hover:opacity-60">Our Story</a>
+          <a href="{{ pages.contact.url | default: '/pages/contact' }}" class="hover:opacity-60">Contact</a>
+        {%- endif -%}
+      </div>
+    </div>
+
+    {%- comment -%} Centre: logo, dead-centred regardless of side content width {%- endcomment -%}
+    <a href="{{ routes.root_url }}" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center" aria-label="{{ shop.name | escape }} home">
+      {% render 'logo', image: section.settings.logo, class: 'h-11 sm:h-12 md:h-14 w-auto object-contain' %}
+    </a>
+
+    {%- comment -%} Right: search + bag {%- endcomment -%}
+    <div class="flex items-center gap-1 sm:gap-2">
+      <div class="relative" data-search-root>
+        <button
+          type="button"
+          data-search-toggle
+          aria-expanded="false"
+          aria-label="Search"
+          class="p-2 min-w-[40px] min-h-[40px] flex items-center justify-center hover:opacity-60"
+        >
+          <span data-search-icon="open">{% render 'icon', name: 'search' %}</span>
+          <span data-search-icon="close" class="hidden">{% render 'icon', name: 'close' %}</span>
+        </button>
+        <div
+          data-search-panel
+          class="hidden fixed left-4 right-4 sm:left-auto sm:right-6 md:right-12 sm:w-96 bg-white shadow-2xl z-50 rounded-sm overflow-hidden"
+          style="border: 1px solid rgba(43,38,32,.12); top: 64px;"
+        >
+          <form action="{{ routes.search_url }}" method="get" role="search" class="flex items-center gap-2 px-4 py-3 border-b" style="border-color: rgba(43,38,32,.1)" onsubmit="return false">
+            {% render 'icon', name: 'search', size: 15, class: 'opacity-40 shrink-0' %}
+            <input type="hidden" name="type" value="product">
+            <input
+              data-search-input
+              type="search"
+              name="q"
+              autocomplete="off"
+              placeholder="Search by name, SKU, category..."
+              aria-label="Search products"
+              class="flex-1 text-sm outline-none bg-transparent"
+            >
+          </form>
+          <div data-search-results class="max-h-[60vh] overflow-y-auto" aria-live="polite"></div>
+        </div>
+      </div>
+
+      <button
+        type="button"
+        data-cart-open
+        aria-label="Shopping bag{% if cart.item_count > 0 %}, {{ cart.item_count }} items{% endif %}"
+        class="relative p-2 min-w-[40px] min-h-[40px] flex items-center justify-center hover:opacity-60"
+      >
+        {% render 'icon', name: 'bag' %}
+        <span
+          data-cart-count
+          class="absolute top-0.5 right-0.5 flex items-center justify-center w-4 h-4 rounded-full text-[9px] font-semibold leading-none text-white{% if cart.item_count <= 0 %} hidden{% endif %}"
+          style="background: var(--gold-deep)"
+        >{% if cart.item_count > 9 %}9+{% else %}{{ cart.item_count }}{% endif %}</span>
+      </button>
+    </div>
+  </nav>
+
+  {%- comment -%} Mobile nav drawer {%- endcomment -%}
+  <div
+    data-mobile-backdrop
+    class="fixed inset-0 bg-[#17140F]/50 backdrop-blur-sm z-[98] transition-opacity duration-300 header-desktop:hidden opacity-0 pointer-events-none"
+  ></div>
+  <aside
+    id="ElaraaMobileDrawer"
+    data-mobile-drawer
+    class="fixed top-0 left-0 h-full w-[85%] max-w-[320px] z-[99] flex flex-col justify-between shadow-2xl transition-transform duration-500 ease-out header-desktop:hidden -translate-x-full"
+    style="background: var(--ivory); border-right: 1px solid rgba(201,166,107,.3)"
+    aria-label="Menu"
+  >
+    <div class="p-6">
+      <div class="flex items-center justify-between pb-5 border-b" style="border-color: rgba(43,38,32,.15)">
+        {% render 'logo', image: section.settings.logo, class: 'h-11 sm:h-12 md:h-14 w-auto object-contain' %}
+        <button type="button" data-menu-close aria-label="Close menu" class="w-10 h-10 rounded-full flex items-center justify-center text-lg hover:bg-black/5">✕</button>
+      </div>
+      <div class="py-6 flex flex-col gap-5 text-xs tracking-[.25em] uppercase font-medium">
+        <a href="{{ routes.root_url }}" class="pb-2.5 border-b hover:text-[var(--gold-deep)]" style="border-color: rgba(43,38,32,.1)">Home</a>
+        {%- if mobile_menu != blank -%}
+          {%- for link in mobile_menu.links -%}
+            <a href="{{ link.url }}" class="pb-2.5 border-b hover:text-[var(--gold-deep)]" style="border-color: rgba(43,38,32,.1)">{{ link.title }}</a>
+          {%- endfor -%}
+        {%- else -%}
+          <a href="{{ all_url }}" class="pb-2.5 border-b hover:text-[var(--gold-deep)]" style="border-color: rgba(43,38,32,.1)">Shop All</a>
+          <a href="{{ routes.collections_url }}/new-arrivals" class="pb-2.5 border-b hover:text-[var(--gold-deep)]" style="border-color: rgba(43,38,32,.1)">New Arrivals</a>
+          <a href="{{ routes.collections_url }}/best-sellers" class="pb-2.5 border-b hover:text-[var(--gold-deep)]" style="border-color: rgba(43,38,32,.1)">Best Seller</a>
+          <a href="{{ pages.about.url | default: '/pages/about' }}" class="pb-2.5 border-b hover:text-[var(--gold-deep)]" style="border-color: rgba(43,38,32,.1)">Our Story</a>
+          <a href="{{ pages.contact.url | default: '/pages/contact' }}" class="pb-2.5 border-b hover:text-[var(--gold-deep)]" style="border-color: rgba(43,38,32,.1)">Contact</a>
+          <a href="{{ pages.policy.url | default: '/pages/policy' }}" class="pb-2.5 border-b hover:text-[var(--gold-deep)]" style="border-color: rgba(43,38,32,.1)">Customer Care</a>
+        {%- endif -%}
+      </div>
+    </div>
+    <div class="p-5 text-center" style="background: var(--cream); border-top: 1px solid rgba(43,38,32,.15)">
+      <p class="eyebrow mb-1" style="font-size: 0.65rem">{{ section.settings.drawer_tagline }}</p>
+      <p class="text-[11px] font-serif italic opacity-70">{{ section.settings.drawer_subline }}</p>
+    </div>
+  </aside>
+</div>
+
+{% schema %}
+{
+  "name": "Header",
+  "tag": "header",
+  "class": "elaraa-header",
+  "settings": [
+    {
+      "type": "image_picker",
+      "id": "logo",
+      "label": "Logo",
+      "info": "Overrides Theme settings → Brand → Logo for the header only."
+    },
+    {
+      "type": "link_list",
+      "id": "main_menu",
+      "label": "Desktop menu",
+      "default": "main-menu",
+      "info": "Home, Shop, New Arrivals, Best Seller, Our Story, Contact on the live site."
+    },
+    {
+      "type": "link_list",
+      "id": "mobile_menu",
+      "label": "Mobile menu",
+      "default": "main-menu",
+      "info": "Shown in the slide-out drawer under a fixed Home link. Create a 'mobile-menu' navigation to add Customer Care."
+    },
+    {
+      "type": "text",
+      "id": "drawer_tagline",
+      "label": "Drawer tagline",
+      "default": "Anti Tarnish Premium Fashion Jewellery"
+    },
+    {
+      "type": "text",
+      "id": "drawer_subline",
+      "label": "Drawer subline",
+      "default": "Free Insured Shipping Across India"
+    }
+  ],
+  "enabled_on": {
+    "groups": ["header"]
+  }
+}
+{% endschema %}

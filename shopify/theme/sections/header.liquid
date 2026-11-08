@@ -117,7 +117,9 @@
         <a href="{{ routes.root_url }}" class="pb-2.5 border-b hover:text-[var(--gold-deep)]" style="border-color: rgba(43,38,32,.1)">Home</a>
         {%- if mobile_menu != blank -%}
           {%- for link in mobile_menu.links -%}
-            <a href="{{ link.url }}" class="pb-2.5 border-b hover:text-[var(--gold-deep)]" style="border-color: rgba(43,38,32,.1)">{{ link.title }}</a>
+            {%- unless link.url == routes.root_url -%}
+              <a href="{{ link.url }}" class="pb-2.5 border-b hover:text-[var(--gold-deep)]" style="border-color: rgba(43,38,32,.1)">{{ link.title }}</a>
+            {%- endunless -%}
           {%- endfor -%}
         {%- else -%}
           <a href="{{ all_url }}" class="pb-2.5 border-b hover:text-[var(--gold-deep)]" style="border-color: rgba(43,38,32,.1)">Shop All</a>
@@ -135,11 +137,6 @@
     </div>
   </aside>
 </div>
-
-{%- comment -%} Global overlays: mini cart drawer (opened by the bag button) and the Quick View modal. {%- endcomment -%}
-{% render 'cart-drawer' %}
-{% render 'quick-view' %}
-
 {% schema %}
 {
   "name": "Header",

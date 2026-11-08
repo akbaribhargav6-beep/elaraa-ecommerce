@@ -31,8 +31,19 @@ function read(storage) {
   }
 }
 
-export function createWishlist({ storage = globalThis.localStorage, onChange } = {}) {
-  const store = safeStorage(storage);
+function resolveStorage(opts) {
+  // Even *reading* window.localStorage throws when site data is blocked, so
+  // the lookup has to happen inside a try — never in a default parameter.
+  try {
+    return 'storage' in opts ? opts.storage : globalThis.localStorage;
+  } catch {
+    return null;
+  }
+}
+
+export function createWishlist(opts = {}) {
+  const { onChange } = opts;
+  const store = safeStorage(resolveStorage(opts));
   let handles = read(store);
   const persist = () => {
     try {

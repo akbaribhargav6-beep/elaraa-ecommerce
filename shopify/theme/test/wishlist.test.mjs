@@ -54,6 +54,27 @@ test('storage that throws (private mode) degrades to an in-memory list', () => {
   assert.deepEqual(w.list(), ['x']);
 });
 
+test('a window.localStorage getter that throws (site data blocked) does not break boot', () => {
+  const original = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
+  Object.defineProperty(globalThis, 'localStorage', {
+    configurable: true,
+    get() {
+      throw new Error('SecurityError: access denied');
+    },
+  });
+  try {
+    let w;
+    assert.doesNotThrow(() => {
+      w = createWishlist();
+    });
+    assert.equal(w.toggle('z'), true);
+    assert.deepEqual(w.list(), ['z']);
+  } finally {
+    if (original) Object.defineProperty(globalThis, 'localStorage', original);
+    else delete globalThis.localStorage;
+  }
+});
+
 test('createWishlist with no storage at all still works', () => {
   const w = createWishlist({ storage: null });
   assert.equal(w.toggle('y'), true);

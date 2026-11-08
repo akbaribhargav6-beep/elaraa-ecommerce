@@ -393,7 +393,7 @@ test('addItem surfaces Shopify 422 description as CartError', async () => {
 - Test: `shopify/theme/test/quick-view.test.mjs`
 
 **Interfaces:**
-- Card mirrors `ProductCard.tsx`: `.card-luxury`, primary/secondary image cross-fade (`product.images[0]`, `[1]`), category badge (`product.type`), wishlist heart (`data-wishlist-handle`, Task 13), `Quick View` button (`data-quick-view="{{ product.handle }}"`), name, price + compare-at, `+ Bag` quick add → `addItem(product.selected_or_first_available_variant.id, 1)`; disabled when `product.available == false`.
+- Card mirrors `ProductCard.tsx`: `.card-luxury`, primary/secondary image cross-fade (`product.images[0]`, `[1]`), category badge (`product.type`), wishlist heart (`data-wishlist-toggle="<handle>"`, Task 13), `Quick View` button (`data-quick-view="{{ product.handle }}"`), name, price + compare-at, `+ Bag` quick add → `addItem(product.selected_or_first_available_variant.id, 1)`; disabled when `product.available == false`.
 - Quick View fetches `/products/<handle>.js`, renders image, eyebrow metafield (`product.metafields.custom.eyebrow` is not in the `.js` payload → read from `data-eyebrow` on the card), title, price, metal swatch from `data-metal-hex`, Size buttons from `options` when `options[0].name == 'Size'`, `Add to Bag`, `View Full Details →` → `/products/<handle>`.
 - Produces: `selectVariant(productJson, { size }) → variant` in `quick-view.mjs` — returns the variant whose `option1 === size`, else first available, else `variants[0]`.
 
@@ -411,7 +411,7 @@ test('addItem surfaces Shopify 422 description as CartError', async () => {
 - Test: `shopify/theme/test/wishlist.test.mjs`
 
 **Interfaces:**
-- Produces: `createWishlist(storage?) → { has(handle), toggle(handle) → boolean, list() → string[] }` persisted under key `elaraa:wishlist` as a JSON array; when `storage` throws on access, falls back to an in-memory array. Dispatches `elaraa:wishlist:updated`. Hearts on cards/product page read `data-wishlist-handle`.
+- Produces: `createWishlist({ storage?, onChange? }) → { has(handle), toggle(handle) → boolean, remove(handle), list() → string[] }` persisted under key `elaraa:wishlist` as a JSON array; when `storage` (or reading `window.localStorage` itself) throws, falls back to an in-memory array. Dispatches `elaraa:wishlist:updated`. Hearts on cards/product page carry `data-wishlist-toggle="<handle>"` (optional `data-wishlist-idle` colour and a child `[data-wishlist-label]` for "Add to Wishlist / In Your Wishlist" text).
 - Wishlist page renders `list()` by fetching `/products/<handle>.js` for each handle and reusing the card markup client-side; empty state copy from `account/wishlist/page.tsx`.
 
 - [ ] **Step 1: Failing tests** — toggle adds then removes; persisted JSON equals `["captivate"]`; `createWishlist({ get getItem() { throw new Error('blocked'); } })` does not throw and `toggle('x')` returns `true`.

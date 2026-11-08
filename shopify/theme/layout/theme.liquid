@@ -31,9 +31,12 @@
     {% sections 'footer-group' %}
 
     {% comment %}
-      The cart drawer and Quick View modal are rendered by sections/header.liquid
-      so they exist on every page (and theme check sees the snippets in use).
+      Global overlays live in the layout on purpose: a section re-render in the
+      theme editor (shopify:section:load) would otherwise replace #cartDrawer /
+      #quickView and orphan their JS bindings.
     {% endcomment %}
+    {% render 'cart-drawer' %}
+    {% render 'quick-view' %}
 
     <script>
       window.ELARAA = {

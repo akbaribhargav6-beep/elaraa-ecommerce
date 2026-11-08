@@ -1,5 +1,7 @@
+{% # theme-check-disable OrphanedSnippet %}
 {% comment %}
   Mini cart drawer — ported from frontend/src/components/layout/CartDrawer.tsx.
+  Rendered from layout/theme.liquid (theme check only counts section renders).
   Server-renders the current cart so there is no empty flash; src/js/cart-drawer.mjs
   takes over for opening, quantity changes and removal via the Ajax Cart API.
   #cartOverlay / #cartDrawer styles live in assets/elaraa.css.
@@ -51,7 +53,7 @@
       <span class="opacity-70">Subtotal</span>
       <span class="font-medium" data-drawer-subtotal>{{ cart.total_price | money_without_trailing_zeros }}</span>
     </div>
-    <a href="{{ routes.cart_url }}/checkout" data-drawer-close class="btn-luxury btn-gold-solid w-full justify-center mb-3">
+    <a href="/checkout" data-drawer-close class="btn-luxury btn-gold-solid w-full justify-center mb-3">
       <span>Checkout →</span>
     </a>
     <a href="{{ routes.cart_url }}" data-drawer-close class="block text-center text-xs tracking-[.15em] uppercase opacity-60 hover:opacity-100">

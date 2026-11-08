@@ -15,15 +15,21 @@
   assign metal_finish = product.metafields.custom.metal_finish.value
   assign metal_hex = product.metafields.custom.metal_hex.value
   assign sizes = '(min-width: 768px) 33vw, 50vw'
+  comment
+    `| default:` must not appear inside a filter's argument list — Liquid
+    would parse it as a new filter and silently drop every argument after it.
+  endcomment
+  assign primary_alt = primary.alt | default: product.title
+  assign secondary_alt = secondary.alt | default: product.title
 -%}
 
 <div class="card-luxury" data-product-card data-product-handle="{{ product.handle }}">
   <a href="{{ product.url }}" class="img-wrap aspect-square block relative overflow-hidden bg-cream">
     {%- if primary -%}
-      {{ primary | image_url: width: 800 | image_tag: alt: primary.alt | default: product.title, class: 'img-primary absolute inset-0 w-full h-full object-cover', widths: '300, 400, 600, 800', sizes: sizes, loading: 'lazy' }}
+      {{ primary | image_url: width: 800 | image_tag: alt: primary_alt, class: 'img-primary absolute inset-0 w-full h-full object-cover', widths: '300, 400, 600, 800', sizes: sizes, loading: 'lazy' }}
     {%- endif -%}
     {%- if secondary and secondary != primary -%}
-      {{ secondary | image_url: width: 800 | image_tag: alt: secondary.alt | default: product.title, class: 'img-secondary absolute inset-0 w-full h-full object-cover', widths: '300, 400, 600, 800', sizes: sizes, loading: 'lazy' }}
+      {{ secondary | image_url: width: 800 | image_tag: alt: secondary_alt, class: 'img-secondary absolute inset-0 w-full h-full object-cover', widths: '300, 400, 600, 800', sizes: sizes, loading: 'lazy' }}
     {%- endif -%}
 
     {%- if product.type != blank -%}

@@ -134,3 +134,26 @@ export function productToRows(p, categoryNames = {}) {
 
   return rows;
 }
+
+/**
+ * The ₹99 gift-packaging add-on the cart page adds via the Ajax Cart API.
+ * Tagged `hidden` so Search & Discovery can exclude it; inventory policy
+ * `continue` so it can never block a checkout by going out of stock.
+ */
+export function giftPackagingRows() {
+  const row = emptyRow();
+  row.Handle = 'gift-packaging';
+  row.Title = 'Gift Packaging';
+  row['Body (HTML)'] = '<p>Signature ELARAA velvet box, luxury ribbon and personalised care card.</p>';
+  row.Vendor = 'ELARAA';
+  row.Type = 'Add-on';
+  row.Tags = 'hidden';
+  row.Published = 'TRUE';
+  row.Status = 'active';
+  row['Option1 Name'] = 'Title';
+  row['Option1 Value'] = 'Default Title';
+  variantCells(row, { sku: 'ADDON-GIFT', stockQuantity: 0, price: 99 });
+  row['Variant Inventory Policy'] = 'continue';
+  row['SEO Title'] = 'Gift Packaging | ELARAA';
+  return [row];
+}

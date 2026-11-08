@@ -221,7 +221,7 @@ test('redirectRows covers products and static pages', () => {
 });
 ```
 
-Static map: `/shop→/collections/all`, `/about→/pages/about`, `/contact→/pages/contact`, `/policy→/pages/policy`, `/login→/account/login`, `/register→/account/register`, `/forgot-password→/account/login`, `/account/orders→/account`, `/account/addresses→/account/addresses`, `/account/wishlist→/pages/wishlist`.
+Static map: `/about→/pages/about`, `/contact→/pages/contact`, `/policy→/pages/policy`, `/login→/account/login`, `/register→/account/register`, `/forgot-password→/account/login`, `/reset-password→/account/login`, `/verify-email→/account/login`, `/account/orders→/account`, `/account/wishlist→/pages/wishlist`. No row for `/shop` (reserved Shopify prefix, handled in Task 21's 404 template) and none for `/account/addresses` (same path on Shopify; a self-redirect is rejected).
 
 - [ ] **Step 2: Run test → FAIL**
 - [ ] **Step 3: Implement `redirects.mjs` + `build-redirects-csv.mjs`**, and append the gift product row in `build-products-csv.mjs`.
@@ -548,7 +548,7 @@ Every section root carries `data-reveal` on the same elements that use `<RevealO
 - Create: `sections/about-hero.liquid`, `sections/about-atelier.liquid`, `sections/about-promise.liquid`, `sections/about-stats.liquid`, `sections/about-gallery.liquid`, `sections/about-cta.liquid`, `templates/page.about.json`
 - Create: `sections/contact-hero.liquid`, `sections/contact-cards.liquid` (Call / Email / WhatsApp / Appointment, values from settings), `sections/contact-form.liquid` (`{% form 'contact' %}` fields name, email, phone, subject select default "Bridal & Bespoke", message; success copy from `contact/page.tsx`), `templates/page.contact.json`
 - Create: `sections/policy-blocks.liquid` (blocks with `anchor` text: shipping, authenticity, privacy, terms, care; headings/bodies ported from `policy/page.tsx`; `scroll-mt-28`), `templates/page.policy.json`
-- Create: `templates/404.json`, `sections/main-404.liquid`
+- Create: `templates/404.json`, `sections/main-404.liquid` — the 404 section must also handle the legacy `/shop` URL, which Shopify refuses to redirect (reserved prefix): when `request.path == '/shop'`, emit `<meta http-equiv="refresh" content="0; url=/collections/all">` plus a visible link, and set `<link rel="canonical" href="/collections/all">`.
 - Create: `src/js/counter.mjs` — `animateCounter(el, target, durationMs)` port of `AnimatedCounter.tsx`
 
 - [ ] **Step 1: Build sections/templates**; About copy and the two Cloudinary hero images are section defaults (image pickers so they can be replaced).

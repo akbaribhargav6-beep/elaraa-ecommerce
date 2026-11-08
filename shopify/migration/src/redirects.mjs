@@ -1,12 +1,15 @@
 // Shopify URL-redirect CSV rows (Online Store → Navigation → URL redirects →
-// Import). Shopify matches paths only — query strings such as
-// /shop?category=earrings cannot be redirected, so the theme's nav links
-// point straight at collection URLs instead.
+// Import). Two Shopify rules shape this list:
+//  - paths only: query strings such as /shop?category=earrings cannot be
+//    redirected, so the theme's nav links point straight at collection URLs;
+//  - reserved prefixes (/shop, /cart, /apps, /orders, /services, …) and paths
+//    that still resolve are rejected by the importer. The old /shop URL is
+//    therefore handled in the theme's 404 template (plan Task 21), and
+//    /account/addresses needs no row because it is the same path on Shopify.
 
 export const REDIRECT_HEADERS = ['Redirect from', 'Redirect to'];
 
 const STATIC_REDIRECTS = [
-  ['/shop', '/collections/all'],
   ['/about', '/pages/about'],
   ['/contact', '/pages/contact'],
   ['/policy', '/pages/policy'],
@@ -16,7 +19,6 @@ const STATIC_REDIRECTS = [
   ['/reset-password', '/account/login'],
   ['/verify-email', '/account/login'],
   ['/account/orders', '/account'],
-  ['/account/addresses', '/account/addresses'],
   ['/account/wishlist', '/pages/wishlist'],
 ];
 

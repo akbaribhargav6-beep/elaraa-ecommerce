@@ -9,11 +9,15 @@ test('redirectRows covers products and static pages', () => {
   assert.deepEqual(rows[0], { 'Redirect from': '/product/captivate', 'Redirect to': '/products/captivate' });
   assert.deepEqual(rows[1], { 'Redirect from': '/product/delicate', 'Redirect to': '/products/delicate' });
   const from = rows.map((r) => r['Redirect from']);
-  for (const p of ['/shop', '/about', '/contact', '/policy', '/login', '/register', '/forgot-password', '/account/orders', '/account/addresses', '/account/wishlist']) {
+  for (const p of ['/about', '/contact', '/policy', '/login', '/register', '/forgot-password', '/account/orders', '/account/wishlist']) {
     assert.ok(from.includes(p), `missing redirect for ${p}`);
   }
+  // Shopify refuses redirects from reserved prefixes (/shop, /cart, /apps, …)
+  // and from paths that still resolve; neither row may be emitted.
+  assert.ok(!from.includes('/shop'), '/shop is a reserved Shopify prefix');
+  assert.ok(!from.includes('/account/addresses'), 'self-redirect to a live page');
+  for (const r of rows) assert.notEqual(r['Redirect from'], r['Redirect to'], `self-redirect ${r['Redirect from']}`);
   const to = Object.fromEntries(rows.map((r) => [r['Redirect from'], r['Redirect to']]));
-  assert.equal(to['/shop'], '/collections/all');
   assert.equal(to['/about'], '/pages/about');
   assert.equal(to['/contact'], '/pages/contact');
   assert.equal(to['/policy'], '/pages/policy');
@@ -21,7 +25,6 @@ test('redirectRows covers products and static pages', () => {
   assert.equal(to['/register'], '/account/register');
   assert.equal(to['/forgot-password'], '/account/login');
   assert.equal(to['/account/orders'], '/account');
-  assert.equal(to['/account/addresses'], '/account/addresses');
   assert.equal(to['/account/wishlist'], '/pages/wishlist');
   assert.equal(new Set(from).size, from.length, 'no duplicate sources');
   assert.deepEqual(REDIRECT_HEADERS, ['Redirect from', 'Redirect to']);

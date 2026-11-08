@@ -35,6 +35,10 @@ export const CSV_HEADERS = [
 ];
 
 const DEFAULT_METAL_HEX = '#C9A66B';
+// 127 of 133 live products are this finish; used when the API returns no
+// variant to read it from (sold-out products arrive with variants: []).
+const DEFAULT_METAL_FINISH = 'Anti Tarnish';
+const SEO_DESCRIPTION_MAX = 320; // Shopify's limit for the SEO description field
 
 /** Collapses the live catalog's inconsistent metal spellings. */
 export function normalizeMetal(label) {
@@ -50,6 +54,32 @@ export function productTags(p) {
   if (p.isBestSeller) tags.push('best-seller');
   if (p.isNewArrival) tags.push('new-arrival');
   return tags;
+}
+
+/** Caps text at Shopify's SEO-description limit, cutting on a word boundary. */
+export function truncateSeo(text, max = SEO_DESCRIPTION_MAX) {
+  const s = String(text ?? '').trim();
+  if (s.length <= max) return s;
+  const cut = s.slice(0, max - 1);
+  const lastSpace = cut.lastIndexOf(' ');
+  return (lastSpace > 0 ? cut.slice(0, lastSpace) : cut).trimEnd() + '…';
+}
+
+/**
+ * Import-safety check over built rows. Errors must stop the build (Shopify
+ * would import a blank price as ₹0.00); warnings are listed for the human
+ * doing Task 4 to fix in admin afterwards.
+ */
+export function validateRows(rows) {
+  const errors = [];
+  const warnings = [];
+  for (const r of rows) {
+    const isVariantRow = r['Option1 Value'] !== '';
+    if (!isVariantRow) continue;
+    if (r['Variant Price'] === '') errors.push(`${r.Handle}: blank Variant Price (would import as ₹0.00)`);
+    if (r['Variant SKU'] === '') warnings.push(`${r.Handle}: blank Variant SKU`);
+  }
+  return { errors, warnings };
 }
 
 function emptyRow() {
@@ -86,7 +116,10 @@ export function productToRows(p, categoryNames = {}) {
   const images = [...(p.images ?? [])].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
   const variants = (p.variants ?? []).filter((v) => v.isActive !== false);
   const sized = variants.some((v) => String(v.size ?? '').trim() !== '');
-  const first = variants[0] ?? {};
+  // No active variant (sold out): keep the live price and import as qty 0
+  // rather than letting Shopify default a blank price to ₹0.00. The SKU is
+  // not exposed by the public API in this case and is left blank on purpose.
+  const first = variants[0] ?? { sku: '', metalLabel: DEFAULT_METAL_FINISH, metalHex: DEFAULT_METAL_HEX, price: p.basePrice, stockQuantity: 0 };
 
   const head = emptyRow();
   head.Handle = p.slug;
@@ -98,7 +131,7 @@ export function productToRows(p, categoryNames = {}) {
   head.Published = 'TRUE';
   head.Status = p.isActive === false ? 'draft' : 'active';
   head['SEO Title'] = `${title} | ELARAA`;
-  head['SEO Description'] = str(p.shortDescription);
+  head['SEO Description'] = truncateSeo(p.shortDescription);
   head['Eyebrow (product.metafields.custom.eyebrow)'] = str(p.eyebrow).trim();
   head['Material (product.metafields.custom.material)'] = str(p.material).trim();
   head['Short Description (product.metafields.custom.short_description)'] = str(p.shortDescription);

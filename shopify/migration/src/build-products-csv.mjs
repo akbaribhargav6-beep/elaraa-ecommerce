@@ -5,7 +5,7 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
-import { CSV_HEADERS, productToRows, giftPackagingRows } from './transform.mjs';
+import { CSV_HEADERS, productToRows, giftPackagingRows, validateRows } from './transform.mjs';
 import { toCsv } from './csv.mjs';
 
 const outDir = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'out');
@@ -18,8 +18,16 @@ const rows = [...products.flatMap((p) => productToRows(p, categoryNames)), ...gi
 const imageCount = rows.filter((r) => r['Image Src'] !== '').length;
 const productCount = new Set(rows.map((r) => r.Handle)).size;
 
+const { errors, warnings } = validateRows(rows);
+for (const w of warnings) console.warn(`warning: ${w} — re-enter the SKU in Shopify admin after import`);
+if (errors.length > 0) {
+  for (const e of errors) console.error(`error: ${e}`);
+  console.error(`aborting: ${errors.length} row(s) would import with a wrong price`);
+  process.exit(1);
+}
+
 // Shopify's importer reads the file as UTF-8; a BOM keeps the ₹-free but
 // accented names (e.g. "Édition Lumière") intact if someone previews it.
 await writeFile(path.join(outDir, 'products.csv'), '﻿' + toCsv(rows, CSV_HEADERS) + '\n');
 
-console.log(`rows: ${rows.length}, products: ${productCount}, images: ${imageCount}`);
+console.log(`rows: ${rows.length}, products: ${productCount}, images: ${imageCount}, sku warnings: ${warnings.length}`);

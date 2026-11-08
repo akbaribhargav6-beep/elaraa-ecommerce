@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { normalizeMetal, productTags, productToRows, CSV_HEADERS } from '../src/transform.mjs';
+import { normalizeMetal, productTags, productToRows, validateRows, truncateSeo, CSV_HEADERS } from '../src/transform.mjs';
 import { toCsv } from '../src/csv.mjs';
 
 const base = {
@@ -90,6 +90,50 @@ test('single-variant product uses Default Title', () => {
 test('inactive product is imported as draft', () => {
   const rows = productToRows({ ...base, isActive: false }, { rings: 'Rings' });
   assert.equal(rows[0].Status, 'draft');
+});
+
+test('product with no active variants keeps its live price, qty 0, blank SKU', () => {
+  // The public API drops inactive variants, so 6 live sold-out products arrive
+  // with variants: [] — they must never import at ₹0.
+  const rows = productToRows({ ...base, variants: [], images: base.images.slice(0, 1) }, { rings: 'Rings' });
+  assert.equal(rows.length, 1);
+  assert.equal(rows[0]['Option1 Name'], 'Title');
+  assert.equal(rows[0]['Option1 Value'], 'Default Title');
+  assert.equal(rows[0]['Variant Price'], '939');
+  assert.equal(rows[0]['Variant Compare At Price'], '1139');
+  assert.equal(rows[0]['Variant Inventory Qty'], '0');
+  assert.equal(rows[0]['Variant SKU'], '');
+  assert.equal(rows[0]['Metal Finish (product.metafields.custom.metal_finish)'], 'Anti Tarnish');
+  assert.equal(rows[0]['Metal Hex (product.metafields.custom.metal_hex)'], '#C9A66B');
+});
+
+test('truncateSeo caps SEO Description at 320 chars on a word boundary', () => {
+  assert.equal(truncateSeo('short text'), 'short text');
+  const long = Array.from({ length: 60 }, (_, i) => `word${i}`).join(' '); // > 320 chars
+  const out = truncateSeo(long);
+  assert.ok(out.length <= 320, `length ${out.length}`);
+  assert.ok(!out.endsWith(' '), 'no trailing space');
+  assert.ok(long.startsWith(out.replace(/…$/, '')), 'prefix preserved');
+  assert.ok(/word\d+…$/.test(out), 'ends on a whole word plus ellipsis');
+});
+
+test('productToRows applies the SEO cap but keeps the full short description metafield', () => {
+  const long = 'x'.repeat(100) + ' ' + 'y'.repeat(300);
+  const rows = productToRows({ ...base, shortDescription: long }, { rings: 'Rings' });
+  assert.ok(rows[0]['SEO Description'].length <= 320);
+  assert.equal(rows[0]['Short Description (product.metafields.custom.short_description)'], long);
+});
+
+test('validateRows flags variant rows with a blank price and warns on blank SKUs', () => {
+  const ok = productToRows(base, { rings: 'Rings' });
+  assert.deepEqual(validateRows(ok), { errors: [], warnings: [] });
+  const noSku = productToRows({ ...base, variants: [] }, { rings: 'Rings' });
+  assert.deepEqual(validateRows(noSku).errors, []);
+  assert.deepEqual(validateRows(noSku).warnings, [`${base.slug}: blank Variant SKU`]);
+  const broken = ok.map((r) => ({ ...r, 'Variant Price': '' }));
+  assert.ok(validateRows(broken).errors.some((e) => e.startsWith(`${base.slug}: blank Variant Price`)));
+  const imageOnly = ok.filter((r) => r['Image Position'] === '2');
+  assert.deepEqual(validateRows(imageOnly), { errors: [], warnings: [] }, 'image rows are not variant rows');
 });
 
 test('every row has exactly the CSV header keys', () => {

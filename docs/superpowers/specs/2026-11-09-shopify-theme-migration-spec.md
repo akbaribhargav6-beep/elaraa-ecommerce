@@ -25,7 +25,7 @@ Replace the current self-hosted stack (Next.js 15 storefront on Vercel + Express
 | Fact | Value |
 |---|---|
 | Products / images | 133 / 168 (1–2 images each) |
-| Variants | 1 metal label per product; 9 products have sizes 16 / 17 / 18 (rings) |
+| Variants | 1 metal label per product; 3 ring products have sizes 16 / 17 / 18 (9 sized variants). The public API omits inactive variants, so the 6 sold-out products arrive with no variant at all (price must come from `basePrice`, SKU is not exposed). |
 | Metal label spellings | "Anti Tarnish", "Anti tarnish", "Anti Tarnish ", "AntiTarnish", "Anti-Tarnish", "Gold Plated" → normalise |
 | Price range | ₹469 – ₹1,629; every product has a compare-at price |
 | Out of stock | 6 products |

@@ -1,12 +1,13 @@
-/*
- * ------------------------------------------------------------
- * IMPORTANT: The contents of this file are auto-generated.
- *
- * This file may be updated by the Shopify admin theme editor
- * or related systems. Please exercise caution as any changes
- * made to this file may be overwritten.
- * ------------------------------------------------------------
- */
 {
-  "current": {}
+  "current": {
+    "whatsapp_number": "919213473062",
+    "contact_email": "customer@elaraaluxes.com",
+    "contact_phone": "+91 92134 73062",
+    "instagram_url": "https://www.instagram.com/elaraa.luxes/",
+    "facebook_url": "https://www.facebook.com/elaraa.luxes",
+    "free_shipping_threshold": 2000,
+    "pincode_success_copy": "We deliver to {pincode}. Orders typically arrive in 3 to 5 business days, with Cash on Delivery available.",
+    "enable_smooth_scroll": true,
+    "enable_cursor": true
+  }
 }

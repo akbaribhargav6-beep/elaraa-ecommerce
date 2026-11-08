@@ -1,82 +1,110 @@
 [
   {
     "name": "theme_info",
-    "theme_name": "Skeleton",
+    "theme_name": "ELARAA",
     "theme_version": "0.1.0",
-    "theme_author": "Shopify",
-    "theme_documentation_url": "https://help.shopify.com/manual/online-store/themes",
-    "theme_support_url": "https://support.shopify.com/"
+    "theme_author": "ELARAA",
+    "theme_documentation_url": "https://github.com/akbaribhargav6-beep/elaraa-ecommerce/tree/main/shopify/theme",
+    "theme_support_url": "https://github.com/akbaribhargav6-beep/elaraa-ecommerce/issues"
   },
   {
-    "name": "t:general.typography",
+    "name": "Brand",
     "settings": [
       {
-        "type": "header",
-        "content": "t:general.fonts"
+        "type": "image_picker",
+        "id": "logo",
+        "label": "Logo",
+        "info": "Header and mobile menu logo. Leave empty to use the bundled ELARAA wordmark."
       },
       {
-        "type": "font_picker",
-        "id": "type_primary_font",
-        "default": "work_sans_n4",
-        "label": "t:general.primary"
+        "type": "image_picker",
+        "id": "logo_footer",
+        "label": "Footer logo",
+        "info": "Leave empty to use the bundled footer wordmark."
+      },
+      {
+        "type": "image_picker",
+        "id": "favicon",
+        "label": "Favicon",
+        "info": "Square PNG, at least 192 × 192 px. Leave empty to use the bundled favicon."
       }
     ]
   },
   {
-    "name": "t:general.layout",
+    "name": "Contact",
     "settings": [
       {
-        "type": "select",
-        "id": "max_page_width",
-        "label": "t:labels.page_width",
-        "options": [
-          {
-            "value": "90rem",
-            "label": "t:options.page_width.narrow"
-          },
-          {
-            "value": "110rem",
-            "label": "t:options.page_width.wide"
-          }
-        ],
-        "default": "90rem"
+        "type": "text",
+        "id": "whatsapp_number",
+        "label": "WhatsApp number",
+        "info": "Digits only, with country code. Used by Bulk Inquiry, Contact and the footer.",
+        "default": "919213473062"
       },
       {
-        "type": "range",
-        "id": "min_page_margin",
-        "min": 10,
-        "max": 100,
-        "step": 1,
-        "unit": "px",
-        "label": "t:labels.page_margin",
-        "default": 20
+        "type": "text",
+        "id": "contact_email",
+        "label": "Contact email",
+        "default": "customer@elaraaluxes.com"
+      },
+      {
+        "type": "text",
+        "id": "contact_phone",
+        "label": "Contact phone (display)",
+        "default": "+91 92134 73062"
+      },
+      {
+        "type": "url",
+        "id": "instagram_url",
+        "label": "Instagram URL",
+        "default": "https://www.instagram.com/elaraa.luxes/"
+      },
+      {
+        "type": "url",
+        "id": "facebook_url",
+        "label": "Facebook URL",
+        "default": "https://www.facebook.com/elaraa.luxes"
       }
     ]
   },
   {
-    "name": "t:general.colors",
+    "name": "Commerce",
     "settings": [
       {
-        "type": "color",
-        "id": "background_color",
-        "default": "#FFFFFF",
-        "label": "t:labels.background"
+        "type": "number",
+        "id": "free_shipping_threshold",
+        "label": "Free shipping threshold (₹)",
+        "info": "Drives the progress bar in the cart drawer and cart page. Must match the free-shipping rate in Settings → Shipping.",
+        "default": 2000
       },
       {
-        "type": "color",
-        "id": "foreground_color",
-        "default": "#333333",
-        "label": "t:labels.foreground"
+        "type": "product",
+        "id": "gift_packaging_product",
+        "label": "Gift packaging product",
+        "info": "The hidden ₹99 add-on the cart page offers. Created by the catalog import (handle gift-packaging)."
       },
       {
-        "type": "range",
-        "id": "input_corner_radius",
-        "min": 0,
-        "max": 10,
-        "step": 1,
-        "unit": "px",
-        "label": "t:labels.input_corner_radius",
-        "default": 4
+        "type": "text",
+        "id": "pincode_success_copy",
+        "label": "Pincode check success message",
+        "info": "{pincode} is replaced with the entered pincode.",
+        "default": "We deliver to {pincode}. Orders typically arrive in 3 to 5 business days, with Cash on Delivery available."
+      }
+    ]
+  },
+  {
+    "name": "Motion",
+    "settings": [
+      {
+        "type": "checkbox",
+        "id": "enable_smooth_scroll",
+        "label": "Smooth scrolling (Lenis)",
+        "default": true
+      },
+      {
+        "type": "checkbox",
+        "id": "enable_cursor",
+        "label": "Gold cursor dot on desktop",
+        "default": true
       }
     ]
   }

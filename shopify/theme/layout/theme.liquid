@@ -1,43 +1,77 @@
 <!doctype html>
 <html lang="{{ request.locale.iso_code }}">
   <head>
-    {% # Inlined CSS Variables %}
-    {% render 'css-variables' %}
-
-    {% comment %}
-      Font preloading:
-      1. Preconnect to font CDN for faster connection
-      2. Preload only the critical font variant (base weight)
-      3. Additional variants load on-demand via @font-face
-    {% endcomment %}
-    {% unless settings.type_primary_font.system? %}
-      <link rel="preconnect" href="https://fonts.shopifycdn.com" crossorigin>
-
-      {% comment %} Preload the base font variant for initial page render {% endcomment %}
-      {{ settings.type_primary_font | font_url | preload_tag: as: 'font', crossorigin: 'anonymous' }}
-    {% endunless %}
-
-    {% # Load and preload the critical CSS %}
-    {{ 'critical.css' | asset_url | stylesheet_tag: preload: true }}
-    {{ 'base.css' | asset_url | stylesheet_tag }}
-
-    {% # Social, title, etc. %}
     {% render 'meta-tags' %}
+
+    {%- liquid
+      assign favicon = settings.favicon
+    -%}
+    {%- if favicon != blank -%}
+      <link rel="icon" type="image/png" href="{{ favicon | image_url: width: 32, height: 32 }}">
+      <link rel="apple-touch-icon" href="{{ favicon | image_url: width: 192, height: 192 }}">
+    {%- else -%}
+      <link rel="icon" type="image/png" sizes="32x32" href="{{ 'favicon-32.png' | asset_url }}">
+      <link rel="apple-touch-icon" sizes="192x192" href="{{ 'favicon-192.png' | asset_url }}">
+    {%- endif -%}
+
+    {% render 'head-styles' %}
 
     {{ content_for_header }}
   </head>
 
-  <body>
-    {% block 'container', tag: 'div' %}
-      {% block 'header' -%}{%- endblock %}
-    {% endblock %}
+  <body class="template-{{ request.page_type | handle }}">
+    <div class="cursor-dot" aria-hidden="true"></div>
 
-    <main>
+    {% sections 'header-group' %}
+
+    <main id="MainContent" role="main" tabindex="-1">
       {{ content_for_layout }}
     </main>
 
-    {% block 'container', tag: 'div' %}
-      {% block 'footer' -%}{%- endblock %}
-    {% endblock %}
+    {% sections 'footer-group' %}
+
+    {% comment %} Task 10 renders 'cart-drawer' here; Task 12 renders 'quick-view'. {% endcomment %}
+
+    <script>
+      window.ELARAA = {
+        settings: {
+          freeShippingThreshold: {{ settings.free_shipping_threshold | default: 2000 | json }},
+          whatsappNumber: {{ settings.whatsapp_number | json }},
+          contactEmail: {{ settings.contact_email | json }},
+          contactPhone: {{ settings.contact_phone | json }},
+          instagramUrl: {{ settings.instagram_url | json }},
+          facebookUrl: {{ settings.facebook_url | json }},
+          giftPackagingVariantId: {{ settings.gift_packaging_product.selected_or_first_available_variant.id | json }},
+          pincodeSuccessCopy: {{ settings.pincode_success_copy | json }},
+          enableSmoothScroll: {{ settings.enable_smooth_scroll | json }},
+          enableCursor: {{ settings.enable_cursor | json }}
+        },
+        cart: {
+          totalPrice: {{ cart.total_price | json }},
+          itemCount: {{ cart.item_count | json }}
+        },
+        routes: {
+          root: {{ routes.root_url | json }},
+          cart: {{ routes.cart_url | json }},
+          cartAdd: {{ routes.cart_add_url | json }},
+          cartChange: {{ routes.cart_change_url | json }},
+          cartUpdate: {{ routes.cart_update_url | json }},
+          search: {{ routes.search_url | json }},
+          predictiveSearch: {{ routes.predictive_search_url | json }},
+          productRecommendations: {{ routes.product_recommendations_url | json }},
+          allProducts: {{ routes.all_products_collection_url | json }},
+          account: {{ routes.account_url | json }},
+          login: {{ routes.account_login_url | json }}
+        },
+        shop: {
+          currency: {{ cart.currency.iso_code | json }},
+          moneyFormat: {{ shop.money_format | json }}
+        }
+      };
+    </script>
+    <script src="{{ 'vendor-gsap.min.js' | asset_url }}" defer></script>
+    <script src="{{ 'vendor-scrolltrigger.min.js' | asset_url }}" defer></script>
+    <script src="{{ 'vendor-lenis.min.js' | asset_url }}" defer></script>
+    <script src="{{ 'elaraa.js' | asset_url }}" defer></script>
   </body>
 </html>

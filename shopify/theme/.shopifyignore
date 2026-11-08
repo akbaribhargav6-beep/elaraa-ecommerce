@@ -1,0 +1,24 @@
+# This file contains a list of files that will be excluded from Shopify CLI
+# operations such as push, pull, dev, etc.
+#
+# Examples:
+#
+# Ignore a specific file:
+#   templates/product.json
+#
+# Ignore templates with a wildcard pattern:
+#   templates/*.json
+#
+# Ignore templates and sections with a regular expression:
+#   /(templates|sections)/.*\.json/
+
+# build tooling (not theme files)
+node_modules/
+src/
+test/
+package.json
+package-lock.json
+tailwind.config.js
+esbuild.config.mjs
+.gitignore
+README.md

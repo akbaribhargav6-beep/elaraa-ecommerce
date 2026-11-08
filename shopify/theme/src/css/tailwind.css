@@ -1,0 +1,5 @@
+/* Compiled by `npm run build:css` into assets/tailwind.css. Hand-written
+   component CSS lives in assets/elaraa.css (loaded before this file). */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;

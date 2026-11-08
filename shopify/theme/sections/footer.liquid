@@ -1,0 +1,205 @@
+{% comment %}
+  Footer — ported from frontend/src/components/layout/Footer.tsx.
+  Four columns: brand + socials, Shop Collections menu, Customer Support menu,
+  Guaranteed & Secure + payment badges; gold divider; copyright + trust badges.
+{% endcomment %}
+{%- liquid
+  assign collections_menu = section.settings.collections_menu
+  assign support_menu = section.settings.support_menu
+  assign whatsapp = settings.whatsapp_number
+-%}
+
+<footer class="px-6 md:px-16 py-16{% if section.settings.top_margin %} mt-10{% endif %}" style="background: var(--black); color: var(--ivory)" data-section-id="{{ section.id }}">
+  <div class="max-w-7xl mx-auto grid md:grid-cols-4 gap-10 text-sm">
+    <div>
+      {% render 'logo', image: section.settings.logo, variant: 'footer', class: 'mb-4 h-16 w-auto' %}
+      <div class="opacity-60 text-xs leading-relaxed mb-6">{{ section.settings.blurb }}</div>
+
+      <p class="text-[11px] tracking-[.2em] uppercase opacity-50 mb-3">{{ section.settings.connect_heading }}</p>
+      <div class="flex items-center gap-3">
+        {%- if settings.instagram_url != blank -%}
+          <a href="{{ settings.instagram_url }}" target="_blank" rel="noopener noreferrer" aria-label="Instagram" class="social-icon w-8 h-8 rounded-full border border-white/20 flex items-center justify-center text-white/80 transition-colors">
+            {% render 'icon', name: 'instagram', size: 16 %}
+          </a>
+        {%- endif -%}
+        {%- if settings.facebook_url != blank -%}
+          <a href="{{ settings.facebook_url }}" target="_blank" rel="noopener noreferrer" aria-label="Facebook" class="social-icon w-8 h-8 rounded-full border border-white/20 flex items-center justify-center text-white/80 transition-colors">
+            {% render 'icon', name: 'facebook', size: 16 %}
+          </a>
+        {%- endif -%}
+        {%- if whatsapp != blank -%}
+          <a href="https://wa.me/{{ whatsapp }}" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" class="social-icon w-8 h-8 rounded-full border border-white/20 flex items-center justify-center text-white/80 transition-colors">
+            {% render 'icon', name: 'whatsapp-footer', size: 16 %}
+          </a>
+        {%- endif -%}
+      </div>
+    </div>
+
+    <div>
+      <p class="text-xs tracking-[.2em] uppercase opacity-50 mb-4">{{ section.settings.collections_heading }}</p>
+      <ul class="space-y-2 opacity-70 text-xs">
+        {%- if collections_menu != blank -%}
+          {%- for link in collections_menu.links -%}
+            <li><a href="{{ link.url }}" class="hover:opacity-100">{{ link.title }}</a></li>
+          {%- endfor -%}
+        {%- else -%}
+          <li><a href="{{ routes.collections_url }}/earrings" class="hover:opacity-100">Statement Earrings</a></li>
+          <li><a href="{{ routes.collections_url }}/necklaces" class="hover:opacity-100">Elegant Necklaces</a></li>
+          <li><a href="{{ routes.collections_url }}/rings" class="hover:opacity-100">Daily Wear Rings</a></li>
+          <li><a href="{{ routes.collections_url }}/new-arrivals" class="hover:opacity-100">New Arrivals</a></li>
+        {%- endif -%}
+      </ul>
+    </div>
+
+    <div>
+      <p class="text-xs tracking-[.2em] uppercase opacity-50 mb-4">{{ section.settings.support_heading }}</p>
+      <ul class="space-y-2 opacity-70 text-xs">
+        {%- if support_menu != blank -%}
+          {%- for link in support_menu.links -%}
+            <li><a href="{{ link.url }}" class="hover:opacity-100">{{ link.title }}</a></li>
+          {%- endfor -%}
+        {%- else -%}
+          {%- assign policy_url = pages.policy.url | default: '/pages/policy' -%}
+          <li><a href="{{ policy_url }}#shipping" class="hover:opacity-100">Insured Shipping &amp; Returns</a></li>
+          <li><a href="{{ policy_url }}#authenticity" class="hover:opacity-100">Anti Tarnish Quality Standard</a></li>
+          <li><a href="{{ policy_url }}#privacy" class="hover:opacity-100">Privacy Policy</a></li>
+          <li><a href="{{ policy_url }}#terms" class="hover:opacity-100">Terms of Service</a></li>
+          <li><a href="{{ pages.contact.url | default: '/pages/contact' }}" class="hover:opacity-100">Contact Concierge</a></li>
+        {%- endif -%}
+      </ul>
+    </div>
+
+    <div>
+      <p class="text-xs tracking-[.2em] uppercase opacity-50 mb-4">{{ section.settings.secure_heading }}</p>
+      <p class="opacity-60 text-xs leading-relaxed mb-4">{{ section.settings.secure_copy }}</p>
+      <p class="text-[11px] tracking-[.15em] uppercase opacity-50 mb-2.5">{{ section.settings.payments_heading }}</p>
+      <div class="flex flex-wrap items-center gap-1.5">
+        <span class="px-2 py-1 bg-white/10 rounded border border-white/10 text-[10px] font-semibold text-white tracking-wider flex items-center gap-1">
+          {% render 'icon', name: 'shield', size: 12, stroke: '#D8B77E', stroke_width: 2 %}
+          BHIM / UPI
+        </span>
+        {%- assign badges = section.settings.payment_badges | split: ',' -%}
+        {%- for badge in badges -%}
+          {%- assign label = badge | strip -%}
+          {%- if label != blank -%}
+            <span class="px-2 py-1 bg-white/10 rounded border border-white/10 text-[10px] font-semibold tracking-wider">{{ label }}</span>
+          {%- endif -%}
+        {%- endfor -%}
+      </div>
+    </div>
+  </div>
+
+  <div class="divider-gold my-10 max-w-7xl mx-auto"></div>
+
+  <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] opacity-50">
+    <p>&copy; {{ 'now' | date: '%Y' }} {{ section.settings.copyright_name }}. All rights reserved.</p>
+    <div class="flex items-center gap-3">
+      {%- assign trust = section.settings.trust_badges | split: ',' -%}
+      {%- for badge in trust -%}
+        <span class="flex items-center gap-3">
+          {{ badge | strip }}
+          {%- unless forloop.last %}<span>•</span>{% endunless -%}
+        </span>
+      {%- endfor -%}
+    </div>
+  </div>
+</footer>
+
+{% schema %}
+{
+  "name": "Footer",
+  "tag": "div",
+  "class": "elaraa-footer",
+  "settings": [
+    {
+      "type": "image_picker",
+      "id": "logo",
+      "label": "Footer logo",
+      "info": "Overrides Theme settings → Brand → Footer logo."
+    },
+    {
+      "type": "richtext",
+      "id": "blurb",
+      "label": "Brand blurb",
+      "default": "<p>Premium fashion jewellery designed for everyday wear.<br>Made with intention. Worn with ease.</p>"
+    },
+    {
+      "type": "text",
+      "id": "connect_heading",
+      "label": "Social heading",
+      "default": "Connect With Us"
+    },
+    {
+      "type": "text",
+      "id": "collections_heading",
+      "label": "Collections column heading",
+      "default": "Shop Collections"
+    },
+    {
+      "type": "link_list",
+      "id": "collections_menu",
+      "label": "Collections menu",
+      "default": "footer",
+      "info": "Live site: Statement Earrings, Elegant Necklaces, Daily Wear Rings, New Arrivals."
+    },
+    {
+      "type": "text",
+      "id": "support_heading",
+      "label": "Support column heading",
+      "default": "Customer Support"
+    },
+    {
+      "type": "link_list",
+      "id": "support_menu",
+      "label": "Support menu",
+      "info": "Live site: Insured Shipping & Returns, Anti Tarnish Quality Standard, Privacy Policy, Terms of Service, Contact Concierge."
+    },
+    {
+      "type": "text",
+      "id": "secure_heading",
+      "label": "Secure column heading",
+      "default": "Guaranteed & Secure"
+    },
+    {
+      "type": "textarea",
+      "id": "secure_copy",
+      "label": "Secure copy",
+      "default": "256 bit SSL encryption on every order. Cash on Delivery available across India."
+    },
+    {
+      "type": "text",
+      "id": "payments_heading",
+      "label": "Payments heading",
+      "default": "Accepted Payment Methods"
+    },
+    {
+      "type": "text",
+      "id": "payment_badges",
+      "label": "Payment badges (comma separated)",
+      "default": "Visa, Mastercard, RuPay, NetBanking, COD"
+    },
+    {
+      "type": "text",
+      "id": "copyright_name",
+      "label": "Copyright name",
+      "default": "ELARAA LUXES"
+    },
+    {
+      "type": "text",
+      "id": "trust_badges",
+      "label": "Trust badges (comma separated)",
+      "default": "Anti Tarnish Quality, Skin Friendly Alloy, Fast Insured Shipping"
+    },
+    {
+      "type": "checkbox",
+      "id": "top_margin",
+      "label": "Add top margin",
+      "info": "The live site adds a small gap above the footer on every page except the home page.",
+      "default": true
+    }
+  ],
+  "enabled_on": {
+    "groups": ["footer"]
+  }
+}
+{% endschema %}

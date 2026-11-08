@@ -1,6 +1,15 @@
 {
   "type": "footer",
   "name": "Footer",
-  "sections": {},
-  "order": []
+  "sections": {
+    "footer": {
+      "type": "footer",
+      "settings": {
+        "collections_menu": "footer-collections",
+        "support_menu": "footer-support",
+        "top_margin": true
+      }
+    }
+  },
+  "order": ["footer"]
 }

@@ -33,6 +33,17 @@ test('every globals.css selector is present in assets/elaraa.css', async () => {
   assert.ok(want.size > 60, `sanity: parsed only ${want.size} source selectors`);
 });
 
+test('head-styles loads tailwind.css before elaraa.css so component rules win the cascade', async () => {
+  // In globals.css the component rules follow the @tailwind directives, so at
+  // equal specificity they beat preflight and utilities (e.g. placeholder
+  // colour, .btn-luxury padding vs px-3). The theme must keep that order.
+  const snippet = await readFile(path.join(here, '..', 'snippets', 'head-styles.liquid'), 'utf8');
+  const tailwindAt = snippet.indexOf("'tailwind.css'");
+  const elaraaAt = snippet.indexOf("'elaraa.css'");
+  assert.ok(tailwindAt >= 0 && elaraaAt >= 0, 'both stylesheets are referenced');
+  assert.ok(tailwindAt < elaraaAt, 'tailwind.css must be linked before elaraa.css');
+});
+
 test('design tokens keep their exact values', async () => {
   const theme = await readFile(themeCss, 'utf8');
   for (const [name, value] of [

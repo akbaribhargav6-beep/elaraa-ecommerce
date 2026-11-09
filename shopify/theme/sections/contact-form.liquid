@@ -1,0 +1,184 @@
+{% comment %}
+  Contact — inquiry form + atelier information, ported from
+  frontend/src/app/contact/page.tsx. The form is Shopify's contact form (the
+  message is emailed to the store's sender address); topic chips fill a hidden
+  field via src/js/contact.mjs.
+{% endcomment %}
+{%- liquid
+  assign topics = section.settings.topics | split: ','
+  assign first_topic = topics.first | strip
+  assign whatsapp = settings.whatsapp_number
+-%}
+<section id="inquiry-form" class="px-6 md:px-16 py-20 sm:py-28 max-w-7xl mx-auto scroll-mt-28" data-section-id="{{ section.id }}">
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
+    <div class="lg:col-span-7 space-y-8 bg-white/70 p-6 sm:p-10" style="border: 1px solid rgba(43,38,32,.1)" data-reveal>
+      <div>
+        <p class="eyebrow mb-2">{{ section.settings.eyebrow }}</p>
+        <h2 class="serif text-3xl sm:text-4xl font-light">{{ section.settings.heading }}</h2>
+        <p class="text-xs sm:text-sm opacity-60 mt-2">{{ section.settings.copy }}</p>
+      </div>
+
+      {%- form 'contact', id: 'ContactForm', class: 'space-y-5 scroll-mt-28' -%}
+        {%- if form.posted_successfully? -%}
+          <p class="text-sm opacity-70 py-10 text-center" role="status" tabindex="-1" autofocus>{{ section.settings.success_message }}</p>
+        {%- else -%}
+          {%- if form.errors -%}
+            <p class="text-xs" style="color: #b91c1c" role="alert">{{ section.settings.error_message }}</p>
+          {%- endif -%}
+
+          <div data-topics>
+            <p class="block text-[11px] uppercase tracking-widest opacity-60 mb-2.5 font-medium" id="ContactTopicLabel">Inquiry Category</p>
+            <input type="hidden" name="contact[Topic]" value="{{ first_topic | escape }}" data-topic-field>
+            <div class="flex flex-wrap gap-2" role="group" aria-labelledby="ContactTopicLabel">
+              {%- for topic in topics -%}
+                {%- assign label = topic | strip -%}
+                {%- if label == blank -%}{%- continue -%}{%- endif -%}
+                <button
+                  type="button"
+                  data-topic="{{ label | escape }}"
+                  aria-pressed="{% if forloop.first %}true{% else %}false{% endif %}"
+                  class="text-xs px-3.5 py-2 font-medium transition-colors"
+                  style="{% if forloop.first %}background: var(--gold-deep); color: var(--ivory); border: 1px solid var(--gold-deep){% else %}background: white; border: 1px solid rgba(43,38,32,.15){% endif %}"
+                >{{ label }}</button>
+              {%- endfor -%}
+            </div>
+          </div>
+
+          <div class="grid sm:grid-cols-2 gap-5">
+            <div>
+              <label for="ContactName" class="block text-[11px] uppercase tracking-widest opacity-60 mb-1.5 font-medium">Full Name *</label>
+              <input id="ContactName" required type="text" name="contact[name]" autocomplete="name" value="{{ form.name | default: customer.name | escape }}" placeholder="Your name" class="w-full px-4 py-3 text-sm bg-white border outline-none" style="border-color: rgba(43,38,32,.2)">
+            </div>
+            <div>
+              <label for="ContactEmail" class="block text-[11px] uppercase tracking-widest opacity-60 mb-1.5 font-medium">Email Address *</label>
+              <input id="ContactEmail" required type="email" name="contact[email]" autocomplete="email" value="{{ form.email | default: customer.email | escape }}" placeholder="you@example.com" class="w-full px-4 py-3 text-sm bg-white border outline-none" style="border-color: rgba(43,38,32,.2)">
+            </div>
+          </div>
+
+          <div>
+            <label for="ContactPhone" class="block text-[11px] uppercase tracking-widest opacity-60 mb-1.5 font-medium">Phone / WhatsApp</label>
+            <input id="ContactPhone" type="tel" name="contact[phone]" autocomplete="tel" value="{{ form.phone | escape }}" placeholder="+91 98765 43210" class="w-full px-4 py-3 text-sm bg-white border outline-none" style="border-color: rgba(43,38,32,.2)">
+          </div>
+
+          <div>
+            <label for="ContactMessage" class="block text-[11px] uppercase tracking-widest opacity-60 mb-1.5 font-medium">Message &amp; Vision Details *</label>
+            <textarea id="ContactMessage" required rows="5" name="contact[body]" placeholder="Tell us about the piece, style preference, or appointment timeline..." class="w-full px-4 py-3 text-sm bg-white border outline-none" style="border-color: rgba(43,38,32,.2)">{{ form.body }}</textarea>
+          </div>
+
+          <div class="pt-2 flex items-center justify-between flex-wrap gap-4">
+            <button type="submit" class="btn-luxury btn-gold-solid min-h-[48px] w-full sm:w-auto justify-center"><span>{{ section.settings.button_label }}</span></button>
+            <p class="text-[11px] opacity-50 italic">🔒 Strictly confidential. We respect your privacy.</p>
+          </div>
+        {%- endif -%}
+      {%- endform -%}
+    </div>
+
+    <div class="lg:col-span-5 space-y-8">
+      <div class="p-6 sm:p-8 space-y-6" style="background: var(--cream); border: 1px solid rgba(43,38,32,.1)" data-reveal>
+        <div class="flex items-center justify-between pb-4 border-b" style="border-color: rgba(43,38,32,.12)">
+          <div>
+            <p class="eyebrow text-[10px]">Atelier Hours</p>
+            <h3 class="serif text-2xl">Visit Our Gallery</h3>
+          </div>
+          {%- if section.settings.hours_badge != blank -%}
+            <span class="text-[10px] font-medium px-2.5 py-1 rounded-full uppercase tracking-wider" style="background: #d1fae5; color: #065f46">{{ section.settings.hours_badge }}</span>
+          {%- endif -%}
+        </div>
+        <div class="space-y-3 text-sm">
+          {%- for block in section.blocks -%}
+            {%- if block.type != 'hours' -%}{%- continue -%}{%- endif -%}
+            <div class="flex justify-between{% unless forloop.last %} border-b pb-2{% endunless %}" style="border-color: rgba(43,38,32,.08)" {{ block.shopify_attributes }}>
+              <span class="font-medium">{{ block.settings.days }}</span>
+              <span class="opacity-70">{{ block.settings.hours }}</span>
+            </div>
+          {%- endfor -%}
+        </div>
+        {%- if whatsapp != blank -%}
+          <a href="https://wa.me/{{ whatsapp }}?text=I%20would%20like%20to%20schedule%20a%20private%20atelier%20visit" target="_blank" rel="noopener" class="btn-luxury btn-gold w-full justify-center min-h-[44px]"><span>Book Private Appointment</span></a>
+        {%- endif -%}
+      </div>
+
+      <div class="bg-white/80 p-6 sm:p-8 space-y-4" style="border: 1px solid rgba(43,38,32,.1)" data-reveal>
+        <p class="eyebrow text-[10px]">The ELARAA Promise</p>
+        <h3 class="serif text-2xl">Bespoke Jewellery Experience</h3>
+        <ul class="space-y-3.5 text-sm">
+          <li class="flex items-start gap-3">
+            <span class="w-5 h-5 rounded-full flex items-center justify-center text-xs shrink-0 font-bold" style="background: rgba(168,130,61,.15); color: var(--gold-deep)" aria-hidden="true">✓</span>
+            <div>
+              <strong class="block font-medium">Premium Anti-Tarnish Protection</strong>
+              <span class="opacity-60 text-xs">Crafted with advanced anti-tarnish technology to preserve its brilliant shine through everyday wear.</span>
+            </div>
+          </li>
+          <li class="flex items-start gap-3">
+            <span class="w-5 h-5 rounded-full flex items-center justify-center text-xs shrink-0 font-bold" style="background: rgba(168,130,61,.15); color: var(--gold-deep)" aria-hidden="true">✓</span>
+            <div>
+              <strong class="block font-medium">Made for Everyday Elegance</strong>
+              <span class="opacity-60 text-xs">Lightweight, skin friendly, and exceptionally comfortable designed to complement your style from morning to night.</span>
+            </div>
+          </li>
+          <li class="flex items-start gap-3">
+            <span class="w-5 h-5 rounded-full flex items-center justify-center text-xs shrink-0 font-bold" style="background: rgba(168,130,61,.15); color: var(--gold-deep)" aria-hidden="true">✓</span>
+            <div>
+              <strong class="block font-medium">Water &amp; Sweat Resistant</strong>
+              <span class="opacity-60 text-xs">Wear it confidently through your daily routine. Our jewellery is built to resist water, sweat, and everyday exposure while maintaining its luxurious finish.</span>
+            </div>
+          </li>
+        </ul>
+      </div>
+
+      <div class="p-6 space-y-3 shadow-xl" style="background: linear-gradient(135deg, #17140F, #2B2620); color: var(--ivory)" data-reveal>
+        <div class="text-3xl serif leading-none" style="color: var(--gold)" aria-hidden="true">&ldquo;</div>
+        <p class="serif italic text-base sm:text-lg leading-relaxed opacity-90">{{ section.settings.quote }}</p>
+        <div class="pt-2 border-t flex items-center justify-between" style="border-color: rgba(255,255,255,.15)">
+          <div>
+            <p class="text-xs font-medium" style="color: var(--gold)">{{ section.settings.quote_author }}</p>
+            <p class="text-[10px] opacity-50">{{ section.settings.quote_place }}</p>
+          </div>
+          <span class="text-xs tracking-widest opacity-40 uppercase serif" aria-hidden="true">✦ ELARAA ✦</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Contact form",
+  "tag": "div",
+  "max_blocks": 6,
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "Personal Service" },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Send an Editorial Inquiry" },
+    { "type": "text", "id": "copy", "label": "Copy", "default": "Select a topic below so we can connect you with the right specialist." },
+    {
+      "type": "text",
+      "id": "topics",
+      "label": "Topics (comma separated)",
+      "default": "Bridal & Bespoke, Custom Engraving, Online Order, Bulk & Corporate Gifting, Atelier Visit, Press & Collaboration"
+    },
+    { "type": "text", "id": "button_label", "label": "Button label", "default": "Submit Concierge Inquiry →" },
+    { "type": "text", "id": "success_message", "label": "Success message", "default": "Thanks, we'll get back to you shortly." },
+    { "type": "text", "id": "error_message", "label": "Error message", "default": "Something went wrong. Please check your details and try again." },
+    { "type": "text", "id": "hours_badge", "label": "Hours badge", "default": "Open Today" },
+    {
+      "type": "textarea",
+      "id": "quote",
+      "label": "Quote",
+      "default": "Jewellery should feel like poetry in motion, personal, weightless, and created for effortless style."
+    },
+    { "type": "text", "id": "quote_author", "label": "Quote attribution", "default": "Founder - Elaraa Luxes" },
+    { "type": "text", "id": "quote_place", "label": "Quote place", "default": "Jamnagar, India" }
+  ],
+  "blocks": [
+    {
+      "type": "hours",
+      "name": "Opening hours row",
+      "settings": [
+        { "type": "text", "id": "days", "label": "Days", "default": "Monday to Saturday" },
+        { "type": "text", "id": "hours", "label": "Hours", "default": "10:00 AM to 5:00 PM IST" }
+      ]
+    }
+  ],
+  "presets": [{ "name": "Contact form", "blocks": [{ "type": "hours" }] }]
+}
+{% endschema %}

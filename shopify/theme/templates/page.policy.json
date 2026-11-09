@@ -1,0 +1,57 @@
+{
+  "sections": {
+    "main": {
+      "type": "policy-blocks",
+      "blocks": {
+        "shipping": {
+          "type": "policy",
+          "settings": {
+            "anchor": "shipping",
+            "nav_label": "Shipping & Returns",
+            "heading": "Shipping & Returns",
+            "body": "<p><strong>Shipping:</strong> Orders are dispatched within 24 hours and arrive within 3 to 5 business days across India. Shipping is free on orders over ₹2,000; a flat ₹99 applies below that.</p><p><strong>Returns:</strong> Unworn pieces in original packaging can be returned or exchanged within 14 days of delivery. To start a return, contact us with your order number.</p><p><strong>Warranty:</strong> Every ELARAA piece is covered by a 1 year craftsmanship warranty against tarnish and defects.</p>"
+          }
+        },
+        "authenticity": {
+          "type": "policy",
+          "settings": {
+            "anchor": "authenticity",
+            "nav_label": "Authenticity & Quality",
+            "heading": "Authenticity & Quality Standard",
+            "body": "<p>Every ELARAA piece is fashion jewellery crafted from a premium alloy base with a long lasting, anti tarnish, skin friendly finish, not gold or silver. We're upfront about this so you know exactly what you're buying.</p><p>Every order ships with an authenticity card confirming the finish and care standard of your piece.</p>"
+          }
+        },
+        "privacy": {
+          "type": "policy",
+          "settings": {
+            "anchor": "privacy",
+            "nav_label": "Privacy",
+            "heading": "Privacy Policy",
+            "body": "<p>We collect only what's needed to process your order and improve your experience: your name, email, phone, and shipping address. We never sell your data to third parties.</p><p>Payment details are handled securely and are never stored on our servers in raw form. You can request access to, correction of, or deletion of your data at any time by contacting us.</p>"
+          }
+        },
+        "terms": {
+          "type": "policy",
+          "settings": {
+            "anchor": "terms",
+            "nav_label": "Terms of Service",
+            "heading": "Terms of Service",
+            "body": "<p>By placing an order with ELARAA, you agree to our pricing, availability, and shipping terms as listed at time of purchase. Prices are listed in Indian Rupees (₹) and are subject to change without notice. All product images are representative; natural variation in handmade pieces is expected.</p><p>All jewellery is sold subject to availability. We reserve the right to cancel any order suspected of fraud or error, with a full refund issued.</p>"
+          }
+        },
+        "care": {
+          "type": "policy",
+          "settings": {
+            "anchor": "care",
+            "nav_label": "Jewellery Care",
+            "heading": "Jewellery Care",
+            "body": "<p>• Store pieces separately to avoid scratching</p><p>• Remove before swimming, showering or exercise</p><p>• Clean gently with a soft, lint free cloth</p>"
+          }
+        }
+      },
+      "block_order": ["shipping", "authenticity", "privacy", "terms", "care"],
+      "settings": {}
+    }
+  },
+  "order": ["main"]
+}

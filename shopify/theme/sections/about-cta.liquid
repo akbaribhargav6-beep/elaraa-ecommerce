@@ -1,0 +1,47 @@
+{% comment %}
+  About — final call to action, ported from frontend/src/app/about/page.tsx.
+{% endcomment %}
+{%- liquid
+  assign primary_url = section.settings.primary_link | default: routes.all_products_collection_url
+  assign secondary_url = section.settings.secondary_link | default: '/pages/contact'
+-%}
+<section class="px-6 md:px-16 py-20 text-center" style="background: linear-gradient(180deg, #FAF7F2 0%, #EFE9DE 100%); border-top: 1px solid rgba(43,38,32,.08)" data-section-id="{{ section.id }}">
+  <div class="max-w-4xl mx-auto space-y-6" data-reveal>
+    <p class="eyebrow">{{ section.settings.eyebrow }}</p>
+    <h2 class="serif text-4xl sm:text-6xl font-light leading-tight">
+      {{ section.settings.heading_before }} <em class="not-italic" style="color: var(--gold-deep)">{{ section.settings.heading_accent }}</em>
+    </h2>
+    <p class="text-sm sm:text-base opacity-70 max-w-xl mx-auto leading-relaxed">{{ section.settings.copy }}</p>
+    <div class="pt-4 flex flex-wrap items-center justify-center gap-4">
+      {%- if section.settings.primary_label != blank -%}
+        <a href="{{ primary_url }}" class="btn-luxury btn-gold-solid"><span>{{ section.settings.primary_label }}</span></a>
+      {%- endif -%}
+      {%- if section.settings.secondary_label != blank -%}
+        <a href="{{ secondary_url }}" class="btn-luxury btn-gold"><span>{{ section.settings.secondary_label }}</span></a>
+      {%- endif -%}
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "About call to action",
+  "tag": "div",
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "Discover Excellence" },
+    { "type": "text", "id": "heading_before", "label": "Heading (before accent)", "default": "Begin Your" },
+    { "type": "text", "id": "heading_accent", "label": "Heading accent (gold)", "default": "ELARAA Journey" },
+    {
+      "type": "textarea",
+      "id": "copy",
+      "label": "Copy",
+      "default": "Explore our latest collections online, or reach out to our concierge for styling assistance."
+    },
+    { "type": "text", "id": "primary_label", "label": "Primary button label", "default": "Explore Collection →" },
+    { "type": "url", "id": "primary_link", "label": "Primary button link" },
+    { "type": "text", "id": "secondary_label", "label": "Secondary button label", "default": "Contact Private Concierge" },
+    { "type": "url", "id": "secondary_link", "label": "Secondary button link" }
+  ],
+  "presets": [{ "name": "About call to action" }]
+}
+{% endschema %}

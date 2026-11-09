@@ -1,0 +1,65 @@
+{% comment %}
+  Policies ("Good to Know") — ported from frontend/src/app/policy/page.tsx.
+  One block per policy; each block's anchor is the id the footer links to
+  (/pages/policy#shipping, #authenticity, #privacy, #terms) and the jump-link
+  row is generated from the blocks.
+{% endcomment %}
+<div class="pt-28"></div>
+<section class="px-4 sm:px-6 md:px-16 pb-20 sm:pb-28 max-w-4xl mx-auto" data-section-id="{{ section.id }}">
+  <div class="text-center mb-8 sm:mb-14" data-reveal>
+    <p class="eyebrow">{{ section.settings.eyebrow }}</p>
+    <h1 class="serif text-3xl sm:text-4xl md:text-6xl mt-3 sm:mt-4">{{ section.settings.heading }}</h1>
+  </div>
+
+  <nav class="flex flex-wrap justify-center gap-2.5 sm:gap-3 mb-10 sm:mb-14" aria-label="Policies" data-reveal>
+    {%- for block in section.blocks -%}
+      {%- assign anchor = block.settings.anchor | handleize -%}
+      {%- if anchor == blank -%}{%- continue -%}{%- endif -%}
+      <a
+        href="#{{ anchor }}"
+        class="flex px-4 sm:px-5 py-2.5 border text-xs tracking-[.15em] uppercase min-h-[44px] items-center font-medium transition-colors hover:opacity-70"
+        style="{% if forloop.first %}border-color: var(--gold-deep); color: var(--gold-deep){% else %}border-color: rgba(43,38,32,.2){% endif %}"
+      >{{ block.settings.nav_label | default: block.settings.heading }}</a>
+    {%- endfor -%}
+  </nav>
+
+  <div class="space-y-8 sm:space-y-10 text-sm opacity-80 leading-relaxed">
+    {%- for block in section.blocks -%}
+      {%- assign anchor = block.settings.anchor | handleize -%}
+      <div {% if anchor != blank %}id="{{ anchor }}"{% endif %} class="p-5 sm:p-8 border scroll-mt-28" style="border-color: rgba(43,38,32,.12)" data-reveal {{ block.shopify_attributes }}>
+        <h2 class="serif text-2xl sm:text-3xl mb-4 sm:mb-6" style="opacity: 1; color: var(--gold-deep)">{{ block.settings.heading }}</h2>
+        <div class="space-y-3">{{ block.settings.body }}</div>
+      </div>
+    {%- endfor -%}
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Policies",
+  "tag": "div",
+  "max_blocks": 12,
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "Policies" },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Good to Know" }
+  ],
+  "blocks": [
+    {
+      "type": "policy",
+      "name": "Policy",
+      "settings": [
+        { "type": "text", "id": "anchor", "label": "Anchor (URL id)", "info": "Lowercase, no spaces. The footer links to shipping, authenticity, privacy and terms.", "default": "shipping" },
+        { "type": "text", "id": "nav_label", "label": "Jump-link label", "info": "Defaults to the heading." },
+        { "type": "text", "id": "heading", "label": "Heading", "default": "Shipping & Returns" },
+        {
+          "type": "richtext",
+          "id": "body",
+          "label": "Body",
+          "default": "<p><strong>Shipping:</strong> Orders are dispatched within 24 hours and arrive within 3 to 5 business days across India.</p>"
+        }
+      ]
+    }
+  ],
+  "presets": [{ "name": "Policies", "blocks": [{ "type": "policy" }] }]
+}
+{% endschema %}

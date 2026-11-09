@@ -1,0 +1,16 @@
+{
+  "sections": {
+    "hero": { "type": "contact-hero", "settings": {} },
+    "form": {
+      "type": "contact-form",
+      "blocks": {
+        "h1": { "type": "hours", "settings": { "days": "Monday to Saturday", "hours": "10:00 AM to 5:00 PM IST" } },
+        "h2": { "type": "hours", "settings": { "days": "Sunday", "hours": "By Appointment Only" } },
+        "h3": { "type": "hours", "settings": { "days": "Virtual Concierge", "hours": "24/7 Global Desk" } }
+      },
+      "block_order": ["h1", "h2", "h3"],
+      "settings": {}
+    }
+  },
+  "order": ["hero", "form"]
+}

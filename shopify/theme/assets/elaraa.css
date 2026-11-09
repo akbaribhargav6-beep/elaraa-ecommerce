@@ -284,3 +284,16 @@ select { background: transparent; }
 .jdgm-widget .jdgm-btn { border-radius: 0; border-color: var(--gold-deep); color: var(--gold-deep); background: transparent; letter-spacing: .25em; text-transform: uppercase; font-size: .75rem; }
 .jdgm-widget .jdgm-histogram__bar-content { background: var(--gold-deep); }
 .jdgm-preview-badge .jdgm-prev-badge__text { opacity: .7; text-decoration: underline; text-underline-offset: 4px; }
+
+/* ══════════════════════ Rich text from the Shopify page editor (theme addition) ══════════════════════
+   Used by sections/main-page.liquid for pages without a custom design. */
+.rte > * + * { margin-top: 1em; }
+.rte h2, .rte h3, .rte h4 { font-family: var(--font-cormorant), serif; font-weight: 400; line-height: 1.2; margin-top: 1.6em; }
+.rte h2 { font-size: 1.75rem; }
+.rte h3 { font-size: 1.4rem; }
+.rte a { color: var(--gold-deep); text-decoration: underline; text-underline-offset: 4px; }
+.rte ul { list-style: disc; padding-left: 1.25em; }
+.rte ol { list-style: decimal; padding-left: 1.25em; }
+.rte li + li { margin-top: .4em; }
+.rte img { max-width: 100%; height: auto; }
+.rte blockquote { border-left: 2px solid var(--gold); padding-left: 1em; font-style: italic; }

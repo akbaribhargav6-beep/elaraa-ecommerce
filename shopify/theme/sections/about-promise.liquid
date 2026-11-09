@@ -1,0 +1,62 @@
+{% comment %}
+  About — "The ELARAA Promise to You", ported from frontend/src/app/about/page.tsx.
+{% endcomment %}
+{%- assign button_url = section.settings.button_link | default: routes.all_products_collection_url -%}
+<section class="px-6 md:px-16 py-20 sm:py-28 max-w-7xl mx-auto" data-section-id="{{ section.id }}">
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
+    <div class="lg:col-span-5 space-y-6" data-reveal>
+      <p class="eyebrow">{{ section.settings.eyebrow }}</p>
+      <h2 class="serif text-3xl sm:text-5xl leading-tight">{{ section.settings.heading }}</h2>
+      <p class="text-sm sm:text-base opacity-70 leading-relaxed">{{ section.settings.copy }}</p>
+      {%- if section.settings.button_label != blank -%}
+        <a href="{{ button_url }}" class="btn-luxury btn-gold"><span>{{ section.settings.button_label }}</span></a>
+      {%- endif -%}
+    </div>
+    <div class="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-5">
+      {%- for block in section.blocks -%}
+        <div class="bg-white p-6 border space-y-3" style="border-color: rgba(43,38,32,.1)" data-reveal {{ block.shopify_attributes }}>
+          <div class="w-10 h-10 rounded-full flex items-center justify-center text-lg" style="background: rgba(168,130,61,.1)" aria-hidden="true">{{ block.settings.icon }}</div>
+          <h3 class="serif text-xl font-medium">{{ block.settings.title }}</h3>
+          <p class="text-xs opacity-60 leading-relaxed">{{ block.settings.body }}</p>
+        </div>
+      {%- endfor -%}
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "About promise",
+  "tag": "div",
+  "max_blocks": 6,
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "Our Guarantees" },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "The ELARAA Promise to You" },
+    {
+      "type": "textarea",
+      "id": "copy",
+      "label": "Copy",
+      "default": "When you choose an ELARAA piece, you are entering a lasting relationship with our atelier. Here is what we guarantee with every delivery."
+    },
+    { "type": "text", "id": "button_label", "label": "Button label", "default": "Explore Current Collections" },
+    { "type": "url", "id": "button_link", "label": "Button link" }
+  ],
+  "blocks": [
+    {
+      "type": "promise",
+      "name": "Promise",
+      "settings": [
+        { "type": "text", "id": "icon", "label": "Icon (emoji)", "default": "👑" },
+        { "type": "text", "id": "title", "label": "Title", "default": "Quality Guarantee" },
+        {
+          "type": "textarea",
+          "id": "body",
+          "label": "Body",
+          "default": "Every item arrives with an authenticity card and premium anti tarnish finish guarantee."
+        }
+      ]
+    }
+  ],
+  "presets": [{ "name": "About promise", "blocks": [{ "type": "promise" }] }]
+}
+{% endschema %}

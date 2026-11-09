@@ -1,0 +1,77 @@
+{% comment %}
+  About — hero + cinematic banner, ported from frontend/src/app/about/page.tsx.
+  Images fall back to the photos the live page uses (hosted on Cloudinary)
+  until the merchant picks their own in the editor.
+{% endcomment %}
+<div class="pt-28"></div>
+<section class="relative pb-16 sm:pb-20 px-6 md:px-16 text-center" style="background: linear-gradient(180deg, #FAF7F2 0%, #F8F5F0 50%, rgba(239,233,222,.5) 100%); border-bottom: 1px solid rgba(43,38,32,.08)" data-section-id="{{ section.id }}">
+  <div class="max-w-3xl mx-auto space-y-6">
+    {%- if section.settings.pill != blank -%}
+      <div data-reveal>
+        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/80" style="border: 1px solid rgba(201,166,107,.35)">
+          <span class="text-xs" style="color: var(--gold-deep)" aria-hidden="true">✦</span>
+          <span class="text-[11px] font-medium tracking-widest uppercase">{{ section.settings.pill }}</span>
+          <span class="text-xs" style="color: var(--gold-deep)" aria-hidden="true">✦</span>
+        </div>
+      </div>
+    {%- endif -%}
+    <div data-reveal><p class="eyebrow tracking-[.4em]">{{ section.settings.eyebrow }}</p></div>
+    <div data-reveal>
+      <h1 class="serif text-4xl sm:text-6xl font-light leading-[1.1]">
+        {{ section.settings.heading_before }} <em class="not-italic" style="color: var(--gold-deep)">{{ section.settings.heading_accent }}</em> {{ section.settings.heading_after }}
+      </h1>
+    </div>
+    <div data-reveal>
+      <p class="text-sm sm:text-base opacity-70 leading-relaxed">{{ section.settings.copy }}</p>
+    </div>
+  </div>
+</section>
+
+<section class="px-6 md:px-16 -mt-8 relative z-10 max-w-7xl mx-auto">
+  <div class="relative aspect-[16/9] md:aspect-[21/9] overflow-hidden shadow-2xl border" style="border-color: rgba(43,38,32,.15)" data-reveal>
+    {%- if section.settings.banner != blank -%}
+      {{ section.settings.banner | image_url: width: 2000 | image_tag: alt: section.settings.banner_alt, class: 'absolute inset-0 w-full h-full object-cover', widths: '800, 1200, 2000', sizes: '(min-width:1280px) 1216px, 100vw', fetchpriority: 'high' }}
+    {%- else -%}
+      <img src="https://res.cloudinary.com/nvausw3f/image/upload/v1786170498/products/enchant/img-5.jpg" alt="{{ section.settings.banner_alt | escape }}" width="1600" height="900" class="absolute inset-0 w-full h-full object-cover" fetchpriority="high">
+    {%- endif -%}
+    <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent flex items-end p-6 sm:p-12">
+      <div class="text-white space-y-2 max-w-xl">
+        <p class="eyebrow text-xs" style="color: var(--gold)">{{ section.settings.banner_eyebrow }}</p>
+        <h2 class="serif text-2xl sm:text-4xl font-light">{{ section.settings.banner_heading }}</h2>
+        <p class="text-xs sm:text-sm opacity-80 hidden sm:block">{{ section.settings.banner_copy }}</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "About hero",
+  "tag": "div",
+  "settings": [
+    { "type": "text", "id": "pill", "label": "Pill", "default": "Heritage of Elegance · Jamnagar Atelier" },
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "Our Story & Craftsmanship" },
+    { "type": "text", "id": "heading_before", "label": "Heading (before accent)", "default": "Crafting Timeless" },
+    { "type": "text", "id": "heading_accent", "label": "Heading accent (gold)", "default": "Fashion Jewellery" },
+    { "type": "text", "id": "heading_after", "label": "Heading (after accent)", "default": "& Everyday Luxury" },
+    {
+      "type": "textarea",
+      "id": "copy",
+      "label": "Copy",
+      "default": "ELARAA was born from a singular conviction: jewellery shouldn't hide in a drawer awaiting special occasions. It should be weightless, personal, and worn every single day."
+    },
+    { "type": "header", "content": "Banner" },
+    { "type": "image_picker", "id": "banner", "label": "Banner image" },
+    { "type": "text", "id": "banner_alt", "label": "Banner alt text", "default": "ELARAA artisans at work" },
+    { "type": "text", "id": "banner_eyebrow", "label": "Banner eyebrow", "default": "Jamnagar Atelier District" },
+    { "type": "text", "id": "banner_heading", "label": "Banner heading", "default": "Where Heritage Aesthetics Meet Modern Restraint" },
+    {
+      "type": "text",
+      "id": "banner_copy",
+      "label": "Banner copy",
+      "default": "Handcrafted in small batches, premium anti tarnish finish, and polished by master artisans."
+    }
+  ],
+  "presets": [{ "name": "About hero" }]
+}
+{% endschema %}

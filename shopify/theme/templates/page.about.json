@@ -1,0 +1,55 @@
+{
+  "sections": {
+    "hero": { "type": "about-hero", "settings": {} },
+    "story": {
+      "type": "about-story",
+      "blocks": {
+        "f1": { "type": "feature", "settings": { "title": "Premium Finish & Anti Tarnish", "body": "Skin friendly and built for daily wear." } },
+        "f2": { "type": "feature", "settings": { "title": "Fair Direct Pricing", "body": "Crafted in-house without middleman markups." } }
+      },
+      "block_order": ["f1", "f2"],
+      "settings": {}
+    },
+    "stats": {
+      "type": "about-stats",
+      "blocks": {
+        "s1": { "type": "counter", "settings": { "target": 15000, "suffix": "+", "label": "Delighted Clients" } },
+        "s2": { "type": "counter", "settings": { "target": 100, "suffix": "%", "label": "Anti Tarnish Quality" } },
+        "s3": { "type": "static", "settings": { "text": "4.9 / 5", "label": "Client Concierge Rating" } },
+        "s4": { "type": "counter", "settings": { "target": 25, "suffix": "+", "label": "Cities Delivered" } }
+      },
+      "block_order": ["s1", "s2", "s3", "s4"],
+      "settings": {}
+    },
+    "promise": {
+      "type": "about-promise",
+      "blocks": {
+        "p1": { "type": "promise", "settings": { "icon": "👑", "title": "Quality Guarantee", "body": "Every item arrives with an authenticity card and premium anti tarnish finish guarantee." } },
+        "p2": { "type": "promise", "settings": { "icon": "🎁", "title": "Velvet Gift Unboxing", "body": "Enclosed in our signature gift packaging, luxury ribbon, and personalized care instructions." } },
+        "p3": { "type": "promise", "settings": { "icon": "🚚", "title": "Insured Shipping", "body": "Dispatched via premium express logistics with transit protection covering full item value." } },
+        "p4": { "type": "promise", "settings": { "icon": "💎", "title": "Customer Satisfaction", "body": "Dedicated customer support and seamless assistance for all your jewellery care needs." } }
+      },
+      "block_order": ["p1", "p2", "p3", "p4"],
+      "settings": { "button_link": "shopify://collections/all" }
+    },
+    "gallery": {
+      "type": "about-gallery",
+      "blocks": {
+        "g1": { "type": "image", "settings": { "fallback_url": "https://res.cloudinary.com/nvausw3f/image/upload/v1786170500/products/dazzle/img-1.jpg", "alt": "ELARAA Dazzle earrings", "caption": "The Dazzle Drop Collection", "wide": false } },
+        "g2": { "type": "image", "settings": { "fallback_url": "https://res.cloudinary.com/nvausw3f/image/upload/v1786170488/products/serene/img-1.jpg", "alt": "ELARAA Serene pearl studs", "caption": "Hand Selected Freshwater Pearls", "wide": false } },
+        "g3": { "type": "image", "settings": { "fallback_url": "https://res.cloudinary.com/nvausw3f/image/upload/v1786170482/products/radiance/img-1.jpg", "alt": "ELARAA Radiance studs", "caption": "Premium Anti Tarnish Finish", "wide": true } }
+      },
+      "block_order": ["g1", "g2", "g3"],
+      "settings": {}
+    },
+    "quote": { "type": "about-quote", "settings": {} },
+    "cta": {
+      "type": "about-cta",
+      "settings": {
+        "primary_link": "shopify://collections/all",
+        "secondary_link": "shopify://pages/contact"
+      }
+    }
+  },
+  "order": ["hero", "story", "stats", "promise", "gallery", "quote", "cta"]
+}

@@ -1,0 +1,31 @@
+{% comment %}
+  About — founder quote card, ported from frontend/src/app/about/page.tsx.
+{% endcomment %}
+<section class="px-6 md:px-16 py-20 sm:py-28 max-w-5xl mx-auto text-center" data-section-id="{{ section.id }}">
+  <div class="p-8 sm:p-14 shadow-2xl space-y-6" style="background: var(--black); color: var(--ivory); border: 1px solid rgba(201,166,107,.4)" data-reveal>
+    <div class="text-5xl serif leading-none opacity-80" style="color: var(--gold)" aria-hidden="true">&ldquo;</div>
+    <p class="serif italic text-xl sm:text-3xl leading-relaxed font-light max-w-3xl mx-auto opacity-90">{{ section.settings.quote }}</p>
+    <div class="pt-4 border-t max-w-xs mx-auto space-y-1" style="border-color: rgba(255,255,255,.15)">
+      <p class="serif text-xl font-medium" style="color: var(--gold)">{{ section.settings.author }}</p>
+      <p class="text-[11px] uppercase tracking-widest opacity-50">{{ section.settings.author_sub }}</p>
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "About quote",
+  "tag": "div",
+  "settings": [
+    {
+      "type": "textarea",
+      "id": "quote",
+      "label": "Quote",
+      "default": "True luxury isn't defined by how loud a piece speaks, but by how deeply it connects with the person wearing it. When you put on ELARAA, you should feel effortless elegance and lightweight comfort."
+    },
+    { "type": "text", "id": "author", "label": "Attribution", "default": "The Founders & Artisans" },
+    { "type": "text", "id": "author_sub", "label": "Attribution sub-line", "default": "ELARAA Atelier · Jamnagar, India" }
+  ],
+  "presets": [{ "name": "About quote" }]
+}
+{% endschema %}

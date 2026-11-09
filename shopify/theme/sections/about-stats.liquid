@@ -1,0 +1,48 @@
+{% comment %}
+  About — stats band, ported from frontend/src/app/about/page.tsx.
+  "counter" blocks count up when scrolled into view (src/js/counter.mjs, port
+  of AnimatedCounter.tsx); "static" blocks show fixed text such as "4.9 / 5".
+  Without JS a counter simply shows its final value.
+{% endcomment %}
+<section class="py-16 px-6 md:px-16 text-center" style="background: var(--black); color: var(--ivory)" data-section-id="{{ section.id }}">
+  <div class="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8">
+    {%- for block in section.blocks -%}
+      <div class="space-y-2" data-reveal {{ block.shopify_attributes }}>
+        {%- if block.type == 'counter' -%}
+          <p class="serif text-4xl sm:text-6xl font-light" style="color: var(--gold)" data-counter data-target="{{ block.settings.target }}" data-suffix="{{ block.settings.suffix | escape }}">{{ block.settings.target }}{{ block.settings.suffix }}</p>
+        {%- else -%}
+          <p class="serif text-4xl sm:text-6xl font-light" style="color: var(--gold)">{{ block.settings.text }}</p>
+        {%- endif -%}
+        <p class="text-[11px] uppercase tracking-widest opacity-60">{{ block.settings.label }}</p>
+      </div>
+    {%- endfor -%}
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "About stats",
+  "tag": "div",
+  "max_blocks": 4,
+  "blocks": [
+    {
+      "type": "counter",
+      "name": "Counter",
+      "settings": [
+        { "type": "number", "id": "target", "label": "Number", "default": 15000 },
+        { "type": "text", "id": "suffix", "label": "Suffix", "default": "+" },
+        { "type": "text", "id": "label", "label": "Label", "default": "Delighted Clients" }
+      ]
+    },
+    {
+      "type": "static",
+      "name": "Static figure",
+      "settings": [
+        { "type": "text", "id": "text", "label": "Text", "default": "4.9 / 5" },
+        { "type": "text", "id": "label", "label": "Label", "default": "Client Concierge Rating" }
+      ]
+    }
+  ],
+  "presets": [{ "name": "About stats", "blocks": [{ "type": "counter" }, { "type": "static" }] }]
+}
+{% endschema %}

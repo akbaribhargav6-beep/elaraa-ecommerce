@@ -1,0 +1,63 @@
+{% comment %}
+  About — "Inside the World of ELARAA" editorial gallery, ported from
+  frontend/src/app/about/page.tsx. Each block is one captioned image; a block
+  without a picked image uses its fallback URL (the live page's Cloudinary photo).
+{% endcomment %}
+<section class="px-6 md:px-16 py-16" style="background: rgba(239,233,222,.4); border-top: 1px solid rgba(43,38,32,.08); border-bottom: 1px solid rgba(43,38,32,.08)" data-section-id="{{ section.id }}">
+  <div class="max-w-7xl mx-auto space-y-8">
+    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4" data-reveal>
+      <div>
+        <p class="eyebrow">{{ section.settings.eyebrow }}</p>
+        <h2 class="serif text-3xl sm:text-4xl">{{ section.settings.heading }}</h2>
+      </div>
+      <p class="text-xs opacity-60 max-w-sm">{{ section.settings.copy }}</p>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      {%- for block in section.blocks -%}
+        {%- if block.settings.image == blank and block.settings.fallback_url == blank -%}{%- continue -%}{%- endif -%}
+        <div class="relative aspect-[4/5] overflow-hidden border{% if block.settings.wide %} sm:col-span-2 lg:col-span-1{% endif %}" style="border-color: rgba(43,38,32,.15)" data-reveal {{ block.shopify_attributes }}>
+          {%- if block.settings.image != blank -%}
+            {{ block.settings.image | image_url: width: 1000 | image_tag: alt: block.settings.alt, class: 'absolute inset-0 w-full h-full object-cover', widths: '400, 700, 1000', sizes: '(min-width:1024px) 33vw, (min-width:640px) 50vw, 100vw', loading: 'lazy' }}
+          {%- else -%}
+            <img src="{{ block.settings.fallback_url }}" alt="{{ block.settings.alt | escape }}" width="800" height="1000" class="absolute inset-0 w-full h-full object-cover" loading="lazy">
+          {%- endif -%}
+          <div class="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent p-6 flex items-end">
+            <p class="text-xs text-white font-medium">{{ block.settings.caption }}</p>
+          </div>
+        </div>
+      {%- endfor -%}
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "About gallery",
+  "tag": "div",
+  "max_blocks": 6,
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "Visual Gallery" },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Inside the World of ELARAA" },
+    {
+      "type": "text",
+      "id": "copy",
+      "label": "Copy",
+      "default": "A glimpse into our daily studio practice, stone selection, and finished creations."
+    }
+  ],
+  "blocks": [
+    {
+      "type": "image",
+      "name": "Image",
+      "settings": [
+        { "type": "image_picker", "id": "image", "label": "Image" },
+        { "type": "text", "id": "fallback_url", "label": "Fallback image URL", "info": "Used until an image is picked above." },
+        { "type": "text", "id": "alt", "label": "Alt text", "default": "ELARAA jewellery" },
+        { "type": "text", "id": "caption", "label": "Caption", "default": "The Dazzle Drop Collection" },
+        { "type": "checkbox", "id": "wide", "label": "Span two columns on tablet", "default": false }
+      ]
+    }
+  ],
+  "presets": [{ "name": "About gallery", "blocks": [{ "type": "image" }] }]
+}
+{% endschema %}

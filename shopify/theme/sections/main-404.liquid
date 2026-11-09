@@ -1,0 +1,60 @@
+{% comment %}
+  404 page. Also catches the Next.js site's /shop URL: Shopify refuses URL
+  redirects from the reserved /shop prefix (see shopify/migration/src/redirects.mjs),
+  so that one legacy path is sent on to the all-products collection from here.
+{% endcomment %}
+{%- liquid
+  assign legacy_shop = false
+  if request.path == '/shop' or request.path == '/shop/'
+    assign legacy_shop = true
+  endif
+  assign shop_all = routes.all_products_collection_url
+-%}
+<div class="pt-28"></div>
+<section class="px-6 md:px-16 py-20 sm:py-28 max-w-3xl mx-auto text-center" data-section-id="{{ section.id }}">
+  {%- if legacy_shop -%}
+    {%- comment -%}
+      src/js/legacy.mjs redirects at once and maps ?category= / ?newArrival= /
+      ?search= / ?sort= to the right collection. The 2-second meta refresh is
+      the no-JS fallback (all products).
+    {%- endcomment -%}
+    <meta http-equiv="refresh" content="2; url={{ shop_all }}">
+    <span data-legacy-shop data-all-url="{{ shop_all }}" data-collections-url="{{ routes.collections_url }}" data-search-url="{{ routes.search_url }}" hidden></span>
+    <p class="eyebrow">{{ section.settings.moved_eyebrow }}</p>
+    <h1 class="serif text-4xl sm:text-6xl font-light mt-4">{{ section.settings.moved_heading }}</h1>
+    <p class="text-sm opacity-70 mt-6">
+      <a href="{{ shop_all }}" class="underline underline-offset-4">{{ section.settings.moved_link }}</a>
+    </p>
+  {%- else -%}
+    <p class="eyebrow">{{ section.settings.eyebrow }}</p>
+    <h1 class="serif text-4xl sm:text-6xl font-light mt-4">{{ section.settings.heading }}</h1>
+    <p class="text-sm sm:text-base opacity-70 mt-6 max-w-xl mx-auto leading-relaxed">{{ section.settings.copy }}</p>
+    <div class="pt-10 flex flex-wrap items-center justify-center gap-4">
+      <a href="{{ shop_all }}" class="btn-luxury btn-gold-solid"><span>{{ section.settings.primary_label }}</span></a>
+      <a href="{{ routes.root_url }}" class="btn-luxury btn-gold"><span>{{ section.settings.secondary_label }}</span></a>
+    </div>
+  {%- endif -%}
+</section>
+
+{% schema %}
+{
+  "name": "404",
+  "tag": "div",
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "404" },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "This Page Has Wandered Off" },
+    {
+      "type": "textarea",
+      "id": "copy",
+      "label": "Copy",
+      "default": "The piece or page you were looking for is no longer here. Explore the full collection, or head back home."
+    },
+    { "type": "text", "id": "primary_label", "label": "Primary button label", "default": "Shop All Jewellery" },
+    { "type": "text", "id": "secondary_label", "label": "Secondary button label", "default": "Back to Home" },
+    { "type": "header", "content": "Legacy /shop URL" },
+    { "type": "text", "id": "moved_eyebrow", "label": "Eyebrow", "default": "One moment" },
+    { "type": "text", "id": "moved_heading", "label": "Heading", "default": "Taking you to the collection…" },
+    { "type": "text", "id": "moved_link", "label": "Link label", "default": "Continue to Shop All Jewellery" }
+  ]
+}
+{% endschema %}

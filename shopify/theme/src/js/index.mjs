@@ -51,6 +51,11 @@ function boot() {
   initAccordions();
   initRelated();
   initNotify();
+  // A page restored from the back/forward cache shows the cart as it was when
+  // the shopper left (e.g. before Buy Now added an item) — refresh it.
+  window.addEventListener('pageshow', (e) => {
+    if (e.persisted) ELARAA.cartStore.refresh().catch(() => {});
+  });
   document.addEventListener('shopify:section:load', (e) => {
     initCountdowns(e.target);
     initTestimonials(e.target);

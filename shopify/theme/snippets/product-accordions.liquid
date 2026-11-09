@@ -21,7 +21,8 @@
       <span class="serif text-xl group-hover:opacity-70 transition-opacity">Design Story &amp; Inspiration</span>
       <span data-accordion-arrow class="transition-transform duration-300" style="color: var(--gold-deep); transform: rotate(180deg)" aria-hidden="true">▼</span>
     </button>
-    <div data-accordion-panel class="overflow-hidden transition-[max-height,opacity] duration-500 text-sm opacity-70 leading-relaxed" style="max-height: 500px; opacity: 1">
+    {%- comment -%} No fixed cap: accordions.mjs sets max-height to the content height (and without JS the panel is simply fully open). {%- endcomment -%}
+    <div data-accordion-panel class="overflow-hidden transition-[max-height,opacity] duration-500 text-sm opacity-70 leading-relaxed" style="max-height: none; opacity: 1">
       <div class="pb-5 space-y-3">
         {%- if short_description != blank -%}<p>{{ short_description }}</p>{%- endif -%}
         {%- if product.description != blank -%}<div>{{ product.description }}</div>{%- endif -%}

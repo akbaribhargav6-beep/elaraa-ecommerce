@@ -1,16 +1,23 @@
 {% comment %}
   "You May Also Like" — ported from the related-products block of
-  frontend/src/app/product/[slug]/page.tsx. The block starts hidden; src/js/related.mjs
+  frontend/src/app/product/[slug]/page.tsx.
+
+  The page renders only the empty [data-related] root. src/js/related.mjs
   requests this same section from Shopify's recommendations endpoint (which
-  fills `recommendations`) and swaps in [data-related-inner].
+  fills `recommendations`) and swaps in [data-related-inner], which carries
+  all the spacing — so a product with no recommendations leaves no gap.
+  The root must never be display:none: related.mjs watches it with an
+  IntersectionObserver, and hidden targets never intersect.
 {% endcomment %}
-<section
-  class="max-w-7xl mx-auto px-4 sm:px-6 md:px-12 mt-24 sm:mt-32 hidden"
+<div
   data-related
-  data-url="{{ routes.product_recommendations_url }}?section_id={{ section.id }}&product_id={{ product.id }}&limit={{ section.settings.limit }}&intent=related"
+  data-base="{{ routes.product_recommendations_url }}"
+  data-section-id="{{ section.id }}"
+  data-product-id="{{ product.id }}"
+  data-limit="{{ section.settings.limit }}"
 >
-  {%- if recommendations.performed and recommendations.products_count > 0 -%}
-    <div data-related-inner>
+  {%- if recommendations.performed? and recommendations.products_count > 0 -%}
+    <section class="max-w-7xl mx-auto px-4 sm:px-6 md:px-12 mt-24 sm:mt-32" data-related-inner>
       <div class="flex items-end justify-between mb-8 sm:mb-10">
         <div>
           <p class="eyebrow">{{ section.settings.eyebrow }}</p>
@@ -25,9 +32,9 @@
           </div>
         {%- endfor -%}
       </div>
-    </div>
+    </section>
   {%- endif -%}
-</section>
+</div>
 
 {% schema %}
 {

@@ -7,6 +7,25 @@ export function notifyBody(productTitle, variantTitle) {
   return `Please notify me when "${productTitle}"${variant} is back in stock.`;
 }
 
+/**
+ * Where focus goes when the modal opens: the phone field, else (confirmation
+ * state) the close button. Two queries on purpose — a combined selector
+ * returns the close button, which comes first in the DOM, and then Enter
+ * would close the modal instead of submitting.
+ */
+export function pickFocusTarget(modal) {
+  return modal.querySelector('input[type="tel"]') || modal.querySelector('[data-notify-close]');
+}
+
+/** Drops Shopify's ?contact_posted=true (and the form anchor) so reload / share use the clean URL. */
+export function stripPostedParam(currentUrl) {
+  const url = new URL(currentUrl);
+  if (!url.searchParams.has('contact_posted')) return currentUrl;
+  url.searchParams.delete('contact_posted');
+  url.hash = '';
+  return url.toString();
+}
+
 export function initNotify() {
   const modal = document.querySelector('[data-notify-modal]');
   if (!modal || modal.dataset.bound === '1') return;
@@ -20,7 +39,7 @@ export function initNotify() {
     modal.classList.toggle('hidden', !open);
     modal.setAttribute('aria-hidden', String(!open));
     document.body.style.overflow = open ? 'hidden' : '';
-    if (open) modal.querySelector('input[type="tel"], [data-notify-close]')?.focus({ preventScroll: true });
+    if (open) pickFocusTarget(modal)?.focus({ preventScroll: true });
   };
 
   document.addEventListener('elaraa:notify:open', (e) => {
@@ -39,5 +58,9 @@ export function initNotify() {
 
   // After the form posts, Shopify reloads the product page; reopen the modal
   // to show the confirmation (or the error).
-  if (modal.hasAttribute('data-notify-auto-open')) setOpen(true);
+  if (modal.hasAttribute('data-notify-auto-open')) {
+    setOpen(true);
+    const clean = stripPostedParam(window.location.href);
+    if (clean !== window.location.href) window.history.replaceState(window.history.state, '', clean);
+  }
 }

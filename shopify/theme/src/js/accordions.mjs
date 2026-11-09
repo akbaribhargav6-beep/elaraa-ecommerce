@@ -6,6 +6,14 @@ export function toggleIndex(open, clicked) {
   return open === clicked ? null : clicked;
 }
 
+/**
+ * An open panel is as tall as its content. (ProductAccordions.tsx used a fixed
+ * 500px, which clips a long product description with no way to reach the rest.)
+ */
+export function panelMaxHeight(open, scrollHeight) {
+  return open ? `${scrollHeight}px` : '0px';
+}
+
 function bind(root) {
   if (root.dataset.bound === '1') return;
   root.dataset.bound = '1';
@@ -22,7 +30,7 @@ function bind(root) {
       item.dataset.open = String(on);
       if (button) button.setAttribute('aria-expanded', String(on));
       if (panel) {
-        panel.style.maxHeight = on ? '500px' : '0px';
+        panel.style.maxHeight = panelMaxHeight(on, panel.scrollHeight);
         panel.style.opacity = on ? '1' : '0';
         panel.toggleAttribute('inert', !on);
       }
@@ -39,6 +47,9 @@ function bind(root) {
     paint();
   });
 
+  // Content height changes with the viewport width and when fonts/images load.
+  window.addEventListener('resize', paint, { passive: true });
+  window.addEventListener('load', paint, { once: true });
   paint();
 }
 

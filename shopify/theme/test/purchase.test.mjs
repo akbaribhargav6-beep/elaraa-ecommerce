@@ -1,6 +1,29 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { savingsPercent, bulkInquiryUrl, isValidPincode, pincodeMessage, clampQty, variantUrl } from '../src/js/purchase.mjs';
+import { savingsPercent, bulkInquiryUrl, isValidPincode, pincodeMessage, clampQty, variantUrl, maxQtyFor, isBfcacheRestore } from '../src/js/purchase.mjs';
+
+test('clampQty honours a per-variant stock ceiling', () => {
+  assert.equal(clampQty(150, 20), 20);
+  assert.equal(clampQty(5, 20), 5);
+  assert.equal(clampQty(5, 0), 1, 'a sold-out variant still shows 1');
+  assert.equal(clampQty(5, undefined), 5);
+});
+
+test('maxQtyFor reads tracked stock and falls back to 99', () => {
+  const stock = { 11: 20, 12: 0, 13: null };
+  assert.equal(maxQtyFor(stock, 11), 20);
+  assert.equal(maxQtyFor(stock, 12), 1);
+  assert.equal(maxQtyFor(stock, 13), 99, 'null = inventory not tracked / sells when out of stock');
+  assert.equal(maxQtyFor(stock, 404), 99);
+  assert.equal(maxQtyFor(null, 11), 99);
+  assert.equal(maxQtyFor({ 11: 500 }, 11), 99, 'never above the 99 hard cap');
+});
+
+test('isBfcacheRestore is true only for a page restored from the back/forward cache', () => {
+  assert.equal(isBfcacheRestore({ persisted: true }), true);
+  assert.equal(isBfcacheRestore({ persisted: false }), false);
+  assert.equal(isBfcacheRestore({}), false);
+});
 
 test('savingsPercent rounds like ProductPurchasePanel.tsx and is null without a compare-at price', () => {
   assert.equal(savingsPercent(93900, 113900), 18);

@@ -15,6 +15,16 @@
   assign metal_finish = product.metafields.custom.metal_finish.value
   assign metal_hex = product.metafields.custom.metal_hex.value | default: '#C9A66B'
   assign size_option = product.options_by_name['Size']
+  assign judgeme_badge = product.metafields.judgeme.badge
+
+  comment
+    Units the quantity stepper may reach for the selected variant: tracked
+    stock when Shopify will refuse an oversell, else the 99 hard cap.
+  endcomment
+  assign qty_max = 99
+  if variant.inventory_management == 'shopify' and variant.inventory_policy == 'deny'
+    assign qty_max = variant.inventory_quantity | at_least: 1 | at_most: 99
+  endif
 
   assign has_compare = false
   assign savings = 0
@@ -26,6 +36,14 @@
 
 <div data-purchase-panel>
   <script type="application/json" data-product-json>{{ product | json }}</script>
+  {%- comment -%} variant id → tracked units (null = Shopify does not limit it). The product JSON carries no inventory quantity. {%- endcomment -%}
+  <script type="application/json" data-inventory-json>
+    {
+      {%- for v in product.variants -%}
+        "{{ v.id }}": {% if v.inventory_management == 'shopify' and v.inventory_policy == 'deny' %}{{ v.inventory_quantity | at_least: 0 }}{% else %}null{% endif %}{% unless forloop.last %},{% endunless %}
+      {%- endfor -%}
+    }
+  </script>
 
   <div class="flex items-center justify-between mb-1">
     {%- if eyebrow != blank -%}
@@ -42,8 +60,13 @@
 
   <h1 class="serif text-4xl md:text-5xl mt-1">{{ product.title }}</h1>
 
-  {%- comment -%} Judge.me star badge (empty until the app is installed and the product has reviews). {%- endcomment -%}
-  <a href="#reviews" class="block mt-3 text-xs empty:hidden"><span class="jdgm-widget jdgm-preview-badge" data-id="{{ product.id }}">{{ product.metafields.judgeme.badge }}</span></a>
+  {%- comment -%}
+    Judge.me star badge. Rendered only when the app has a badge for this
+    product — an empty link would be an invisible, unnamed tab stop.
+  {%- endcomment -%}
+  {%- if judgeme_badge != blank -%}
+    <a href="#reviews" class="block mt-3 text-xs"><span class="jdgm-widget jdgm-preview-badge" data-id="{{ product.id }}">{{ judgeme_badge }}</span></a>
+  {%- endif -%}
 
   <div class="flex items-baseline gap-3 mt-4">
     <span class="text-2xl md:text-3xl font-medium" style="color: var(--charcoal)" data-price>{{ variant.price | money_without_trailing_zeros }}</span>
@@ -67,7 +90,7 @@
     </div>
   {%- endif -%}
 
-  {%- form 'product', product, data-product-form: '', novalidate: 'novalidate' -%}
+  {%- form 'product', product, data-product-form: 'true', novalidate: 'novalidate' -%}
     <input type="hidden" name="id" value="{{ variant.id }}" data-variant-id>
 
     {%- if size_option -%}
@@ -104,7 +127,7 @@
         <div class="flex items-center gap-3">
           <div class="qty-box">
             <button type="button" data-qty-step="-1" aria-label="Decrease quantity">−</button>
-            <input type="number" name="quantity" value="1" min="1" max="99" data-qty-input aria-label="Quantity">
+            <input type="number" name="quantity" value="1" min="1" max="{{ qty_max }}" data-qty-input aria-label="Quantity">
             <button type="button" data-qty-step="1" aria-label="Increase quantity">+</button>
           </div>
           <button type="submit" data-add-to-bag class="btn-luxury btn-gold-solid flex-1 justify-center h-12">

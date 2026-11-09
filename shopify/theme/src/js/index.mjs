@@ -12,6 +12,7 @@ import { initWishlist } from './wishlist.mjs';
 import { initCountdowns } from './countdown.mjs';
 import { initSpotlights } from './spotlight.mjs';
 import { initTestimonials } from './testimonials.mjs';
+import { initCollection } from './collection.mjs';
 import { notify } from './toast.mjs';
 
 const ELARAA = (window.ELARAA = window.ELARAA || { settings: {}, cart: {}, routes: {} });
@@ -39,6 +40,7 @@ function boot() {
   initCountdowns();
   initSpotlights();
   initTestimonials();
+  initCollection();
   document.addEventListener('shopify:section:load', (e) => {
     initCountdowns(e.target);
     initTestimonials(e.target);

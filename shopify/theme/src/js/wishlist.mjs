@@ -159,6 +159,8 @@ export function initWishlist({ routes } = {}) {
     if (page) renderWishlistPage(wishlist, page, routes);
   });
   document.addEventListener('shopify:section:load', (e) => paintHearts(wishlist, e.target));
+  // Fired by collection.mjs after it swaps the product grid in place.
+  document.addEventListener('elaraa:section:replaced', (e) => paintHearts(wishlist, e.target));
 
   const page = document.querySelector('[data-wishlist-page]');
   if (page) renderWishlistPage(wishlist, page, routes);

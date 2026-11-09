@@ -1,0 +1,22 @@
+{
+  "sections": {
+    "main": {
+      "type": "main-collection",
+      "blocks": {
+        "earrings": { "type": "category", "settings": { "collection": "earrings" } },
+        "rings": { "type": "category", "settings": { "collection": "rings" } },
+        "necklaces": { "type": "category", "settings": { "collection": "necklaces" } },
+        "bracelets": { "type": "category", "settings": { "collection": "bracelets" } },
+        "charms": { "type": "category", "settings": { "collection": "charms" } },
+        "duo-set": { "type": "category", "settings": { "collection": "duo-set" } }
+      },
+      "block_order": ["earrings", "rings", "necklaces", "bracelets", "charms", "duo-set"],
+      "settings": {
+        "per_page": 12,
+        "price_floor": 400,
+        "price_step": 100
+      }
+    }
+  },
+  "order": ["main"]
+}

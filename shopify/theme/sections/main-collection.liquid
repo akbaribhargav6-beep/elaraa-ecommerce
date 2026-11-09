@@ -1,0 +1,257 @@
+{% comment %}
+  Shop / collection page — ported from frontend/src/app/shop/page.tsx and
+  components/shop/ShopFilters.tsx.
+
+  How the React filters map onto Shopify:
+    Category radios      → the category collections (blocks); switching keeps
+                           the active filter.* / sort_by params
+    New Arrivals / Best  → the storefront tag filter (filter.p.tag) when the
+    Sellers checkboxes     Search & Discovery app exposes it, else links to the
+                           new-arrivals / best-sellers collections
+    Max Price slider     → the storefront price filter (filter.v.price.lte)
+    Search box           → the store search page (products only)
+    Sort select          → sort_by
+  src/js/collection.mjs re-renders this section in place on every change.
+{% endcomment %}
+{%- liquid
+  assign all_url = routes.all_products_collection_url
+  assign all_collection = collections.all
+  assign is_all = false
+  if collection.handle == 'all'
+    assign is_all = true
+  endif
+
+  assign price_filter = nil
+  assign tag_filter = nil
+  assign active_filter_count = 0
+  for filter in collection.filters
+    if filter.type == 'price_range'
+      assign price_filter = filter
+      if filter.min_value.value != nil or filter.max_value.value != nil
+        assign active_filter_count = active_filter_count | plus: 1
+      endif
+    else
+      if filter.param_name == 'filter.p.tag'
+        assign tag_filter = filter
+      endif
+      assign active_filter_count = active_filter_count | plus: filter.active_values.size
+    endif
+  endfor
+
+  assign has_active = false
+  if is_all == false or active_filter_count > 0
+    assign has_active = true
+  endif
+
+  assign heading = collection.title
+  if is_all and section.settings.heading_all != blank
+    assign heading = section.settings.heading_all
+  endif
+
+  assign sort_current = collection.sort_by | default: collection.default_sort_by
+-%}
+
+<div class="pt-28"></div>
+<section
+  class="px-4 sm:px-6 md:px-16 pb-20 sm:pb-28 max-w-7xl mx-auto"
+  data-collection-root
+  data-section-id="{{ section.id }}"
+  data-all-url="{{ all_url }}"
+>
+  <div class="text-center mb-6 sm:mb-10">
+    <p class="eyebrow">{{ section.settings.eyebrow }}</p>
+    <h1 class="serif text-3xl sm:text-4xl md:text-6xl mt-2 sm:mt-4">{{ heading }}</h1>
+    <p class="text-xs sm:text-sm opacity-60 mt-2 sm:mt-4">{{ collection.all_products_count }} {{ section.settings.count_suffix }}</p>
+  </div>
+
+  {%- comment -%} Search bar + mobile filter toggle {%- endcomment -%}
+  <div class="mb-6 flex flex-col sm:flex-row gap-3 justify-between items-stretch sm:items-center p-3 border" style="background: var(--cream); border-color: rgba(43,38,32,.15)">
+    <form action="{{ routes.search_url }}" method="get" role="search" class="flex-1 relative flex items-center">
+      <span class="absolute left-3 text-stone-400 text-sm" aria-hidden="true">🔍</span>
+      <input type="hidden" name="type" value="product">
+      <input
+        type="search"
+        name="q"
+        placeholder="{{ section.settings.search_placeholder | escape }}"
+        aria-label="Search products"
+        class="w-full pl-9 pr-4 py-2 bg-white text-xs border rounded-sm focus:outline-none"
+        style="border-color: rgba(43,38,32,.2)"
+      >
+    </form>
+    <div class="flex items-center justify-between sm:justify-end gap-3">
+      <button type="button" data-filters-toggle class="md:hidden text-xs tracking-[.15em] uppercase font-medium flex items-center gap-2 min-h-[40px] px-3 bg-white border rounded-sm" style="border-color: rgba(43,38,32,.2)">Filters</button>
+      <span class="text-xs opacity-60">{{ all_collection.products_count }} Products</span>
+    </div>
+  </div>
+
+  <div class="flex flex-col md:flex-row gap-8 md:gap-10">
+    <aside data-filters-panel class="hidden md:block md:w-64 shrink-0 space-y-8 p-5 md:p-0 border md:border-none rounded-sm" style="border-color: rgba(43,38,32,.15)" aria-label="Filters">
+      <div>
+        <p class="text-xs tracking-[.2em] uppercase opacity-60 mb-3">Category</p>
+        <div class="space-y-2 text-sm">
+          <label class="flex items-center gap-2.5 cursor-pointer">
+            <input type="radio" name="shopCategory" data-category-url="{{ all_url }}" {% if is_all %}checked{% endif %}>
+            <span>All Categories ({{ all_collection.products_count }})</span>
+          </label>
+          {%- for block in section.blocks -%}
+            {%- assign col = block.settings.collection -%}
+            {%- if col == blank -%}{%- continue -%}{%- endif -%}
+            <label class="flex items-center gap-2.5 cursor-pointer" {{ block.shopify_attributes }}>
+              <input type="radio" name="shopCategory" data-category-url="{{ col.url }}" {% if collection.handle == col.handle %}checked{% endif %}>
+              <span>{{ block.settings.label | default: col.title }} ({{ col.all_products_count }})</span>
+            </label>
+          {%- endfor -%}
+        </div>
+      </div>
+
+      <div>
+        <p class="text-xs tracking-[.2em] uppercase opacity-60 mb-3">Collections</p>
+        <div class="space-y-2 text-sm">
+          {%- if tag_filter != nil -%}
+            {%- for value in tag_filter.values -%}
+              {%- liquid
+                assign tag_label = ''
+                if value.value == 'new-arrival'
+                  assign tag_label = 'New Arrivals'
+                elsif value.value == 'best-seller'
+                  assign tag_label = 'Best Sellers'
+                endif
+              -%}
+              {%- if tag_label != '' -%}
+                <label class="flex items-center gap-2.5 cursor-pointer">
+                  <input type="checkbox" data-filter-param="{{ value.param_name }}" data-filter-value="{{ value.value | escape }}" {% if value.active %}checked{% endif %}>
+                  <span>{{ tag_label }}</span>
+                </label>
+              {%- endif -%}
+            {%- endfor -%}
+          {%- else -%}
+            {%- assign curated_handles = 'new-arrivals,best-sellers' | split: ',' -%}
+            {%- for handle in curated_handles -%}
+              {%- assign curated = collections[handle] -%}
+              {%- if curated.handle == blank -%}{%- continue -%}{%- endif -%}
+              <label class="flex items-center gap-2.5 cursor-pointer">
+                <input type="checkbox" data-category-url="{% if collection.handle == curated.handle %}{{ all_url }}{% else %}{{ curated.url }}{% endif %}" {% if collection.handle == curated.handle %}checked{% endif %}>
+                <span>{% if handle == 'new-arrivals' %}New Arrivals{% else %}Best Sellers{% endif %}</span>
+              </label>
+            {%- endfor -%}
+          {%- endif -%}
+        </div>
+      </div>
+
+      {%- if price_filter != nil -%}
+        {%- liquid
+          assign step = section.settings.price_step
+          assign ceiling = price_filter.range_max | divided_by: 100.0 | divided_by: step | ceil | times: step
+          if ceiling < step
+            assign ceiling = step
+          endif
+          assign floor = section.settings.price_floor
+          if floor >= ceiling
+            assign floor = ceiling | minus: step | at_least: 0
+          endif
+          assign current = ceiling
+          if price_filter.max_value.value != nil
+            assign current = price_filter.max_value.value | divided_by: 100 | at_most: ceiling | at_least: floor
+          endif
+          assign floor_money = floor | times: 100 | money_without_trailing_zeros
+          assign current_money = current | times: 100 | money_without_trailing_zeros
+        -%}
+        <div>
+          <p class="text-xs tracking-[.2em] uppercase opacity-60 mb-3">Max Price</p>
+          <input
+            type="range"
+            data-price-slider
+            data-price-param="{{ price_filter.max_value.param_name }}"
+            min="{{ floor }}"
+            max="{{ ceiling }}"
+            step="{{ step }}"
+            value="{{ current }}"
+            aria-label="Maximum price"
+            class="w-full h-2 rounded-lg appearance-none cursor-pointer"
+            style="accent-color: var(--gold-deep)"
+          >
+          <div class="flex justify-between text-xs opacity-60 mt-2">
+            <span>{{ floor_money }}</span>
+            <span data-price-label>Up to {{ current_money }}</span>
+          </div>
+        </div>
+      {%- endif -%}
+
+      <button type="button" data-filters-reset {% unless has_active %}disabled{% endunless %} class="btn-luxury btn-gold w-full justify-center min-h-[44px] disabled:opacity-40 disabled:cursor-not-allowed">
+        <span>Reset Filters</span>
+      </button>
+    </aside>
+
+    <div class="flex-1">
+      {%- paginate collection.products by section.settings.per_page -%}
+        <div class="flex items-center justify-between mb-6 sm:mb-8">
+          <p class="text-xs opacity-60">Showing {{ collection.products.size }} of {{ collection.products_count }} products</p>
+          <select data-collection-sort aria-label="Sort products" class="text-xs tracking-[.1em] uppercase border px-3 py-2 bg-transparent" style="border-color: rgba(43,38,32,.25)">
+            <option value="manual" {% unless sort_current == 'price-ascending' or sort_current == 'price-descending' or sort_current == 'created-descending' %}selected{% endunless %}>Sort: Featured</option>
+            <option value="price-ascending" {% if sort_current == 'price-ascending' %}selected{% endif %}>Price: Low to High</option>
+            <option value="price-descending" {% if sort_current == 'price-descending' %}selected{% endif %}>Price: High to Low</option>
+            <option value="created-descending" {% if sort_current == 'created-descending' %}selected{% endif %}>Newest First</option>
+          </select>
+        </div>
+
+        {%- if collection.products.size == 0 -%}
+          <div class="py-16 text-center space-y-4">
+            <p class="serif text-2xl opacity-70">{{ section.settings.empty_heading }}</p>
+            <p class="text-xs opacity-50">{{ section.settings.empty_copy }}</p>
+          </div>
+        {%- else -%}
+          <div class="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 md:gap-8" data-collection-grid>
+            {%- for product in collection.products -%}
+              {%- comment -%} Belt and braces: the gift-packaging add-on never shows in a grid. {%- endcomment -%}
+              {%- if product.tags contains 'hidden' -%}{%- continue -%}{%- endif -%}
+              {% render 'product-card', product: product %}
+            {%- endfor -%}
+          </div>
+        {%- endif -%}
+
+        {% render 'pagination', paginate: paginate %}
+      {%- endpaginate -%}
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Collection",
+  "tag": "div",
+  "max_blocks": 12,
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "The Full Edit" },
+    {
+      "type": "text",
+      "id": "heading_all",
+      "label": "Heading on the all-products page",
+      "info": "Other collections use their own title.",
+      "default": "Shop All Jewellery"
+    },
+    { "type": "text", "id": "count_suffix", "label": "Count suffix", "default": "pieces, crafted with premium fashion finish" },
+    { "type": "text", "id": "search_placeholder", "label": "Search placeholder", "default": "Search by jewellery name, material, category..." },
+    { "type": "range", "id": "per_page", "label": "Products per page", "min": 6, "max": 24, "step": 3, "default": 12 },
+    {
+      "type": "number",
+      "id": "price_floor",
+      "label": "Price slider minimum (₹)",
+      "info": "The slider's maximum follows the highest price in the collection.",
+      "default": 400
+    },
+    { "type": "range", "id": "price_step", "label": "Price slider step (₹)", "min": 50, "max": 500, "step": 50, "default": 100 },
+    { "type": "text", "id": "empty_heading", "label": "Empty state heading", "default": "No pieces match your selected filters" },
+    { "type": "text", "id": "empty_copy", "label": "Empty state copy", "default": "Try broadening your search term or adjusting the price range." }
+  ],
+  "blocks": [
+    {
+      "type": "category",
+      "name": "Category",
+      "settings": [
+        { "type": "collection", "id": "collection", "label": "Collection" },
+        { "type": "text", "id": "label", "label": "Label", "info": "Defaults to the collection title." }
+      ]
+    }
+  ]
+}
+{% endschema %}

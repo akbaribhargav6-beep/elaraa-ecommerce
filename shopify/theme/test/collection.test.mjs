@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { buildFilterUrl, carryFilters, priceParam, sliderBounds, withSection, hasActiveFilters } from '../src/js/collection.mjs';
+import { buildFilterUrl, carryFilters, priceParam, withSection, hasActiveFilters, swapMode, resetUrl, createUrlBase } from '../src/js/collection.mjs';
 
 const ORIGIN = 'https://shop.test';
 
@@ -48,11 +48,39 @@ test('priceParam omits the filter at (or above) the ceiling', () => {
   assert.equal(priceParam('1300', 1700), '1300');
 });
 
-test('sliderBounds rounds the collection max up to a step and keeps min below max', () => {
-  assert.deepEqual(sliderBounds(162900, 400, 100), { min: 400, max: 1700 });
-  assert.deepEqual(sliderBounds(170000, 400, 100), { min: 400, max: 1700 });
-  assert.deepEqual(sliderBounds(30000, 400, 100), { min: 200, max: 300 }, 'floor is pulled down when it would meet the max');
-  assert.deepEqual(sliderBounds(0, 400, 100), { min: 0, max: 100 });
+test('swapMode keeps the controls mounted for same-collection updates', () => {
+  // Replacing the whole section would detach the slider under the finger and
+  // drop keyboard focus, so only a collection change swaps everything.
+  assert.equal(swapMode(`${ORIGIN}/collections/all?filter.v.price.lte=900`, '/collections/all'), 'partial');
+  assert.equal(swapMode(`${ORIGIN}/collections/all?page=2`, '/collections/all'), 'partial');
+  assert.equal(swapMode(`${ORIGIN}/collections/earrings`, '/collections/all'), 'full');
+  assert.equal(swapMode(`${ORIGIN}/collections/all/`, '/collections/all'), 'partial', 'trailing slash is the same collection');
+});
+
+test('resetUrl returns to all products and keeps only the sort (like resetFilters in ShopFilters.tsx)', () => {
+  const u = new URL(resetUrl('/collections/all', '?filter.p.tag=new-arrival&filter.v.price.lte=900&sort_by=price-ascending&page=3', ORIGIN));
+  assert.equal(u.pathname, '/collections/all');
+  assert.equal(u.searchParams.get('sort_by'), 'price-ascending');
+  assert.equal([...u.searchParams.keys()].length, 1);
+  assert.equal(new URL(resetUrl('/collections/all', '', ORIGIN)).search, '');
+});
+
+test('createUrlBase builds later changes on the pending request, not the stale address bar', () => {
+  // Tick New Arrivals, then Best Sellers before the first response returns:
+  // the second URL must still contain the first tag.
+  const base = createUrlBase(() => `${ORIGIN}/collections/all`);
+  assert.equal(base.current(), `${ORIGIN}/collections/all`);
+  const first = buildFilterUrl(base.current(), { 'filter.p.tag': { add: 'new-arrival' } });
+  const idA = base.begin(first);
+  const second = buildFilterUrl(base.current(), { 'filter.p.tag': { add: 'best-seller' } });
+  assert.deepEqual(new URL(second).searchParams.getAll('filter.p.tag'), ['new-arrival', 'best-seller']);
+  const idB = base.begin(second);
+  assert.equal(base.isLatest(idA), false);
+  assert.equal(base.isLatest(idB), true);
+  base.settle(idA);
+  assert.equal(base.current(), second, 'a stale request settling must not clear the pending URL');
+  base.settle(idB);
+  assert.equal(base.current(), `${ORIGIN}/collections/all`, 'falls back to the address bar once the latest settles');
 });
 
 test('withSection adds section_id without disturbing other params', () => {
@@ -67,4 +95,22 @@ test('hasActiveFilters is true off the all-products collection or with any filte
   assert.equal(hasActiveFilters('/collections/all', '?filter.v.price.lte=900'), true);
   assert.equal(hasActiveFilters('/collections/earrings', ''), true);
   assert.equal(hasActiveFilters('/collections/all', '?page=2'), false);
+});
+
+test('main-collection keeps the controls outside the swapped node and gives them focus keys', async () => {
+  const { readFile } = await import('node:fs/promises');
+  const { fileURLToPath } = await import('node:url');
+  const path = await import('node:path');
+  const file = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'sections', 'main-collection.liquid');
+  // Drop Liquid comments so prose mentioning the attributes is not matched.
+  const src = (await readFile(file, 'utf8')).replace(/\{%-?\s*comment\s*-?%\}[\s\S]*?\{%-?\s*endcomment\s*-?%\}/g, '');
+  const items = src.indexOf('<div data-collection-items');
+  assert.ok(items > 0, 'has a [data-collection-items] swap target');
+  assert.ok(src.indexOf('data-collection-sort') < items, 'the sort select sits before (outside) the swapped node');
+  assert.ok(src.indexOf('data-price-slider') < items, 'the price slider sits outside the swapped node');
+  for (const key of ['data-focus-key="sort"', 'data-focus-key="price"', 'data-focus-key="category:', 'data-focus-key="tag:']) {
+    assert.ok(src.includes(key), `missing ${key}`);
+  }
+  assert.match(src, /<option value=""[^>]*>Sort: Featured<\/option>/, 'Featured clears sort_by instead of forcing manual');
+  assert.match(src, /data-curated-tag=/, 'curated collections expose their tag so category switches keep it');
 });

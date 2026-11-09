@@ -7,17 +7,32 @@
                            the active filter.* / sort_by params
     New Arrivals / Best  → the storefront tag filter (filter.p.tag) when the
     Sellers checkboxes     Search & Discovery app exposes it, else links to the
-                           new-arrivals / best-sellers collections
+                           new-arrivals / best-sellers collections. On those
+                           two "curated" collections the matching box is shown
+                           ticked and All Categories selected, like
+                           /shop?newArrival=true on the Next.js site.
     Max Price slider     → the storefront price filter (filter.v.price.lte)
     Search box           → the store search page (products only)
-    Sort select          → sort_by
-  src/js/collection.mjs re-renders this section in place on every change.
+    Sort select          → sort_by ("Featured" = the collection's default order)
+
+  src/js/collection.mjs re-renders on every change. It swaps only
+  [data-collection-items] and [data-collection-count] for same-collection
+  updates, so every control in this file must stay OUTSIDE those two nodes;
+  data-focus-key lets it restore focus after a full swap.
 {% endcomment %}
 {%- liquid
   assign all_url = routes.all_products_collection_url
   assign all_collection = collections.all
+
+  assign curated_tag = ''
+  if collection.handle == 'new-arrivals'
+    assign curated_tag = 'new-arrival'
+  elsif collection.handle == 'best-sellers'
+    assign curated_tag = 'best-seller'
+  endif
+
   assign is_all = false
-  if collection.handle == 'all'
+  if collection.handle == 'all' or curated_tag != ''
     assign is_all = true
   endif
 
@@ -39,16 +54,16 @@
   endfor
 
   assign has_active = false
-  if is_all == false or active_filter_count > 0
+  if collection.handle != 'all' or active_filter_count > 0
     assign has_active = true
   endif
 
   assign heading = collection.title
-  if is_all and section.settings.heading_all != blank
+  if collection.handle == 'all' and section.settings.heading_all != blank
     assign heading = section.settings.heading_all
   endif
 
-  assign sort_current = collection.sort_by | default: collection.default_sort_by
+  assign wanted_tags = 'new-arrival,best-seller' | split: ','
 -%}
 
 <div class="pt-28"></div>
@@ -56,7 +71,10 @@
   class="px-4 sm:px-6 md:px-16 pb-20 sm:pb-28 max-w-7xl mx-auto"
   data-collection-root
   data-section-id="{{ section.id }}"
+  data-collection-url="{{ collection.url }}"
   data-all-url="{{ all_url }}"
+  data-curated-tag="{{ curated_tag }}"
+  data-tag-param="{% if tag_filter != nil %}{{ tag_filter.param_name }}{% endif %}"
 >
   <div class="text-center mb-6 sm:mb-10">
     <p class="eyebrow">{{ section.settings.eyebrow }}</p>
@@ -79,8 +97,8 @@
       >
     </form>
     <div class="flex items-center justify-between sm:justify-end gap-3">
-      <button type="button" data-filters-toggle class="md:hidden text-xs tracking-[.15em] uppercase font-medium flex items-center gap-2 min-h-[40px] px-3 bg-white border rounded-sm" style="border-color: rgba(43,38,32,.2)">Filters</button>
-      <span class="text-xs opacity-60">{{ all_collection.products_count }} Products</span>
+      <button type="button" data-filters-toggle data-focus-key="filters-toggle" class="md:hidden text-xs tracking-[.15em] uppercase font-medium flex items-center gap-2 min-h-[40px] px-3 bg-white border rounded-sm" style="border-color: rgba(43,38,32,.2)">Filters</button>
+      <span class="text-xs opacity-60">{{ all_collection.all_products_count }} Products</span>
     </div>
   </div>
 
@@ -90,14 +108,14 @@
         <p class="text-xs tracking-[.2em] uppercase opacity-60 mb-3">Category</p>
         <div class="space-y-2 text-sm">
           <label class="flex items-center gap-2.5 cursor-pointer">
-            <input type="radio" name="shopCategory" data-category-url="{{ all_url }}" {% if is_all %}checked{% endif %}>
-            <span>All Categories ({{ all_collection.products_count }})</span>
+            <input type="radio" name="shopCategory" data-category-url="{{ all_url }}" data-focus-key="category:{{ all_url }}" {% if is_all %}checked{% endif %}>
+            <span>All Categories ({{ all_collection.all_products_count }})</span>
           </label>
           {%- for block in section.blocks -%}
             {%- assign col = block.settings.collection -%}
             {%- if col == blank -%}{%- continue -%}{%- endif -%}
             <label class="flex items-center gap-2.5 cursor-pointer" {{ block.shopify_attributes }}>
-              <input type="radio" name="shopCategory" data-category-url="{{ col.url }}" {% if collection.handle == col.handle %}checked{% endif %}>
+              <input type="radio" name="shopCategory" data-category-url="{{ col.url }}" data-focus-key="category:{{ col.url }}" {% if collection.handle == col.handle %}checked{% endif %}>
               <span>{{ block.settings.label | default: col.title }} ({{ col.all_products_count }})</span>
             </label>
           {%- endfor -%}
@@ -107,34 +125,44 @@
       <div>
         <p class="text-xs tracking-[.2em] uppercase opacity-60 mb-3">Collections</p>
         <div class="space-y-2 text-sm">
-          {%- if tag_filter != nil -%}
-            {%- for value in tag_filter.values -%}
-              {%- liquid
-                assign tag_label = ''
-                if value.value == 'new-arrival'
-                  assign tag_label = 'New Arrivals'
-                elsif value.value == 'best-seller'
-                  assign tag_label = 'Best Sellers'
-                endif
-              -%}
-              {%- if tag_label != '' -%}
+          {%- for wanted in wanted_tags -%}
+            {%- liquid
+              assign tag_label = 'Best Sellers'
+              assign curated_handle = 'best-sellers'
+              if wanted == 'new-arrival'
+                assign tag_label = 'New Arrivals'
+                assign curated_handle = 'new-arrivals'
+              endif
+              assign tag_active = false
+              if tag_filter != nil
+                for value in tag_filter.values
+                  if value.value == wanted and value.active
+                    assign tag_active = true
+                  endif
+                endfor
+              endif
+            -%}
+            {%- if wanted == curated_tag -%}
+              {%- comment -%} This collection IS the filter: unticking returns to all products. {%- endcomment -%}
+              <label class="flex items-center gap-2.5 cursor-pointer">
+                <input type="checkbox" data-category-url="{{ all_url }}" data-focus-key="tag:{{ wanted }}" checked>
+                <span>{{ tag_label }}</span>
+              </label>
+            {%- elsif tag_filter != nil -%}
+              <label class="flex items-center gap-2.5 cursor-pointer">
+                <input type="checkbox" data-filter-param="{{ tag_filter.param_name }}" data-filter-value="{{ wanted }}" data-focus-key="tag:{{ wanted }}" {% if tag_active %}checked{% endif %}>
+                <span>{{ tag_label }}</span>
+              </label>
+            {%- else -%}
+              {%- assign curated = collections[curated_handle] -%}
+              {%- if curated.handle != blank -%}
                 <label class="flex items-center gap-2.5 cursor-pointer">
-                  <input type="checkbox" data-filter-param="{{ value.param_name }}" data-filter-value="{{ value.value | escape }}" {% if value.active %}checked{% endif %}>
+                  <input type="checkbox" data-category-url="{{ curated.url }}" data-focus-key="tag:{{ wanted }}">
                   <span>{{ tag_label }}</span>
                 </label>
               {%- endif -%}
-            {%- endfor -%}
-          {%- else -%}
-            {%- assign curated_handles = 'new-arrivals,best-sellers' | split: ',' -%}
-            {%- for handle in curated_handles -%}
-              {%- assign curated = collections[handle] -%}
-              {%- if curated.handle == blank -%}{%- continue -%}{%- endif -%}
-              <label class="flex items-center gap-2.5 cursor-pointer">
-                <input type="checkbox" data-category-url="{% if collection.handle == curated.handle %}{{ all_url }}{% else %}{{ curated.url }}{% endif %}" {% if collection.handle == curated.handle %}checked{% endif %}>
-                <span>{% if handle == 'new-arrivals' %}New Arrivals{% else %}Best Sellers{% endif %}</span>
-              </label>
-            {%- endfor -%}
-          {%- endif -%}
+            {%- endif -%}
+          {%- endfor -%}
         </div>
       </div>
 
@@ -162,6 +190,7 @@
             type="range"
             data-price-slider
             data-price-param="{{ price_filter.max_value.param_name }}"
+            data-focus-key="price"
             min="{{ floor }}"
             max="{{ ceiling }}"
             step="{{ step }}"
@@ -177,7 +206,7 @@
         </div>
       {%- endif -%}
 
-      <button type="button" data-filters-reset {% unless has_active %}disabled{% endunless %} class="btn-luxury btn-gold w-full justify-center min-h-[44px] disabled:opacity-40 disabled:cursor-not-allowed">
+      <button type="button" data-filters-reset data-focus-key="reset" {% unless has_active %}disabled{% endunless %} class="btn-luxury btn-gold w-full justify-center min-h-[44px] disabled:opacity-40 disabled:cursor-not-allowed">
         <span>Reset Filters</span>
       </button>
     </aside>
@@ -185,31 +214,34 @@
     <div class="flex-1">
       {%- paginate collection.products by section.settings.per_page -%}
         <div class="flex items-center justify-between mb-6 sm:mb-8">
-          <p class="text-xs opacity-60">Showing {{ collection.products.size }} of {{ collection.products_count }} products</p>
-          <select data-collection-sort aria-label="Sort products" class="text-xs tracking-[.1em] uppercase border px-3 py-2 bg-transparent" style="border-color: rgba(43,38,32,.25)">
-            <option value="manual" {% unless sort_current == 'price-ascending' or sort_current == 'price-descending' or sort_current == 'created-descending' %}selected{% endunless %}>Sort: Featured</option>
-            <option value="price-ascending" {% if sort_current == 'price-ascending' %}selected{% endif %}>Price: Low to High</option>
-            <option value="price-descending" {% if sort_current == 'price-descending' %}selected{% endif %}>Price: High to Low</option>
-            <option value="created-descending" {% if sort_current == 'created-descending' %}selected{% endif %}>Newest First</option>
+          <p class="text-xs opacity-60" data-collection-count>Showing {{ collection.products.size }} of {{ collection.products_count }} products</p>
+          {%- comment -%} "Featured" clears sort_by, i.e. the collection's own default order. {%- endcomment -%}
+          <select data-collection-sort data-focus-key="sort" aria-label="Sort products" class="text-xs tracking-[.1em] uppercase border px-3 py-2 bg-transparent" style="border-color: rgba(43,38,32,.25)">
+            <option value="" {% unless collection.sort_by == 'price-ascending' or collection.sort_by == 'price-descending' or collection.sort_by == 'created-descending' %}selected{% endunless %}>Sort: Featured</option>
+            <option value="price-ascending" {% if collection.sort_by == 'price-ascending' %}selected{% endif %}>Price: Low to High</option>
+            <option value="price-descending" {% if collection.sort_by == 'price-descending' %}selected{% endif %}>Price: High to Low</option>
+            <option value="created-descending" {% if collection.sort_by == 'created-descending' %}selected{% endif %}>Newest First</option>
           </select>
         </div>
 
-        {%- if collection.products.size == 0 -%}
-          <div class="py-16 text-center space-y-4">
-            <p class="serif text-2xl opacity-70">{{ section.settings.empty_heading }}</p>
-            <p class="text-xs opacity-50">{{ section.settings.empty_copy }}</p>
-          </div>
-        {%- else -%}
-          <div class="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 md:gap-8" data-collection-grid>
-            {%- for product in collection.products -%}
-              {%- comment -%} Belt and braces: the gift-packaging add-on never shows in a grid. {%- endcomment -%}
-              {%- if product.tags contains 'hidden' -%}{%- continue -%}{%- endif -%}
-              {% render 'product-card', product: product %}
-            {%- endfor -%}
-          </div>
-        {%- endif -%}
+        <div data-collection-items>
+          {%- if collection.products.size == 0 -%}
+            <div class="py-16 text-center space-y-4">
+              <p class="serif text-2xl opacity-70">{{ section.settings.empty_heading }}</p>
+              <p class="text-xs opacity-50">{{ section.settings.empty_copy }}</p>
+            </div>
+          {%- else -%}
+            <div class="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 md:gap-8" data-collection-grid>
+              {%- for product in collection.products -%}
+                {%- comment -%} Belt and braces: the gift-packaging add-on never shows in a grid. {%- endcomment -%}
+                {%- if product.tags contains 'hidden' -%}{%- continue -%}{%- endif -%}
+                {% render 'product-card', product: product %}
+              {%- endfor -%}
+            </div>
+          {%- endif -%}
 
-        {% render 'pagination', paginate: paginate %}
+          {% render 'pagination', paginate: paginate %}
+        </div>
       {%- endpaginate -%}
     </div>
   </div>

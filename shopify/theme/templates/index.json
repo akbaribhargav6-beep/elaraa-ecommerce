@@ -61,6 +61,25 @@
       "type": "new-arrivals",
       "settings": { "collection": "new-arrivals", "limit": 6 }
     },
+    "testimonials": {
+      "type": "testimonials",
+      "blocks": {
+        "t1": { "type": "testimonial", "settings": { "name": "Ananya R.", "region": "west", "region_label": "Maharashtra", "quote": "The kind of jewellery I actually reach for every morning, it just goes with everything.", "doodle": "never taking these off", "rotation": -3, "offset_y": 10 } },
+        "t2": { "type": "testimonial", "settings": { "name": "Meera S.", "region": "north", "region_label": "Delhi NCR", "quote": "Hasn’t left my ears since the day it arrived, and still looks brand new.", "doodle": "zero tarnish so far", "rotation": 2, "offset_y": -8 } },
+        "t3": { "type": "testimonial", "settings": { "name": "Kavya P.", "region": "south", "region_label": "Karnataka", "quote": "Packaging alone felt like a gift before I even opened the box.", "doodle": "so obsessed", "rotation": -2, "offset_y": 14 } },
+        "t4": { "type": "testimonial", "settings": { "name": "Riya D.", "region": "east", "region_label": "West Bengal", "quote": "Wore it to a wedding and got asked where it was from all night.", "doodle": "so many compliments", "rotation": 3, "offset_y": -6 } },
+        "t5": { "type": "testimonial", "settings": { "name": "Sneha K.", "region": "west", "region_label": "Gujarat", "quote": "Lightweight, comfortable, and it genuinely hasn’t faded after months of wear.", "doodle": "my everyday piece", "rotation": -1, "offset_y": 8 } },
+        "t6": { "type": "testimonial", "settings": { "name": "Pooja M.", "region": "north", "region_label": "Punjab", "quote": "Gifted it to my sister and now she wants the whole edit for herself.", "doodle": "buying one more", "rotation": 2, "offset_y": -10 } },
+        "t7": { "type": "testimonial", "settings": { "name": "Divya T.", "region": "south", "region_label": "Tamil Nadu", "quote": "Looks far more premium than what I actually paid for it.", "doodle": "best find this year", "rotation": -3, "offset_y": 12 } },
+        "t8": { "type": "testimonial", "settings": { "name": "Arushi N.", "region": "east", "region_label": "Odisha", "quote": "Skin friendly finish means I can wear it all day with zero irritation.", "doodle": "finally, no itching", "rotation": 1, "offset_y": -6 } }
+      },
+      "block_order": ["t1", "t2", "t3", "t4", "t5", "t6", "t7", "t8"],
+      "settings": {}
+    },
+    "elaraa-edit": {
+      "type": "elaraa-edit",
+      "settings": {}
+    },
     "faq": {
       "type": "faq",
       "blocks": {
@@ -112,6 +131,8 @@
     "luxury-deal",
     "necklace-chapters",
     "new-arrivals",
+    "testimonials",
+    "elaraa-edit",
     "faq",
     "newsletter"
   ]

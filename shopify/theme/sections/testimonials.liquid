@@ -1,0 +1,175 @@
+{% comment %}
+  "Loved by Women Across India" polaroid gallery — ported from the testimonial
+  block of frontend/src/app/page.tsx and components/home/TestimonialsGallery.tsx.
+  One block per testimonial. Each block shows its picked product, or (like the
+  React version) the product at the same position in the section's collection.
+  Region filter + lightbox are driven by src/js/testimonials.mjs.
+{% endcomment %}
+{%- liquid
+  assign source = section.settings.collection | default: collections.all
+  assign count_all = 0
+  assign count_west = 0
+  assign count_north = 0
+  assign count_south = 0
+  assign count_east = 0
+  for block in section.blocks
+    assign p = block.settings.product | default: source.products[forloop.index0]
+    if p == blank
+      continue
+    endif
+    assign count_all = count_all | plus: 1
+    case block.settings.region
+      when 'west'
+        assign count_west = count_west | plus: 1
+      when 'north'
+        assign count_north = count_north | plus: 1
+      when 'south'
+        assign count_south = count_south | plus: 1
+      when 'east'
+        assign count_east = count_east | plus: 1
+    endcase
+  endfor
+-%}
+{%- if count_all > 0 -%}
+  <section class="px-6 md:px-16 py-28 max-w-7xl mx-auto" data-section-id="{{ section.id }}">
+    <div class="text-center max-w-2xl mx-auto mb-16" data-reveal>
+      <p class="eyebrow">{{ section.settings.eyebrow }}</p>
+      <h2 class="serif text-4xl md:text-6xl mt-4">{{ section.settings.heading }}</h2>
+      <p class="mt-4 text-sm opacity-70 leading-relaxed">{{ section.settings.copy }}</p>
+    </div>
+
+    <div data-reveal>
+      <div data-testimonials>
+        <div class="flex flex-wrap justify-center gap-3 mb-16" role="group" aria-label="Filter by region">
+          <button type="button" data-region-filter="all" aria-pressed="true" class="region-filter-btn active px-5 py-2 text-xs tracking-[.2em] uppercase border rounded-full" style="border-color: rgba(43,38,32,.2)">All <span class="opacity-50">({{ count_all }})</span></button>
+          <button type="button" data-region-filter="west" aria-pressed="false" class="region-filter-btn hover:opacity-70 px-5 py-2 text-xs tracking-[.2em] uppercase border rounded-full" style="border-color: rgba(43,38,32,.2)">West <span class="opacity-50">({{ count_west }})</span></button>
+          <button type="button" data-region-filter="north" aria-pressed="false" class="region-filter-btn hover:opacity-70 px-5 py-2 text-xs tracking-[.2em] uppercase border rounded-full" style="border-color: rgba(43,38,32,.2)">North <span class="opacity-50">({{ count_north }})</span></button>
+          <button type="button" data-region-filter="south" aria-pressed="false" class="region-filter-btn hover:opacity-70 px-5 py-2 text-xs tracking-[.2em] uppercase border rounded-full" style="border-color: rgba(43,38,32,.2)">South <span class="opacity-50">({{ count_south }})</span></button>
+          <button type="button" data-region-filter="east" aria-pressed="false" class="region-filter-btn hover:opacity-70 px-5 py-2 text-xs tracking-[.2em] uppercase border rounded-full" style="border-color: rgba(43,38,32,.2)">East <span class="opacity-50">({{ count_east }})</span></button>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-x-6 md:gap-x-8 gap-y-20">
+          {%- for block in section.blocks -%}
+            {%- liquid
+              assign p = block.settings.product | default: source.products[forloop.index0]
+              if p == blank
+                continue
+              endif
+              assign image = p.featured_image
+              assign price = p.price | money_without_trailing_zeros
+            -%}
+            <button
+              type="button"
+              class="polaroid-card text-left p-3 pb-5"
+              style="transform: rotate({{ block.settings.rotation }}deg) translateY({{ block.settings.offset_y }}px)"
+              data-testimonial
+              data-region="{{ block.settings.region }}"
+              data-quote="{{ block.settings.quote | escape }}"
+              data-name="{{ block.settings.name | escape }}"
+              data-region-label="{{ block.settings.region_label | escape }}"
+              data-product-title="{{ p.title | escape }}"
+              data-product-url="{{ p.url }}"
+              data-product-price="{{ price | strip_html | escape }}"
+              {% if image %}data-image="{{ image | image_url: width: 1000 }}"{% endif %}
+              {{ block.shopify_attributes }}
+            >
+              <span class="polaroid-tape" aria-hidden="true"></span>
+              <span class="gold-seal-stamp" aria-hidden="true">
+                <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="20" cy="20" r="18" stroke="var(--gold-deep)" stroke-width="1.5"/>
+                  <circle cx="20" cy="20" r="13" stroke="var(--gold-deep)" stroke-width="1" stroke-dasharray="2 2"/>
+                  <text x="20" y="24" text-anchor="middle" font-size="10" fill="var(--gold-deep)" font-family="serif">E</text>
+                </svg>
+              </span>
+              <span class="relative aspect-square overflow-hidden block">
+                {%- if image -%}
+                  {{ image | image_url: width: 600 | image_tag: alt: p.title, class: 'absolute inset-0 w-full h-full object-cover', widths: '300, 450, 600', sizes: '(min-width:768px) 22vw, 45vw', loading: 'lazy' }}
+                {%- endif -%}
+                <span class="photo-gloss-overlay" aria-hidden="true"></span>
+              </span>
+              <span class="font-handwriting text-xl leading-tight mt-3 block" style="color: var(--charcoal)">&ldquo;{{ block.settings.doodle }}&rdquo;</span>
+              <span class="text-[10px] tracking-[.15em] uppercase mt-2 opacity-50 block">{{ block.settings.name }} &middot; {{ block.settings.region_label }}</span>
+            </button>
+          {%- endfor -%}
+        </div>
+
+        {%- comment -%} Lightbox shell, filled from the clicked card's data attributes {%- endcomment -%}
+        <div data-testimonial-lightbox class="hidden fixed inset-0 z-[200] flex items-center justify-center p-4 md:p-10" style="background: rgba(23,20,15,.85)" role="dialog" aria-modal="true" aria-label="Customer story" aria-hidden="true">
+          <div class="relative max-w-3xl w-full rounded-sm overflow-hidden grid md:grid-cols-2 shadow-2xl" style="background: var(--ivory)" data-lightbox-panel>
+            <div class="relative aspect-square md:aspect-auto">
+              <img data-lightbox-image src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" alt="" width="1000" height="1000" class="absolute inset-0 w-full h-full object-cover">
+            </div>
+            <div class="p-8 md:p-10 flex flex-col">
+              <p class="font-handwriting text-3xl leading-tight" style="color: var(--charcoal)" data-lightbox-quote></p>
+              <p class="text-xs tracking-[.2em] uppercase mt-6 opacity-60" data-lightbox-author></p>
+              <div class="mt-auto pt-8 border-t" style="border-color: rgba(43,38,32,.12)">
+                <p class="text-[10px] tracking-[.2em] uppercase opacity-50 mb-1">Wearing</p>
+                <a href="#" class="serif text-lg hover:opacity-70" data-lightbox-product></a>
+                <p class="text-sm opacity-60 mt-1" data-lightbox-price></p>
+              </div>
+            </div>
+            <button type="button" data-lightbox-close aria-label="Close" class="absolute top-4 right-4 w-9 h-9 rounded-full flex items-center justify-center bg-white/85 hover:bg-white transition-colors">&#10005;</button>
+            <button type="button" data-lightbox-step="-1" aria-label="Previous" class="absolute left-4 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full flex items-center justify-center bg-white/85 hover:bg-white transition-colors">&#8592;</button>
+            <button type="button" data-lightbox-step="1" aria-label="Next" class="absolute right-4 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full flex items-center justify-center bg-white/85 hover:bg-white transition-colors">&#8594;</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+{%- elsif request.design_mode -%}
+  <section class="px-6 md:px-16 py-16 max-w-7xl mx-auto text-center text-sm opacity-60">
+    Testimonials: add blocks and pick products (or a collection with products).
+  </section>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Testimonials gallery",
+  "tag": "div",
+  "max_blocks": 16,
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "In Their Words" },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Loved by Women Across India" },
+    {
+      "type": "textarea",
+      "id": "copy",
+      "label": "Copy",
+      "default": "Real pieces, styled and worn every day by the women who bought them."
+    },
+    {
+      "type": "collection",
+      "id": "collection",
+      "label": "Fallback collection",
+      "info": "A testimonial without a picked product shows the product at the same position in this collection (all products when empty)."
+    }
+  ],
+  "blocks": [
+    {
+      "type": "testimonial",
+      "name": "Testimonial",
+      "settings": [
+        { "type": "text", "id": "name", "label": "Name", "default": "Ananya R." },
+        {
+          "type": "select",
+          "id": "region",
+          "label": "Region",
+          "options": [
+            { "value": "west", "label": "West" },
+            { "value": "north", "label": "North" },
+            { "value": "south", "label": "South" },
+            { "value": "east", "label": "East" }
+          ],
+          "default": "west"
+        },
+        { "type": "text", "id": "region_label", "label": "State / city", "default": "Maharashtra" },
+        { "type": "textarea", "id": "quote", "label": "Quote (lightbox)", "default": "The kind of jewellery I actually reach for every morning, it just goes with everything." },
+        { "type": "text", "id": "doodle", "label": "Handwritten note (card)", "default": "never taking these off" },
+        { "type": "range", "id": "rotation", "label": "Rotation", "min": -4, "max": 4, "step": 1, "unit": "°", "default": -3 },
+        { "type": "range", "id": "offset_y", "label": "Vertical offset", "min": -14, "max": 14, "step": 2, "unit": "px", "default": 10 },
+        { "type": "product", "id": "product", "label": "Product worn" }
+      ]
+    }
+  ],
+  "presets": [{ "name": "Testimonials gallery", "blocks": [{ "type": "testimonial" }] }]
+}
+{% endschema %}

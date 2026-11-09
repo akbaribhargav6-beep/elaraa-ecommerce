@@ -1,0 +1,47 @@
+{% comment %}
+  "The ELARAA Guarantee" strip — ported from frontend/src/app/product/[slug]/page.tsx.
+{% endcomment %}
+<section class="max-w-7xl mx-auto px-4 sm:px-6 md:px-12 mt-24 sm:mt-32" data-section-id="{{ section.id }}">
+  <div class="border-t border-b py-12 sm:py-16" style="border-color: rgba(43,38,32,.15)">
+    <div class="text-center mb-10">
+      <p class="eyebrow">{{ section.settings.eyebrow }}</p>
+      <h2 class="serif text-3xl sm:text-4xl mt-1">{{ section.settings.heading }}</h2>
+    </div>
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 text-center">
+      {%- for block in section.blocks -%}
+        <div class="p-4 space-y-2" {{ block.shopify_attributes }}>
+          <div class="w-12 h-12 rounded-full flex items-center justify-center mx-auto text-xl" style="background: rgba(43,38,32,.08); color: var(--gold-deep)" aria-hidden="true">{{ block.settings.icon }}</div>
+          <h3 class="font-medium text-xs uppercase tracking-wider" style="font-family: var(--font-jost), sans-serif">{{ block.settings.label }}</h3>
+          <p class="text-[11px] opacity-60 leading-snug">{{ block.settings.sub }}</p>
+        </div>
+      {%- endfor -%}
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Product guarantee",
+  "tag": "div",
+  "max_blocks": 6,
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "Uncompromising Standards" },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "The ELARAA Guarantee" }
+  ],
+  "blocks": [
+    {
+      "type": "item",
+      "name": "Guarantee",
+      "settings": [
+        { "type": "text", "id": "icon", "label": "Icon (emoji)", "default": "👑" },
+        { "type": "text", "id": "label", "label": "Label", "default": "Anti Tarnish" },
+        { "type": "text", "id": "sub", "label": "Sub-label", "default": "100% Quality Guaranteed" }
+      ]
+    }
+  ],
+  "enabled_on": {
+    "templates": ["product"]
+  },
+  "presets": [{ "name": "Product guarantee", "blocks": [{ "type": "item" }] }]
+}
+{% endschema %}

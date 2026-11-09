@@ -1,0 +1,104 @@
+{% comment %}
+  "Everything You Need To Know" — ported from frontend/src/components/product/ProductAccordions.tsx.
+  Usage: {% render 'product-accordions', product: product %}
+  Design Story and Specifications are per-product (short description, body,
+  material metafield); the rest is the shared policy copy from the React
+  component. src/js/accordions.mjs keeps one item open at a time.
+{% endcomment %}
+{%- liquid
+  assign short_description = product.metafields.custom.short_description.value
+  assign material = product.metafields.custom.material.value | default: 'Premium alloy base'
+-%}
+<section class="max-w-4xl mx-auto px-6 mt-20 sm:mt-28 space-y-2" data-accordion>
+  <div class="text-center mb-10">
+    <p class="eyebrow">The Details &amp; Craft</p>
+    <h2 class="serif text-3xl sm:text-4xl mt-2">Everything You Need To Know</h2>
+  </div>
+
+  {%- comment -%} 1 — Design Story (open by default) {%- endcomment -%}
+  <div class="border-b" style="border-color: rgba(43,38,32,.15)" data-accordion-item data-open="true">
+    <button type="button" data-accordion-button aria-expanded="true" class="w-full flex items-center justify-between text-left py-4 group">
+      <span class="serif text-xl group-hover:opacity-70 transition-opacity">Design Story &amp; Inspiration</span>
+      <span data-accordion-arrow class="transition-transform duration-300" style="color: var(--gold-deep); transform: rotate(180deg)" aria-hidden="true">▼</span>
+    </button>
+    <div data-accordion-panel class="overflow-hidden transition-[max-height,opacity] duration-500 text-sm opacity-70 leading-relaxed" style="max-height: 500px; opacity: 1">
+      <div class="pb-5 space-y-3">
+        {%- if short_description != blank -%}<p>{{ short_description }}</p>{%- endif -%}
+        {%- if product.description != blank -%}<div>{{ product.description }}</div>{%- endif -%}
+      </div>
+    </div>
+  </div>
+
+  {%- comment -%} 2 — Specifications {%- endcomment -%}
+  <div class="border-b" style="border-color: rgba(43,38,32,.15)" data-accordion-item data-open="false">
+    <button type="button" data-accordion-button aria-expanded="false" class="w-full flex items-center justify-between text-left py-4 group">
+      <span class="serif text-xl group-hover:opacity-70 transition-opacity">Specifications &amp; Materials</span>
+      <span data-accordion-arrow class="transition-transform duration-300" style="color: var(--gold-deep)" aria-hidden="true">▼</span>
+    </button>
+    <div data-accordion-panel class="overflow-hidden transition-[max-height,opacity] duration-500 text-sm opacity-70 leading-relaxed" style="max-height: 0px; opacity: 0">
+      <div class="pb-5">
+        <div class="grid sm:grid-cols-2 gap-4">
+          <div class="p-3" style="background: rgba(43,38,32,.05)">
+            <span class="uppercase tracking-widest text-[9px] opacity-50 block">Material</span>
+            <strong class="text-sm">{{ material }}</strong>
+          </div>
+          <div class="p-3" style="background: rgba(43,38,32,.05)">
+            <span class="uppercase tracking-widest text-[9px] opacity-50 block">Quality Grade</span>
+            <strong class="text-sm">Anti Tarnish &amp; Skin Friendly</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {%- comment -%} 3 — Care guide {%- endcomment -%}
+  <div class="border-b" style="border-color: rgba(43,38,32,.15)" data-accordion-item data-open="false">
+    <button type="button" data-accordion-button aria-expanded="false" class="w-full flex items-center justify-between text-left py-4 group">
+      <span class="serif text-xl group-hover:opacity-70 transition-opacity">Jewellery Care Guide</span>
+      <span data-accordion-arrow class="transition-transform duration-300" style="color: var(--gold-deep)" aria-hidden="true">▼</span>
+    </button>
+    <div data-accordion-panel class="overflow-hidden transition-[max-height,opacity] duration-500 text-sm opacity-70 leading-relaxed" style="max-height: 0px; opacity: 0">
+      <div class="pb-5">
+        <ul class="list-disc list-inside space-y-1.5">
+          <li>Apply perfumes, hairsprays, and lotions before putting on your jewellery.</li>
+          <li>Store in the provided ELARAA anti tarnish velvet box when not in use.</li>
+          <li>Gently wipe with the included microfiber polishing cloth after wearing.</li>
+          <li>Avoid wearing during swimming, hot springs, or intense gym sessions.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  {%- comment -%} 4 — Shipping, returns, warranty {%- endcomment -%}
+  <div class="border-b" style="border-color: rgba(43,38,32,.15)" data-accordion-item data-open="false">
+    <button type="button" data-accordion-button aria-expanded="false" class="w-full flex items-center justify-between text-left py-4 group">
+      <span class="serif text-xl group-hover:opacity-70 transition-opacity">Shipping, Returns &amp; Warranty</span>
+      <span data-accordion-arrow class="transition-transform duration-300" style="color: var(--gold-deep)" aria-hidden="true">▼</span>
+    </button>
+    <div data-accordion-panel class="overflow-hidden transition-[max-height,opacity] duration-500 text-sm opacity-70 leading-relaxed" style="max-height: 0px; opacity: 0">
+      <div class="pb-5">
+        <p>Dispatched in discreet, fully insured transit boxes. Delivered across India in 3 to 5 business days. We offer a 14 day return policy, and every piece is covered by a 1 year craftsmanship warranty against tarnish and defects.</p>
+      </div>
+    </div>
+  </div>
+
+  {%- comment -%} 5 — FAQ {%- endcomment -%}
+  <div class="border-b" style="border-color: rgba(43,38,32,.15)" data-accordion-item data-open="false">
+    <button type="button" data-accordion-button aria-expanded="false" class="w-full flex items-center justify-between text-left py-4 group">
+      <span class="serif text-xl group-hover:opacity-70 transition-opacity">Frequently Asked Questions</span>
+      <span data-accordion-arrow class="transition-transform duration-300" style="color: var(--gold-deep)" aria-hidden="true">▼</span>
+    </button>
+    <div data-accordion-panel class="overflow-hidden transition-[max-height,opacity] duration-500 text-sm opacity-70 leading-relaxed" style="max-height: 0px; opacity: 0">
+      <div class="pb-5 space-y-3">
+        <div>
+          <strong class="block font-medium">Q: Is this piece anti tarnish?</strong>
+          <p class="mt-0.5">A: Yes, it features a premium anti tarnish finish designed for daily wear and long lasting shine.</p>
+        </div>
+        <div>
+          <strong class="block font-medium">Q: Can I request gift packaging?</strong>
+          <p class="mt-0.5">A: Yes, every order includes our signature velvet box and ribbon at no extra charge.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

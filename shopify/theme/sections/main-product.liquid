@@ -16,7 +16,7 @@
 -%}
 
 <div class="pt-28"></div>
-<div class="pb-24" data-section-id="{{ section.id }}">
+<div data-section-id="{{ section.id }}">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 md:px-12 mb-6 sm:mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs opacity-70">
     <nav aria-label="Breadcrumb" class="flex items-center gap-2">
       <a href="{{ routes.root_url }}" class="hover:opacity-100">Home</a>
@@ -58,6 +58,9 @@
       </div>
     </div>
   </section>
+
+  {% render 'product-accordions', product: product %}
+  {% render 'notify-modal', product: product %}
 </div>
 
 {% schema %}

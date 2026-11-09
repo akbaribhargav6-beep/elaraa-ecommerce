@@ -271,3 +271,16 @@ select { background: transparent; }
 #cartDrawer.open { transform: translateX(0); }
 .cart-drawer-item { display: flex; gap: 14px; padding: 16px 0; border-bottom: 1px solid rgba(43, 38, 32, .1); }
 .cart-drawer-item img { width: 76px; height: 76px; object-fit: cover; flex-shrink: 0; }
+
+/* ══════════════════════ Judge.me review widget (theme addition, not in globals.css) ══════════════════════
+   Shopify has no native reviews; the Judge.me widget is restyled to the ELARAA palette. */
+.jdgm-widget { font-family: var(--font-jost), sans-serif; color: var(--charcoal); }
+.jdgm-widget .jdgm-star { color: var(--gold-deep) !important; }
+.jdgm-widget .jdgm-rev-widg__title,
+.jdgm-widget .jdgm-rev__title { font-family: var(--font-cormorant), serif; font-weight: 400; }
+.jdgm-widget .jdgm-rev-widg { border-top: 1px solid rgba(43, 38, 32, .1); }
+.jdgm-widget .jdgm-rev { border-color: rgba(43, 38, 32, .1); }
+.jdgm-widget .jdgm-write-rev-link,
+.jdgm-widget .jdgm-btn { border-radius: 0; border-color: var(--gold-deep); color: var(--gold-deep); background: transparent; letter-spacing: .25em; text-transform: uppercase; font-size: .75rem; }
+.jdgm-widget .jdgm-histogram__bar-content { background: var(--gold-deep); }
+.jdgm-preview-badge .jdgm-prev-badge__text { opacity: .7; text-decoration: underline; text-underline-offset: 4px; }

@@ -1,0 +1,76 @@
+{% comment %}
+  Order detail — ported from frontend/src/app/account/orders/[orderNumber]/page.tsx.
+  Differences forced by Shopify: gift packaging is an ordinary line item; the
+  invoice PDF and self-service cancellation were custom backend features, so
+  the buttons become "Track / View Order Status" (Shopify's order status page)
+  and a contact link.
+{% endcomment %}
+{%- liquid
+  assign contact_url = pages.contact.url | default: '/pages/contact'
+  assign shipping = order.shipping_address
+-%}
+<div class="pt-28"></div>
+<section class="px-6 md:px-16 pb-28 max-w-6xl mx-auto" data-section-id="{{ section.id }}">
+  <div class="grid md:grid-cols-[200px_1fr] gap-12">
+    {% render 'account-nav', active: 'orders' %}
+    <div>
+      <div class="flex items-center justify-between mb-8">
+        <h1 class="serif text-3xl">{{ order.name }}</h1>
+        <span class="text-xs uppercase tracking-wide px-3 py-1" style="background: var(--cream)">{% render 'order-status', order: order %}</span>
+      </div>
+      <p class="text-xs opacity-60 -mt-6 mb-8">Placed on {{ order.created_at | date: '%-d %B %Y' }}</p>
+
+      <div class="p-6 mb-8" style="background: var(--cream)">
+        {%- for line in order.line_items -%}
+          <div class="mb-3">
+            <div class="flex justify-between gap-4 text-sm">
+              <span class="opacity-70">
+                {{ line.title }} × {{ line.quantity }}
+              </span>
+              <span class="shrink-0">{{ line.final_line_price | money_without_trailing_zeros }}</span>
+            </div>
+          </div>
+        {%- endfor -%}
+        <div class="divider-gold my-4"></div>
+        <div class="flex justify-between text-sm mb-2"><span class="opacity-70">Products Total</span><span>{{ order.line_items_subtotal_price | money_without_trailing_zeros }}</span></div>
+        {%- for discount in order.cart_level_discount_applications -%}
+          <div class="flex justify-between text-sm mb-2"><span class="opacity-70">Coupon ({{ discount.title }})</span><span style="color: #047857">−{{ discount.total_allocated_amount | money_without_trailing_zeros }}</span></div>
+        {%- endfor -%}
+        <div class="flex justify-between text-sm mb-2"><span class="opacity-70">Shipping</span><span>{% if order.shipping_price == 0 %}Free{% else %}{{ order.shipping_price | money_without_trailing_zeros }}{% endif %}</span></div>
+        {%- if order.tax_price > 0 -%}
+          <div class="flex justify-between text-sm mb-4"><span class="opacity-70">GST{% if order.taxes_included %} (included){% endif %}</span><span>{{ order.tax_price | money_without_trailing_zeros }}</span></div>
+        {%- endif -%}
+        <div class="flex justify-between text-base font-medium"><span>Total</span><span>{{ order.total_price | money_without_trailing_zeros }}</span></div>
+      </div>
+
+      {%- if shipping -%}
+        <div class="text-sm opacity-70 mb-8">
+          <p class="text-xs uppercase tracking-wide opacity-50 mb-2">Shipping to</p>
+          <p>{{ shipping.name }}</p>
+          <p>{{ shipping.address1 }}{% if shipping.address2 != blank %}, {{ shipping.address2 }}{% endif %}</p>
+          <p>{{ shipping.city }}, {{ shipping.province }} {{ shipping.zip }}</p>
+        </div>
+      {%- endif -%}
+
+      <div class="flex flex-wrap items-center gap-4">
+        {%- if order.order_status_url != blank -%}
+          <a href="{{ order.order_status_url }}" class="btn-luxury btn-gold"><span>{{ section.settings.status_label }}</span></a>
+        {%- endif -%}
+        {%- unless order.cancelled or order.fulfillment_status == 'fulfilled' -%}
+          <a href="{{ contact_url }}" class="btn-luxury"><span>{{ section.settings.help_label }}</span></a>
+        {%- endunless -%}
+      </div>
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Order",
+  "tag": "div",
+  "settings": [
+    { "type": "text", "id": "status_label", "label": "Order status button", "default": "Track Order" },
+    { "type": "text", "id": "help_label", "label": "Help button (unshipped orders)", "default": "Change or Cancel Order" }
+  ]
+}
+{% endschema %}

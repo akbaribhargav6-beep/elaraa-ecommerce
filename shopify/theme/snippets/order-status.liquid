@@ -1,0 +1,20 @@
+{% comment %}
+  One-word order status in the vocabulary the React site used
+  (CONFIRMED / SHIPPED / CANCELLED …), derived from Shopify's order state.
+  Usage: {% render 'order-status', order: order %}
+{% endcomment %}
+{%- liquid
+  if order.cancelled
+    echo 'Cancelled'
+  elsif order.financial_status == 'refunded'
+    echo 'Refunded'
+  elsif order.fulfillment_status == 'fulfilled'
+    echo 'Shipped'
+  elsif order.fulfillment_status == 'partial'
+    echo 'Partially Shipped'
+  elsif order.financial_status == 'pending'
+    echo 'Pending'
+  else
+    echo 'Confirmed'
+  endif
+-%}

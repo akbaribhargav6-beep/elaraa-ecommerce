@@ -1,0 +1,68 @@
+{% comment %}
+  Sign in + forgot password — ported from frontend/src/app/(auth)/login/page.tsx
+  and forgot-password/page.tsx (classic customer accounts).
+  The recover form lives on this page, as Shopify expects: /account/login#recover
+  shows it (CSS :target), and Shopify returns here after it is submitted.
+{% endcomment %}
+<div class="pt-28"></div>
+<section class="px-6 pb-28 max-w-sm mx-auto" data-section-id="{{ section.id }}">
+  {%- comment -%} Forgot password (first in the DOM so `peer-target` can hide the sign-in block) {%- endcomment -%}
+  {%- assign recover_active = false -%}
+  {%- capture recover_form -%}
+    {%- form 'recover_customer_password', class: 'space-y-4 text-left' -%}
+      {%- if form.posted_successfully? or form.errors -%}{%- assign recover_active = true -%}{%- endif -%}
+      {%- if form.posted_successfully? -%}
+        <p class="text-sm opacity-70 text-center" role="status">{{ section.settings.recover_success }}</p>
+      {%- else -%}
+        {%- if form.errors -%}
+          <div class="text-sm text-red-700" role="alert">{{ form.errors | default_errors }}</div>
+        {%- endif -%}
+        <input required type="email" name="email" autocomplete="email" placeholder="Your email" aria-label="Email" class="w-full border p-3 text-sm bg-transparent outline-none" style="border-color: rgba(43,38,32,.2)">
+        <button type="submit" class="btn-luxury btn-gold-solid w-full justify-center"><span>Send Reset Link</span></button>
+      {%- endif -%}
+    {%- endform -%}
+  {%- endcapture -%}
+
+  <div id="recover" class="peer {% if recover_active %}block{% else %}hidden target:block{% endif %} text-center scroll-mt-28">
+    <p class="eyebrow">Password Reset</p>
+    <h1 class="serif text-4xl mt-4 mb-8">Forgot Password</h1>
+    {{ recover_form }}
+    <p class="text-center mt-6"><a href="{{ routes.account_login_url }}" class="text-xs opacity-60 hover:opacity-100">Back to sign in</a></p>
+  </div>
+
+  <div class="{% if recover_active %}hidden{% else %}peer-target:hidden{% endif %}">
+    <div class="text-center mb-10">
+      <p class="eyebrow">{{ section.settings.eyebrow }}</p>
+      <h1 class="serif text-4xl mt-4">{{ section.settings.heading }}</h1>
+    </div>
+    {%- form 'customer_login', class: 'space-y-4', novalidate: 'novalidate' -%}
+      <input required type="email" name="customer[email]" autocomplete="email" placeholder="Email" aria-label="Email" value="{{ form.email | escape }}" class="w-full border p-3 text-sm bg-transparent outline-none" style="border-color: rgba(43,38,32,.2)">
+      <input required type="password" name="customer[password]" autocomplete="current-password" placeholder="Password" aria-label="Password" class="w-full border p-3 text-sm bg-transparent outline-none" style="border-color: rgba(43,38,32,.2)">
+      {%- if form.errors -%}
+        <div class="text-sm text-red-700" role="alert">{{ form.errors | default_errors }}</div>
+      {%- endif -%}
+      <button type="submit" class="btn-luxury btn-gold-solid w-full justify-center"><span>Sign In</span></button>
+    {%- endform -%}
+    <div class="text-center mt-6 space-y-2">
+      <a href="#recover" class="block text-xs opacity-60 hover:opacity-100">Forgot your password?</a>
+      <p class="text-xs opacity-60">New to ELARAA? <a href="{{ routes.account_register_url }}" class="underline">Create an account</a></p>
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Login",
+  "tag": "div",
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "Welcome Back" },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Sign In" },
+    {
+      "type": "text",
+      "id": "recover_success",
+      "label": "Reset link sent message",
+      "default": "If that email is registered, a reset link is on its way."
+    }
+  ]
+}
+{% endschema %}

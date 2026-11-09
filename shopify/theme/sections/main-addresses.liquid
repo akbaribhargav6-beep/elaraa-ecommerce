@@ -1,0 +1,84 @@
+{% comment %}
+  Address Book — ported from frontend/src/app/account/addresses/page.tsx
+  (add, delete, set default). Shopify stores first and last name separately
+  and validates the state against the chosen country, so "Full name" is two
+  fields and State is a select filled by Shopify's CountryProvinceSelector
+  (shopify_common.js; wired in src/js/account.mjs).
+{% endcomment %}
+<script src="{{ 'shopify_common.js' | shopify_asset_url }}" defer></script>
+
+<div class="pt-28"></div>
+<section class="px-6 md:px-16 pb-28 max-w-6xl mx-auto" data-section-id="{{ section.id }}">
+  <div class="grid md:grid-cols-[200px_1fr] gap-12">
+    {% render 'account-nav', active: 'addresses' %}
+    <div data-address-book>
+      <div class="flex items-center justify-between mb-8">
+        <h1 class="serif text-3xl">Address Book</h1>
+        <button type="button" data-address-toggle aria-expanded="false" aria-controls="AddressFormNew" class="text-xs tracking-[.15em] uppercase hover:opacity-60">+ Add Address</button>
+      </div>
+
+      {%- form 'customer_address', customer.new_address, id: 'AddressFormNew', class: 'hidden grid sm:grid-cols-2 gap-4 mb-10 p-6', style: 'background: var(--cream)', data-address-form: 'true' -%}
+        {%- if form.errors -%}
+          <div class="sm:col-span-2 text-sm text-red-700" role="alert" data-form-errors>{{ form.errors | default_errors }}</div>
+        {%- endif -%}
+        <input required type="text" name="address[first_name]" autocomplete="given-name" placeholder="First name" aria-label="First name" value="{{ form.first_name | escape }}" class="border p-3 text-sm bg-transparent outline-none" style="border-color: rgba(43,38,32,.2)">
+        <input type="text" name="address[last_name]" autocomplete="family-name" placeholder="Last name" aria-label="Last name" value="{{ form.last_name | escape }}" class="border p-3 text-sm bg-transparent outline-none" style="border-color: rgba(43,38,32,.2)">
+        <input required type="tel" name="address[phone]" autocomplete="tel" placeholder="Phone" aria-label="Phone" value="{{ form.phone | escape }}" class="border p-3 text-sm bg-transparent outline-none sm:col-span-2" style="border-color: rgba(43,38,32,.2)">
+        <input required type="text" name="address[address1]" autocomplete="address-line1" placeholder="Address line 1" aria-label="Address line 1" value="{{ form.address1 | escape }}" class="border p-3 text-sm bg-transparent outline-none sm:col-span-2" style="border-color: rgba(43,38,32,.2)">
+        <input type="text" name="address[address2]" autocomplete="address-line2" placeholder="Address line 2" aria-label="Address line 2" value="{{ form.address2 | escape }}" class="border p-3 text-sm bg-transparent outline-none sm:col-span-2" style="border-color: rgba(43,38,32,.2)">
+        <input required type="text" name="address[city]" autocomplete="address-level2" placeholder="City" aria-label="City" value="{{ form.city | escape }}" class="border p-3 text-sm bg-transparent outline-none" style="border-color: rgba(43,38,32,.2)">
+        <input required type="text" name="address[zip]" autocomplete="postal-code" inputmode="numeric" placeholder="PIN code" aria-label="PIN code" value="{{ form.zip | escape }}" class="border p-3 text-sm bg-transparent outline-none" style="border-color: rgba(43,38,32,.2)">
+        <select id="AddressCountryNew" name="address[country]" autocomplete="country-name" aria-label="Country" data-default="{{ form.country | default: 'India' }}" data-province-suffix="New" class="border p-3 text-sm bg-transparent outline-none" style="border-color: rgba(43,38,32,.2)">{{ all_country_option_tags }}</select>
+        <div id="AddressProvinceContainerNew">
+          <select id="AddressProvinceNew" name="address[province]" autocomplete="address-level1" aria-label="State" data-default="{{ form.province }}" class="w-full border p-3 text-sm bg-transparent outline-none" style="border-color: rgba(43,38,32,.2)"></select>
+        </div>
+        <label class="sm:col-span-2 flex items-center gap-2 text-xs opacity-70">
+          <input type="checkbox" name="address[default]" value="1">
+          Make this my default address
+        </label>
+        <div class="sm:col-span-2">
+          <button type="submit" class="btn-luxury btn-gold-solid"><span>Save Address</span></button>
+        </div>
+      {%- endform -%}
+
+      {%- paginate customer.addresses by 10 -%}
+        <div class="space-y-4">
+          {%- for address in customer.addresses -%}
+            {%- assign is_default = false -%}
+            {%- if address.id == customer.default_address.id -%}{%- assign is_default = true -%}{%- endif -%}
+            <div class="border p-5 flex items-start justify-between gap-4" style="border-color: rgba(43,38,32,.12)">
+              <div class="text-sm">
+                <p>{{ address.name }}{% if is_default %} <span class="text-[10px] uppercase tracking-wide ml-2" style="color: var(--gold-deep)">Default</span>{% endif %}</p>
+                <p class="opacity-60 mt-1">{{ address.address1 }}{% if address.address2 != blank %}, {{ address.address2 }}{% endif %}, {{ address.city }}, {{ address.province }} {{ address.zip }}</p>
+                {%- if address.phone != blank -%}<p class="opacity-60">{{ address.phone }}</p>{%- endif -%}
+              </div>
+              <div class="flex flex-col items-end gap-2 text-xs shrink-0">
+                {%- unless is_default -%}
+                  {%- form 'customer_address', address -%}
+                    <input type="hidden" name="address[default]" value="1">
+                    <button type="submit" class="opacity-60 hover:opacity-100">Set Default</button>
+                  {%- endform -%}
+                {%- endunless -%}
+                <form method="post" action="{{ address.url }}" data-address-delete data-confirm="Delete this address?">
+                  <input type="hidden" name="_method" value="delete">
+                  <button type="submit" class="opacity-60 hover:opacity-100">Delete</button>
+                </form>
+              </div>
+            </div>
+          {%- else -%}
+            <p class="text-sm opacity-60">No saved addresses yet.</p>
+          {%- endfor -%}
+        </div>
+        {% render 'pagination', paginate: paginate %}
+      {%- endpaginate -%}
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Addresses",
+  "tag": "div",
+  "settings": []
+}
+{% endschema %}

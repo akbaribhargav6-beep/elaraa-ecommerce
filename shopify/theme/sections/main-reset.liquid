@@ -1,0 +1,30 @@
+{% comment %}
+  New password (from the emailed reset link) — ported from
+  frontend/src/app/(auth)/reset-password/page.tsx. Shopify requires the
+  password to be typed twice, so there is a confirmation field the React form
+  did not have.
+{% endcomment %}
+<div class="pt-28"></div>
+<section class="px-6 pb-28 max-w-sm mx-auto text-center" data-section-id="{{ section.id }}">
+  <p class="eyebrow">{{ section.settings.eyebrow }}</p>
+  <h1 class="serif text-4xl mt-4 mb-8">{{ section.settings.heading }}</h1>
+  {%- form 'reset_customer_password', class: 'space-y-4 text-left', novalidate: 'novalidate' -%}
+    <input required type="password" name="customer[password]" autocomplete="new-password" minlength="8" placeholder="New password" aria-label="New password" class="w-full border p-3 text-sm bg-transparent outline-none" style="border-color: rgba(43,38,32,.2)">
+    <input required type="password" name="customer[password_confirmation]" autocomplete="new-password" minlength="8" placeholder="Confirm new password" aria-label="Confirm new password" class="w-full border p-3 text-sm bg-transparent outline-none" style="border-color: rgba(43,38,32,.2)">
+    {%- if form.errors -%}
+      <div class="text-sm text-red-700" role="alert">{{ form.errors | default_errors }}</div>
+    {%- endif -%}
+    <button type="submit" class="btn-luxury btn-gold-solid w-full justify-center"><span>Update Password</span></button>
+  {%- endform -%}
+</section>
+
+{% schema %}
+{
+  "name": "Reset password",
+  "tag": "div",
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "Password Reset" },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "New Password" }
+  ]
+}
+{% endschema %}

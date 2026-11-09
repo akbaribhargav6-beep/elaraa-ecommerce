@@ -1,0 +1,32 @@
+{% comment %}
+  Activate account — the page a customer lands on from Shopify's account
+  invite email (used for the customers imported from the old site, who have no
+  Shopify password yet). No React equivalent; styled like the reset page.
+{% endcomment %}
+<div class="pt-28"></div>
+<section class="px-6 pb-28 max-w-sm mx-auto text-center" data-section-id="{{ section.id }}">
+  <p class="eyebrow">{{ section.settings.eyebrow }}</p>
+  <h1 class="serif text-4xl mt-4 mb-4">{{ section.settings.heading }}</h1>
+  <p class="text-sm opacity-70 mb-8">{{ section.settings.copy }}</p>
+  {%- form 'activate_customer_password', class: 'space-y-4 text-left', novalidate: 'novalidate' -%}
+    <input required type="password" name="customer[password]" autocomplete="new-password" minlength="8" placeholder="Password (min 8 characters)" aria-label="Password" class="w-full border p-3 text-sm bg-transparent outline-none" style="border-color: rgba(43,38,32,.2)">
+    <input required type="password" name="customer[password_confirmation]" autocomplete="new-password" minlength="8" placeholder="Confirm password" aria-label="Confirm password" class="w-full border p-3 text-sm bg-transparent outline-none" style="border-color: rgba(43,38,32,.2)">
+    {%- if form.errors -%}
+      <div class="text-sm text-red-700" role="alert">{{ form.errors | default_errors }}</div>
+    {%- endif -%}
+    <button type="submit" class="btn-luxury btn-gold-solid w-full justify-center"><span>Activate Account</span></button>
+    <button type="submit" name="decline" class="block w-full text-center text-xs opacity-60 hover:opacity-100 py-2">No thanks, decline the invitation</button>
+  {%- endform -%}
+</section>
+
+{% schema %}
+{
+  "name": "Activate account",
+  "tag": "div",
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "Welcome to ELARAA" },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Activate Account" },
+    { "type": "text", "id": "copy", "label": "Copy", "default": "Choose a password to finish setting up your account." }
+  ]
+}
+{% endschema %}

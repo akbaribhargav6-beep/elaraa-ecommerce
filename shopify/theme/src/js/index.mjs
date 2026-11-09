@@ -22,6 +22,7 @@ import { initCartPage } from './cart-page.mjs';
 import { initCounters } from './counter.mjs';
 import { initContactTopics } from './contact.mjs';
 import { initLegacyRedirect } from './legacy.mjs';
+import { initAccount } from './account.mjs';
 import { notify } from './toast.mjs';
 
 const ELARAA = (window.ELARAA = window.ELARAA || { settings: {}, cart: {}, routes: {} });
@@ -59,6 +60,7 @@ function boot() {
   initCartPage(ELARAA.cartStore, ELARAA.routes);
   initCounters();
   initContactTopics();
+  initAccount();
   // A page restored from the back/forward cache shows the cart as it was when
   // the shopper left (e.g. before Buy Now added an item) — refresh it.
   window.addEventListener('pageshow', (e) => {

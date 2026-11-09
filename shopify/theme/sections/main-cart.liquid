@@ -1,0 +1,265 @@
+{% comment %}
+  Cart page ("Your Bag") — ported from frontend/src/app/cart/page.tsx, plus the
+  gift-packaging option that lived on the React checkout page (Shopify's
+  checkout is not themeable, so it moves here as a ₹99 add-on line).
+
+  Shopify mapping:
+    line items / totals  → the cart object; src/js/cart-page.mjs re-renders this
+                           section after every change
+    promo code           → Cart API `discount` (falls back to /discount/<CODE>);
+                           applied codes show from cart discount applications
+    shipping row         → an estimate from two settings (the real rate is set
+                           in Settings → Shipping and charged at checkout)
+    combo groups         → dropped (spec)
+  Controls carry data-focus-key so focus survives the re-render.
+{% endcomment %}
+{%- liquid
+  assign gift_product = settings.gift_packaging_product | default: all_products['gift-packaging']
+  assign gift_variant = gift_product.selected_or_first_available_variant
+
+  assign gift_line = nil
+  assign gift_qty = 0
+  assign gift_total = 0
+  for item in cart.items
+    if item.product.tags contains 'hidden' or item.product_id == gift_product.id
+      assign gift_line = item
+      assign gift_qty = gift_qty | plus: item.quantity
+      assign gift_total = gift_total | plus: item.final_line_price
+    endif
+  endfor
+
+  assign visible_count = cart.item_count | minus: gift_qty
+  assign products_total = cart.items_subtotal_price | minus: gift_total
+
+  assign threshold = settings.free_shipping_threshold | default: 2000 | times: 100
+  assign remaining = threshold | minus: cart.total_price | at_least: 0
+  assign progress = 100
+  if threshold > 0
+    assign progress = cart.total_price | times: 100 | divided_by: threshold | at_most: 100 | at_least: 0
+  endif
+  assign shipping_fee = 0
+  if remaining > 0
+    assign shipping_fee = section.settings.shipping_fee | times: 100
+  endif
+  assign grand_total = cart.total_price | plus: shipping_fee
+
+  assign upsell = nil
+  assign upsell_source = section.settings.upsell_collection | default: collections['featured']
+  if visible_count > 0
+    for candidate in upsell_source.products limit: 12
+      if candidate.available == false or candidate.tags contains 'hidden'
+        continue
+      endif
+      assign in_cart = false
+      for item in cart.items
+        if item.product_id == candidate.id
+          assign in_cart = true
+          break
+        endif
+      endfor
+      if in_cart == false
+        assign upsell = candidate
+        break
+      endif
+    endfor
+  endif
+-%}
+
+<div class="pt-28"></div>
+<section class="px-4 sm:px-6 md:px-16 pb-20 sm:pb-28 max-w-6xl mx-auto" data-cart-root data-section-id="{{ section.id }}">
+  <h1 class="serif text-3xl sm:text-4xl md:text-5xl mb-2">{{ section.settings.heading }}</h1>
+  <p class="text-xs sm:text-sm opacity-60 mb-8 sm:mb-12">{{ visible_count }} {% if visible_count == 1 %}item{% else %}items{% endif %} in your shopping bag</p>
+
+  {%- if visible_count == 0 -%}
+    <div class="text-center py-16 space-y-4" style="background: rgba(255,255,255,.6); border: 1px solid rgba(43,38,32,.1)">
+      <div class="text-4xl opacity-30" aria-hidden="true">🛍️</div>
+      <h2 class="serif text-2xl">{{ section.settings.empty_heading }}</h2>
+      <p class="text-xs opacity-60 max-w-md mx-auto">{{ section.settings.empty_copy }}</p>
+      <a href="{{ routes.all_products_collection_url }}" class="btn-luxury btn-gold-solid"><span>Explore Jewellery</span></a>
+    </div>
+  {%- else -%}
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
+      <div class="md:col-span-2 space-y-6 sm:space-y-8">
+        <div class="space-y-6">
+          {%- for item in cart.items -%}
+            {%- liquid
+              if item.product.tags contains 'hidden' or item.product_id == gift_product.id
+                continue
+              endif
+              assign line_max = 99
+              if item.variant.inventory_management == 'shopify' and item.variant.inventory_policy == 'deny'
+                assign line_max = item.variant.inventory_quantity | at_least: 1 | at_most: 99
+              endif
+            -%}
+            <div
+              class="flex flex-col sm:flex-row gap-4 sm:gap-5 pb-6 border-b p-4"
+              style="border-color: rgba(43,38,32,.1); background: rgba(255,255,255,.4)"
+              data-line-key="{{ item.key }}"
+              data-line-qty="{{ item.quantity }}"
+              data-line-max="{{ line_max }}"
+            >
+              {%- if item.image -%}
+                <a href="{{ item.url }}" class="w-20 h-20 sm:w-24 sm:h-24 shrink-0 overflow-hidden border" style="border-color: rgba(43,38,32,.1)">
+                  {{ item.image | image_url: width: 192 | image_tag: alt: item.product.title, class: 'w-full h-full object-cover', sizes: '96px', loading: 'lazy' }}
+                </a>
+              {%- endif -%}
+              <div class="flex-1 flex flex-col justify-between gap-2">
+                <div class="flex items-start justify-between gap-2">
+                  <div>
+                    <a href="{{ item.url }}" class="serif text-lg hover:opacity-70">{{ item.product.title }}</a>
+                    {%- unless item.variant.title == 'Default Title' -%}
+                      <p class="text-xs opacity-60 mt-1">{{ item.variant.title }}</p>
+                    {%- endunless -%}
+                  </div>
+                  <p class="text-sm font-medium">{{ item.final_line_price | money_without_trailing_zeros }}</p>
+                </div>
+                <div class="flex items-center justify-between mt-2 pt-2 border-t" style="border-color: rgba(43,38,32,.08)">
+                  <div class="qty-box">
+                    <button type="button" data-line-step="-1" data-focus-key="qty:{{ item.key }}:minus" aria-label="Decrease quantity of {{ item.product.title | escape }}">−</button>
+                    <input type="number" value="{{ item.quantity }}" readonly aria-label="Quantity of {{ item.product.title | escape }}">
+                    <button type="button" data-line-step="1" data-focus-key="qty:{{ item.key }}:plus" aria-label="Increase quantity of {{ item.product.title | escape }}">+</button>
+                  </div>
+                  <button type="button" data-line-remove data-focus-key="remove:{{ item.key }}" class="text-xs opacity-50 hover:opacity-100 underline">Remove</button>
+                </div>
+              </div>
+            </div>
+          {%- endfor -%}
+        </div>
+
+        {%- if upsell != nil -%}
+          <div class="pt-4 border-t" style="border-color: rgba(43,38,32,.1)">
+            <p class="eyebrow mb-3">{{ section.settings.upsell_heading }}</p>
+            <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center border p-3.5" style="border-color: rgba(43,38,32,.1); background: rgba(255,255,255,.7)">
+              {%- if upsell.featured_image -%}
+                {{ upsell.featured_image | image_url: width: 112 | image_tag: alt: upsell.title, class: 'w-14 h-14 object-cover border shrink-0', style: 'border-color: rgba(43,38,32,.1)', sizes: '56px', loading: 'lazy' }}
+              {%- endif -%}
+              <div class="flex-1">
+                <h3 class="serif text-base"><a href="{{ upsell.url }}" class="hover:opacity-70">{{ upsell.title }}</a></h3>
+                <p class="text-xs font-medium">{{ upsell.price | money_without_trailing_zeros }}</p>
+              </div>
+              <button type="button" data-quick-add="{{ upsell.selected_or_first_available_variant.id }}" data-focus-key="upsell" class="btn-luxury btn-gold text-[10px] px-4 py-2 min-h-[36px]"><span>+ Add To Bag</span></button>
+            </div>
+          </div>
+        {%- endif -%}
+      </div>
+
+      <div class="h-fit p-5 sm:p-8" style="background: var(--cream)">
+        <h2 class="serif text-xl sm:text-2xl mb-4 sm:mb-6">Order Summary</h2>
+
+        <div class="mb-6">
+          <p class="text-xs opacity-70 mb-2">
+            {%- if remaining > 0 -%}
+              Add {{ remaining | money_without_trailing_zeros }} more to unlock free shipping.
+            {%- else -%}
+              You've unlocked free shipping.
+            {%- endif -%}
+          </p>
+          <div class="h-1.5 rounded-full overflow-hidden" style="background: rgba(43,38,32,.15)" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ progress }}" aria-label="Progress to free shipping">
+            <div class="h-full transition-all duration-500" style="width: {{ progress }}%; background: var(--gold-deep)"></div>
+          </div>
+        </div>
+
+        <div class="space-y-3 text-sm">
+          <div class="flex justify-between">
+            <span class="opacity-70">Products Total</span>
+            <span class="font-medium">{{ products_total | money_without_trailing_zeros }}</span>
+          </div>
+          {%- if gift_line != nil -%}
+            <div class="flex justify-between">
+              <span class="opacity-70">🎁 Gift Packaging</span>
+              <span class="font-medium">{{ gift_total | money_without_trailing_zeros }}</span>
+            </div>
+          {%- endif -%}
+          {%- for discount in cart.cart_level_discount_applications -%}
+            <div class="flex justify-between">
+              <span class="opacity-70">Coupon ({{ discount.title }})</span>
+              <span class="font-medium" style="color: #047857">−{{ discount.total_allocated_amount | money_without_trailing_zeros }}</span>
+            </div>
+          {%- endfor -%}
+          <div class="flex justify-between">
+            <span class="opacity-70">Shipping</span>
+            <span class="font-medium"{% if remaining == 0 %} style="color: #047857"{% endif %}>{% if remaining > 0 %}{{ shipping_fee | money_without_trailing_zeros }}{% else %}Free{% endif %}</span>
+          </div>
+        </div>
+
+        {%- if gift_variant != blank -%}
+          <label class="flex items-start gap-3 mt-6 p-3 text-xs cursor-pointer" style="background: rgba(255,255,255,.6); border: 1px solid rgba(43,38,32,.1)">
+            <input
+              type="checkbox"
+              class="mt-0.5"
+              data-gift-toggle
+              data-focus-key="gift"
+              data-variant-id="{{ gift_variant.id }}"
+              {% if gift_line != nil %}data-line-key="{{ gift_line.key }}" checked{% endif %}
+            >
+            <span>
+              <span class="font-medium block">🎁 Add Gift Packaging (+{{ gift_variant.price | money_without_trailing_zeros }})</span>
+              <span class="opacity-60">{{ section.settings.gift_copy }}</span>
+            </span>
+          </label>
+        {%- endif -%}
+
+        <form data-coupon-form class="flex gap-2 mt-6" action="{{ routes.cart_url }}" method="get" novalidate>
+          <input
+            type="text"
+            data-coupon-input
+            data-focus-key="coupon"
+            name="discount"
+            autocomplete="off"
+            autocapitalize="characters"
+            placeholder="Promo / Voucher Code"
+            aria-label="Promo or voucher code"
+            class="flex-1 border px-3 py-2 text-xs bg-white outline-none"
+            style="border-color: rgba(43,38,32,.2)"
+          >
+          <button type="submit" class="btn-luxury text-[10px] px-3 py-2 min-h-[38px]"><span>Apply</span></button>
+        </form>
+        <p data-coupon-message class="text-[11px] mt-2 hidden" role="status"></p>
+
+        <div class="divider-gold my-6"></div>
+
+        <div class="flex justify-between text-base sm:text-lg mb-2">
+          <span class="serif font-medium">Grand Total</span>
+          <span class="serif font-medium">{{ grand_total | money_without_trailing_zeros }}</span>
+        </div>
+        <p class="text-[11px] opacity-50 mb-6 sm:mb-8">{{ section.settings.total_note }}</p>
+
+        <a href="/checkout" class="btn-luxury btn-gold-solid w-full justify-center min-h-[48px]"><span>Proceed to Checkout →</span></a>
+        <a href="{{ routes.all_products_collection_url }}" class="block text-center text-xs tracking-[.15em] uppercase mt-4 py-2 opacity-60 hover:opacity-100">Continue Shopping</a>
+      </div>
+    </div>
+  {%- endif -%}
+</section>
+
+{% schema %}
+{
+  "name": "Cart",
+  "tag": "div",
+  "settings": [
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Your Bag" },
+    { "type": "text", "id": "empty_heading", "label": "Empty state heading", "default": "Your Shopping Bag is Currently Empty" },
+    {
+      "type": "text",
+      "id": "empty_copy",
+      "label": "Empty state copy",
+      "default": "Discover our handcrafted premium fashion jewellery collections and add your favorite pieces."
+    },
+    {
+      "type": "number",
+      "id": "shipping_fee",
+      "label": "Shipping estimate below the free-shipping threshold (₹)",
+      "info": "Display only. Must match the rate in Settings → Shipping; the threshold is in Theme settings → Commerce.",
+      "default": 99
+    },
+    {
+      "type": "text",
+      "id": "total_note",
+      "label": "Note under the grand total",
+      "default": "Inclusive of all taxes. Final shipping is confirmed at checkout."
+    },
+    { "type": "text", "id": "gift_copy", "label": "Gift packaging copy", "default": "Signature velvet box, ribbon and a personalised care card." },
+    { "type": "text", "id": "upsell_heading", "label": "Upsell heading", "default": "Complete Your Look" },
+    { "type": "collection", "id": "upsell_collection", "label": "Upsell collection", "info": "First in-stock product not already in the bag. Defaults to the featured collection." }
+  ]
+}
+{% endschema %}

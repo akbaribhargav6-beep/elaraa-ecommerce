@@ -18,6 +18,7 @@ import { initPurchasePanels } from './purchase.mjs';
 import { initAccordions } from './accordions.mjs';
 import { initRelated } from './related.mjs';
 import { initNotify } from './notify.mjs';
+import { initCartPage } from './cart-page.mjs';
 import { notify } from './toast.mjs';
 
 const ELARAA = (window.ELARAA = window.ELARAA || { settings: {}, cart: {}, routes: {} });
@@ -51,6 +52,7 @@ function boot() {
   initAccordions();
   initRelated();
   initNotify();
+  initCartPage(ELARAA.cartStore, ELARAA.routes);
   // A page restored from the back/forward cache shows the cart as it was when
   // the shopper left (e.g. before Buy Now added an item) — refresh it.
   window.addEventListener('pageshow', (e) => {

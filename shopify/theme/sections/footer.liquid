@@ -9,7 +9,8 @@
   assign whatsapp = settings.whatsapp_number
 -%}
 
-<footer class="px-6 md:px-16 py-16{% if section.settings.top_margin %} mt-10{% endif %}" style="background: var(--black); color: var(--ivory)" data-section-id="{{ section.id }}">
+{%- comment -%} Footer.tsx: `mt-10` on every page except the home page (noMt). {%- endcomment -%}
+<footer class="px-6 md:px-16 py-16{% if section.settings.top_margin and template.name != 'index' %} mt-10{% endif %}" style="background: var(--black); color: var(--ivory)" data-section-id="{{ section.id }}">
   <div class="max-w-7xl mx-auto grid md:grid-cols-4 gap-10 text-sm">
     <div>
       {% render 'logo', image: section.settings.logo, variant: 'footer', class: 'mb-4 h-16 w-auto' %}

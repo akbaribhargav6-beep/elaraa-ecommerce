@@ -1,0 +1,81 @@
+{
+  "sections": {
+    "hero": {
+      "type": "hero-banner",
+      "settings": {
+        "primary_link": "shopify://collections/all",
+        "secondary_link": "shopify://pages/about"
+      }
+    },
+    "categories": {
+      "type": "shop-categories",
+      "blocks": {
+        "earrings": { "type": "category", "settings": { "collection": "earrings" } },
+        "rings": { "type": "category", "settings": { "collection": "rings" } },
+        "necklaces": { "type": "category", "settings": { "collection": "necklaces" } },
+        "bracelets": { "type": "category", "settings": { "collection": "bracelets" } },
+        "charms": { "type": "category", "settings": { "collection": "charms" } },
+        "duo-set": { "type": "category", "settings": { "collection": "duo-set" } }
+      },
+      "block_order": ["earrings", "rings", "necklaces", "bracelets", "charms", "duo-set"],
+      "settings": {}
+    },
+    "value-props": {
+      "type": "value-props",
+      "blocks": {
+        "p1": { "type": "prop", "settings": { "label": "Handcrafted Detail" } },
+        "p2": { "type": "prop", "settings": { "label": "Skin Friendly" } },
+        "p3": { "type": "prop", "settings": { "label": "Anti Tarnish" } },
+        "p4": { "type": "prop", "settings": { "label": "14 Day Easy Returns" } }
+      },
+      "block_order": ["p1", "p2", "p3", "p4"],
+      "settings": {}
+    },
+    "brand-story": {
+      "type": "brand-story",
+      "settings": {
+        "button_link": "shopify://pages/about"
+      }
+    },
+    "faq": {
+      "type": "faq",
+      "blocks": {
+        "q1": {
+          "type": "item",
+          "settings": {
+            "question": "Will the jewellery tarnish over time??",
+            "answer": "<p>Our jewellery is crafted with premium anti-tarnish technology to maintain its shine. With proper care, it stays beautiful for everyday wear.</p>"
+          }
+        },
+        "q2": {
+          "type": "item",
+          "settings": {
+            "question": "Is the jewellery waterproof and sweat resistant?",
+            "answer": "<p>Yes. Our anti-tarnish jewellery is designed to resist water, sweat, and everyday exposure, helping it retain its lasting shine.</p>"
+          }
+        },
+        "q3": {
+          "type": "item",
+          "settings": {
+            "question": "Is it safe for sensitive skin?",
+            "answer": "<p>Absolutely. Our jewellery is hypoallergenic, nickel-free, and designed to be gentle on sensitive skin for all-day comfort.</p>"
+          }
+        },
+        "q4": {
+          "type": "item",
+          "settings": {
+            "question": "How long does delivery take?",
+            "answer": "<p>We ship across India. Most orders are delivered within 3 to 7 business days in secure, premium packaging.</p>"
+          }
+        }
+      },
+      "block_order": ["q1", "q2", "q3", "q4"],
+      "settings": {}
+    },
+    "newsletter": {
+      "type": "newsletter",
+      "settings": {}
+    }
+  },
+  "order": ["hero", "categories", "value-props", "brand-story", "faq", "newsletter"]
+}

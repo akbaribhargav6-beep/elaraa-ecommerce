@@ -32,6 +32,49 @@ test('no `| default:` inside an image_tag argument list (Liquid parses it as a n
   assert.deepEqual(offenders, []);
 });
 
+test('every section type referenced by a JSON template or section group exists', async () => {
+  const missing = [];
+  for (const dir of ['templates', 'templates/customers', 'sections']) {
+    let names = [];
+    try {
+      names = await readdir(path.join(theme, dir));
+    } catch {
+      continue;
+    }
+    for (const n of names) {
+      if (!n.endsWith('.json')) continue;
+      const json = JSON.parse(await readFile(path.join(theme, dir, n), 'utf8'));
+      for (const [key, section] of Object.entries(json.sections ?? {})) {
+        try {
+          await readFile(path.join(theme, 'sections', `${section.type}.liquid`), 'utf8');
+        } catch {
+          missing.push(`${dir}/${n} → ${key}: sections/${section.type}.liquid`);
+        }
+      }
+      for (const key of json.order ?? []) {
+        if (!(key in (json.sections ?? {}))) missing.push(`${dir}/${n} → order lists unknown section "${key}"`);
+      }
+    }
+  }
+  assert.deepEqual(missing, []);
+});
+
+test('no JSON template coexists with a Liquid template of the same name', async () => {
+  const names = await readdir(path.join(theme, 'templates'));
+  const json = new Set(names.filter((n) => n.endsWith('.json')).map((n) => n.replace(/\.json$/, '')));
+  const clash = names.filter((n) => n.endsWith('.liquid') && json.has(n.replace(/\.liquid$/, '')));
+  assert.deepEqual(clash, []);
+});
+
+test('sections never use the .reveal / .fade-in classes (they hide content; use data-reveal)', async () => {
+  const offenders = [];
+  for (const rel of await liquidFiles()) {
+    const src = await readFile(path.join(theme, rel), 'utf8');
+    if (/class="[^"]*\b(reveal|fade-in)\b[^"]*"/.test(src)) offenders.push(rel);
+  }
+  assert.deepEqual(offenders, []);
+});
+
 test('global overlays are rendered from the layout, not from a re-renderable section', async () => {
   const layout = await readFile(path.join(theme, 'layout', 'theme.liquid'), 'utf8');
   const header = await readFile(path.join(theme, 'sections', 'header.liquid'), 'utf8');

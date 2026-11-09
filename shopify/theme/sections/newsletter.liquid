@@ -1,0 +1,51 @@
+{% comment %}
+  Newsletter band — ported from the NEWSLETTER block of frontend/src/app/page.tsx
+  and components/ui/NewsletterForm.tsx. Posts to Shopify's customer form, which
+  creates/updates a customer with email marketing consent and the tag "newsletter".
+{% endcomment %}
+<section class="px-6 py-24 text-center" style="background: var(--cream)" data-section-id="{{ section.id }}" id="newsletter-{{ section.id }}">
+  <div data-reveal><p class="eyebrow">{{ section.settings.eyebrow }}</p></div>
+  <div class="mt-4 mb-8" data-reveal><h2 class="serif text-3xl md:text-4xl">{{ section.settings.heading }}</h2></div>
+  <div data-reveal>
+    {%- form 'customer', id: 'NewsletterForm', class: 'max-w-md mx-auto' -%}
+      <input type="hidden" name="contact[tags]" value="newsletter">
+      {%- if form.posted_successfully? -%}
+        <p class="text-sm" role="status">{{ section.settings.success_message }}</p>
+      {%- else -%}
+        <div class="flex">
+          <input
+            type="email"
+            name="contact[email]"
+            required
+            autocomplete="email"
+            placeholder="{{ section.settings.placeholder | escape }}"
+            aria-label="{{ section.settings.placeholder | escape }}"
+            value="{{ form.email | escape }}"
+            class="flex-1 bg-transparent border-b py-3 px-1 text-sm outline-none"
+            style="border-color: var(--charcoal)"
+          >
+          <button type="submit" class="text-xs tracking-[.2em] uppercase ml-4 hover:opacity-60">{{ section.settings.button_label }}</button>
+        </div>
+        {%- if form.errors -%}
+          <p class="text-xs text-red-700 mt-2" role="alert">{{ section.settings.error_message }}</p>
+        {%- endif -%}
+      {%- endif -%}
+    {%- endform -%}
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Newsletter",
+  "tag": "div",
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "Stay in the Light" },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Join the ELARAA Circle" },
+    { "type": "text", "id": "placeholder", "label": "Email placeholder", "default": "Your email address" },
+    { "type": "text", "id": "button_label", "label": "Button label", "default": "Subscribe →" },
+    { "type": "text", "id": "success_message", "label": "Success message", "default": "You're on the list, welcome to the ELARAA Circle." },
+    { "type": "text", "id": "error_message", "label": "Error message", "default": "Something went wrong, please try again." }
+  ],
+  "presets": [{ "name": "Newsletter" }]
+}
+{% endschema %}

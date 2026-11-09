@@ -73,7 +73,11 @@ export function createWishlist(opts = {}) {
 function paintHearts(wishlist, root = document) {
   root.querySelectorAll('[data-wishlist-toggle]').forEach((btn) => {
     const on = wishlist.has(btn.dataset.wishlistToggle);
-    btn.textContent = on ? '♥' : '♡';
+    // Text-style toggles (product page) keep the glyph in [data-wishlist-icon]
+    // next to a label; icon-only hearts are just the glyph.
+    const icon = btn.querySelector('[data-wishlist-icon]');
+    if (icon) icon.textContent = on ? '♥' : '♡';
+    else btn.textContent = on ? '♥' : '♡';
     btn.style.color = on ? '#dc2626' : btn.dataset.wishlistIdle || '#2B2620';
     btn.setAttribute('aria-pressed', String(on));
     btn.setAttribute('aria-label', on ? 'Remove from wishlist' : 'Add to wishlist');

@@ -13,6 +13,8 @@ import { initCountdowns } from './countdown.mjs';
 import { initSpotlights } from './spotlight.mjs';
 import { initTestimonials } from './testimonials.mjs';
 import { initCollection } from './collection.mjs';
+import { initGalleries } from './gallery.mjs';
+import { initPurchasePanels } from './purchase.mjs';
 import { notify } from './toast.mjs';
 
 const ELARAA = (window.ELARAA = window.ELARAA || { settings: {}, cart: {}, routes: {} });
@@ -41,9 +43,13 @@ function boot() {
   initSpotlights();
   initTestimonials();
   initCollection();
+  initGalleries();
+  initPurchasePanels(ELARAA.cartStore, ELARAA.settings);
   document.addEventListener('shopify:section:load', (e) => {
     initCountdowns(e.target);
     initTestimonials(e.target);
+    initGalleries(e.target);
+    initPurchasePanels(ELARAA.cartStore, ELARAA.settings, e.target);
   });
   // The theme editor re-renders a section in place; re-bind the header then.
   document.addEventListener('shopify:section:load', () => initHeader(ELARAA.routes));

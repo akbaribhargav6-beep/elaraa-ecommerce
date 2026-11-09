@@ -75,6 +75,62 @@ test('sections never use the .reveal / .fade-in classes (they hide content; use 
   assert.deepEqual(offenders, []);
 });
 
+// GSAP leaves an inline transform on every revealed element, and a transformed
+// ancestor becomes the containing block for position:fixed descendants — a
+// lightbox nested in [data-reveal] would be sized to that wrapper, not the
+// viewport.
+function fixedInsideReveal(src) {
+  const html = src
+    .replace(/\{%-?\s*schema\s*-?%\}[\s\S]*?\{%-?\s*endschema\s*-?%\}/g, '')
+    .replace(/\{%-?\s*comment\s*-?%\}[\s\S]*?\{%-?\s*endcomment\s*-?%\}/g, '')
+    .replace(/\{%[\s\S]*?%\}/g, ' ')
+    .replace(/\{\{[\s\S]*?\}\}/g, ' ');
+  const VOID = new Set(['img', 'input', 'br', 'hr', 'source', 'meta', 'link', 'circle', 'path', 'text']);
+  const stack = [];
+  const offenders = [];
+  for (const m of html.matchAll(/<(\/?)([a-zA-Z][\w-]*)((?:"[^"]*"|'[^']*'|[^>"'])*)>/g)) {
+    const [, closing, tag, attrs] = m;
+    const name = tag.toLowerCase();
+    if (closing) {
+      const at = stack.map((s) => s.name).lastIndexOf(name);
+      if (at >= 0) stack.length = at;
+      continue;
+    }
+    const cls = (attrs.match(/class="([^"]*)"/) || [])[1] || '';
+    if (/(^|\s)fixed(\s|$)/.test(cls) && stack.some((s) => s.reveal)) offenders.push(`<${name} class="${cls.slice(0, 50)}…">`);
+    if (VOID.has(name) || /\/\s*$/.test(attrs)) continue;
+    stack.push({ name, reveal: /\bdata-reveal\b/.test(attrs) });
+  }
+  return offenders;
+}
+
+test('fixedInsideReveal detects a fixed element under a data-reveal ancestor', () => {
+  assert.equal(fixedInsideReveal('<div data-reveal><div class="fixed inset-0"></div></div>').length, 1);
+  assert.equal(fixedInsideReveal('<div data-reveal><p>x</p></div><div class="fixed inset-0"></div>').length, 0);
+  assert.equal(fixedInsideReveal('<div data-reveal><img class="a"><div><span class="hidden fixed"></span></div></div>').length, 1);
+});
+
+test('no position:fixed element is nested inside a [data-reveal] wrapper', async () => {
+  const offenders = [];
+  for (const rel of await liquidFiles()) {
+    const src = await readFile(path.join(theme, rel), 'utf8');
+    for (const o of fixedInsideReveal(src)) offenders.push(`${rel}: ${o}`);
+  }
+  assert.deepEqual(offenders, []);
+});
+
+test('newsletter form leaves room for the fixed header when Shopify scrolls back to it', async () => {
+  const src = await readFile(path.join(theme, 'sections', 'newsletter.liquid'), 'utf8');
+  assert.match(src, /form 'customer'[^%]*class: '[^']*scroll-mt-\d+/);
+});
+
+test('fallback product strips skip the hidden gift-packaging add-on', async () => {
+  for (const name of ['testimonials.liquid', 'elaraa-edit.liquid']) {
+    const src = await readFile(path.join(theme, 'sections', name), 'utf8');
+    assert.match(src, /tags contains 'hidden'/, `${name} must skip products tagged hidden`);
+  }
+});
+
 test('global overlays are rendered from the layout, not from a re-renderable section', async () => {
   const layout = await readFile(path.join(theme, 'layout', 'theme.liquid'), 'utf8');
   const header = await readFile(path.join(theme, 'sections', 'header.liquid'), 'utf8');

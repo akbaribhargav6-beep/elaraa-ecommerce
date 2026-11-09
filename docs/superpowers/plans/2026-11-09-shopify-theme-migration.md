@@ -576,7 +576,8 @@ Every section root carries `data-reveal` on the same elements that use `<RevealO
 
 Record each step as done in `shopify/STORE-SETUP.md` with the date.
 
-- [ ] **General:** store name ELARAA, currency INR, timezone Asia/Kolkata, address Jamnagar, Gujarat.
+- [ ] **General:** store name ELARAA, currency INR, timezone Asia/Kolkata, address Jamnagar, Gujarat. Store currency formatting: **HTML with currency `₹{{amount}}`** typed with the literal ₹ character (not `&#8377;` or `Rs.`), default `.` decimal separator — the theme prints prices with `money_without_trailing_zeros` and parses predictive-search prices assuming this format.
+- [ ] **Collection order & images:** set the sort order of `featured`, `best-sellers`, `new-arrivals` and the category collections to *Manually* (or *Newest*) so the home sections lead with the same pieces as the live site; the first product of `best-sellers` is the large “#1 Best Seller” card. The Testimonials and ELARAA Edit sections read the first non-hidden products of *All products* unless a collection is picked in the theme editor — pick a curated collection there (live uses the 8 newest). Upload each category collection's image (bundled fallbacks exist only for earrings, necklaces, rings, bracelets).
 - [ ] **Taxes:** Settings → Taxes and duties → India → GST registration; enable **"Include tax in prices"**; set 3 % on all products (or product-tax override collection if needed).
 - [ ] **Shipping:** one India zone; rate "Free Insured Shipping" condition order ≥ ₹2,000; rate "Standard" below ₹2,000 at the fee read in Phase 0.
 - [ ] **Payments:** install **Razorpay Secure** from the App Store and activate with live keys; enable **Manual payment → Cash on Delivery** named "Cash on Delivery".

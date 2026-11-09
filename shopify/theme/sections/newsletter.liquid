@@ -7,7 +7,11 @@
   <div data-reveal><p class="eyebrow">{{ section.settings.eyebrow }}</p></div>
   <div class="mt-4 mb-8" data-reveal><h2 class="serif text-3xl md:text-4xl">{{ section.settings.heading }}</h2></div>
   <div data-reveal>
-    {%- form 'customer', id: 'NewsletterForm', class: 'max-w-md mx-auto' -%}
+    {%- comment -%}
+      Shopify redirects back to #NewsletterForm after submit; scroll-mt keeps the
+      success / error line clear of the fixed header instead of underneath it.
+    {%- endcomment -%}
+    {%- form 'customer', id: 'NewsletterForm', class: 'max-w-md mx-auto scroll-mt-28' -%}
       <input type="hidden" name="contact[tags]" value="newsletter">
       {%- if form.posted_successfully? -%}
         <p class="text-sm" role="status">{{ section.settings.success_message }}</p>

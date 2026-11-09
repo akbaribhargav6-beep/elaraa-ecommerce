@@ -2,19 +2,44 @@
   "Loved by Women Across India" polaroid gallery — ported from the testimonial
   block of frontend/src/app/page.tsx and components/home/TestimonialsGallery.tsx.
   One block per testimonial. Each block shows its picked product, or (like the
-  React version) the product at the same position in the section's collection.
+  React version) the product at the same position in the section's collection,
+  skipping anything tagged `hidden` (the gift-packaging add-on).
   Region filter + lightbox are driven by src/js/testimonials.mjs.
+
+  The lightbox must stay OUTSIDE every [data-reveal] wrapper: GSAP leaves an
+  inline transform on revealed elements, and a transformed ancestor turns
+  position:fixed into "fixed to that ancestor" (test/theme-structure.test.mjs).
 {% endcomment %}
 {%- liquid
   assign source = section.settings.collection | default: collections.all
+
+  comment
+    Fallback handles: the first non-hidden products of the source collection,
+    one per block. A handle list (not products[i]) keeps this to one bounded
+    collection read and makes the lookup an ordinary all_products[handle].
+  endcomment
+  assign fallback_handles = ''
+  assign fallback_scan = section.blocks.size | plus: 4
+  for product in source.products limit: fallback_scan
+    if product.tags contains 'hidden'
+      continue
+    endif
+    assign fallback_handles = fallback_handles | append: product.handle | append: ','
+  endfor
+  assign fallback_handles = fallback_handles | split: ','
+
   assign count_all = 0
   assign count_west = 0
   assign count_north = 0
   assign count_south = 0
   assign count_east = 0
   for block in section.blocks
-    assign p = block.settings.product | default: source.products[forloop.index0]
+    assign p = block.settings.product
     if p == blank
+      assign fallback_handle = fallback_handles[forloop.index0]
+      assign p = all_products[fallback_handle]
+    endif
+    if p == blank or p.handle == blank
       continue
     endif
     assign count_all = count_all | plus: 1
@@ -38,8 +63,8 @@
       <p class="mt-4 text-sm opacity-70 leading-relaxed">{{ section.settings.copy }}</p>
     </div>
 
-    <div data-reveal>
-      <div data-testimonials>
+    <div data-testimonials>
+      <div data-reveal>
         <div class="flex flex-wrap justify-center gap-3 mb-16" role="group" aria-label="Filter by region">
           <button type="button" data-region-filter="all" aria-pressed="true" class="region-filter-btn active px-5 py-2 text-xs tracking-[.2em] uppercase border rounded-full" style="border-color: rgba(43,38,32,.2)">All <span class="opacity-50">({{ count_all }})</span></button>
           <button type="button" data-region-filter="west" aria-pressed="false" class="region-filter-btn hover:opacity-70 px-5 py-2 text-xs tracking-[.2em] uppercase border rounded-full" style="border-color: rgba(43,38,32,.2)">West <span class="opacity-50">({{ count_west }})</span></button>
@@ -51,8 +76,12 @@
         <div class="grid grid-cols-2 md:grid-cols-4 gap-x-6 md:gap-x-8 gap-y-20">
           {%- for block in section.blocks -%}
             {%- liquid
-              assign p = block.settings.product | default: source.products[forloop.index0]
+              assign p = block.settings.product
               if p == blank
+                assign fallback_handle = fallback_handles[forloop.index0]
+                assign p = all_products[fallback_handle]
+              endif
+              if p == blank or p.handle == blank
                 continue
               endif
               assign image = p.featured_image
@@ -92,26 +121,26 @@
             </button>
           {%- endfor -%}
         </div>
+      </div>
 
-        {%- comment -%} Lightbox shell, filled from the clicked card's data attributes {%- endcomment -%}
-        <div data-testimonial-lightbox class="hidden fixed inset-0 z-[200] flex items-center justify-center p-4 md:p-10" style="background: rgba(23,20,15,.85)" role="dialog" aria-modal="true" aria-label="Customer story" aria-hidden="true">
-          <div class="relative max-w-3xl w-full rounded-sm overflow-hidden grid md:grid-cols-2 shadow-2xl" style="background: var(--ivory)" data-lightbox-panel>
-            <div class="relative aspect-square md:aspect-auto">
-              <img data-lightbox-image src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" alt="" width="1000" height="1000" class="absolute inset-0 w-full h-full object-cover">
-            </div>
-            <div class="p-8 md:p-10 flex flex-col">
-              <p class="font-handwriting text-3xl leading-tight" style="color: var(--charcoal)" data-lightbox-quote></p>
-              <p class="text-xs tracking-[.2em] uppercase mt-6 opacity-60" data-lightbox-author></p>
-              <div class="mt-auto pt-8 border-t" style="border-color: rgba(43,38,32,.12)">
-                <p class="text-[10px] tracking-[.2em] uppercase opacity-50 mb-1">Wearing</p>
-                <a href="#" class="serif text-lg hover:opacity-70" data-lightbox-product></a>
-                <p class="text-sm opacity-60 mt-1" data-lightbox-price></p>
-              </div>
-            </div>
-            <button type="button" data-lightbox-close aria-label="Close" class="absolute top-4 right-4 w-9 h-9 rounded-full flex items-center justify-center bg-white/85 hover:bg-white transition-colors">&#10005;</button>
-            <button type="button" data-lightbox-step="-1" aria-label="Previous" class="absolute left-4 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full flex items-center justify-center bg-white/85 hover:bg-white transition-colors">&#8592;</button>
-            <button type="button" data-lightbox-step="1" aria-label="Next" class="absolute right-4 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full flex items-center justify-center bg-white/85 hover:bg-white transition-colors">&#8594;</button>
+      {%- comment -%} Lightbox shell — a sibling of the reveal wrapper, filled from the clicked card's data attributes {%- endcomment -%}
+      <div data-testimonial-lightbox class="hidden fixed inset-0 z-[200] flex items-center justify-center p-4 md:p-10" style="background: rgba(23,20,15,.85)" role="dialog" aria-modal="true" aria-label="Customer story" aria-hidden="true">
+        <div class="relative max-w-3xl w-full rounded-sm overflow-hidden grid md:grid-cols-2 shadow-2xl" style="background: var(--ivory)" data-lightbox-panel>
+          <div class="relative aspect-square md:aspect-auto">
+            <img data-lightbox-image src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" alt="" width="1000" height="1000" class="absolute inset-0 w-full h-full object-cover">
           </div>
+          <div class="p-8 md:p-10 flex flex-col">
+            <p class="font-handwriting text-3xl leading-tight" style="color: var(--charcoal)" data-lightbox-quote></p>
+            <p class="text-xs tracking-[.2em] uppercase mt-6 opacity-60" data-lightbox-author></p>
+            <div class="mt-auto pt-8 border-t" style="border-color: rgba(43,38,32,.12)">
+              <p class="text-[10px] tracking-[.2em] uppercase opacity-50 mb-1">Wearing</p>
+              <a href="#" class="serif text-lg hover:opacity-70" data-lightbox-product></a>
+              <p class="text-sm opacity-60 mt-1" data-lightbox-price></p>
+            </div>
+          </div>
+          <button type="button" data-lightbox-close aria-label="Close" class="absolute top-4 right-4 w-9 h-9 rounded-full flex items-center justify-center bg-white/85 hover:bg-white transition-colors">&#10005;</button>
+          <button type="button" data-lightbox-step="-1" aria-label="Previous" class="absolute left-4 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full flex items-center justify-center bg-white/85 hover:bg-white transition-colors">&#8592;</button>
+          <button type="button" data-lightbox-step="1" aria-label="Next" class="absolute right-4 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full flex items-center justify-center bg-white/85 hover:bg-white transition-colors">&#8594;</button>
         </div>
       </div>
     </div>
@@ -140,7 +169,7 @@
       "type": "collection",
       "id": "collection",
       "label": "Fallback collection",
-      "info": "A testimonial without a picked product shows the product at the same position in this collection (all products when empty)."
+      "info": "A testimonial without a picked product shows the product at the same position in this collection (all products when empty). Products tagged hidden are skipped."
     }
   ],
   "blocks": [

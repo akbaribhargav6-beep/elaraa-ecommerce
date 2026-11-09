@@ -9,8 +9,19 @@
     <div data-reveal><p class="eyebrow">{{ section.settings.eyebrow }}</p></div>
     <div class="mt-4 mb-12" data-reveal><h2 class="serif text-4xl md:text-5xl">{{ section.settings.heading }}</h2></div>
     <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
-      {%- for product in source.products limit: 5 -%}
-        <div class="aspect-square overflow-hidden{% if forloop.index == 5 %} hidden md:block{% endif %}" data-reveal>
+      {%- comment -%} Scan a few extra so the hidden gift-packaging add-on never takes a slot. {%- endcomment -%}
+      {%- assign shown = 0 -%}
+      {%- for product in source.products limit: 10 -%}
+        {%- liquid
+          if product.tags contains 'hidden'
+            continue
+          endif
+          if shown == 5
+            break
+          endif
+          assign shown = shown | plus: 1
+        -%}
+        <div class="aspect-square overflow-hidden{% if shown == 5 %} hidden md:block{% endif %}" data-reveal>
           <a href="{{ product.url }}" class="block w-full h-full" aria-label="{{ product.title | escape }}">
             {%- if product.featured_image -%}
               {{ product.featured_image | image_url: width: 800 | image_tag: alt: product.title, class: 'w-full h-full object-cover hover:scale-105 transition-transform duration-700', widths: '300, 400, 800', sizes: '(min-width:768px) 20vw, 50vw', loading: 'lazy' }}

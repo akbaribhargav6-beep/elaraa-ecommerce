@@ -16,16 +16,19 @@ export function initProductCards(store, quickView) {
       if (quickAdd.disabled || quickAdd.dataset.busy === '1') return;
       const variantId = Number(quickAdd.dataset.quickAdd);
       if (!variantId) return;
-      const original = quickAdd.textContent;
+      // .btn-luxury keeps its label in a <span> (it must sit above the hover
+      // sweep), so swap the text there and leave the button's markup intact.
+      const label = quickAdd.querySelector('span') || quickAdd;
+      const original = label.textContent;
       quickAdd.dataset.busy = '1';
-      quickAdd.textContent = 'Adding…';
+      label.textContent = 'Adding…';
       try {
         await store.add(variantId, 1);
       } catch (err) {
         notify(err instanceof CartError ? err.description : MESSAGES.addFailed);
       } finally {
         quickAdd.dataset.busy = '0';
-        quickAdd.textContent = original;
+        label.textContent = original;
       }
       return;
     }

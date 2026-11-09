@@ -9,6 +9,8 @@ import { initCartDrawer } from './cart-drawer.mjs';
 import { initQuickView } from './quick-view.mjs';
 import { initProductCards } from './product-card.mjs';
 import { initWishlist } from './wishlist.mjs';
+import { initCountdowns } from './countdown.mjs';
+import { initSpotlights } from './spotlight.mjs';
 import { notify } from './toast.mjs';
 
 const ELARAA = (window.ELARAA = window.ELARAA || { settings: {}, cart: {}, routes: {} });
@@ -33,6 +35,9 @@ function boot() {
   ELARAA.quickView = initQuickView(ELARAA.cartStore, { routes: ELARAA.routes });
   initProductCards(ELARAA.cartStore, ELARAA.quickView);
   ELARAA.wishlist = initWishlist({ routes: ELARAA.routes });
+  initCountdowns();
+  initSpotlights();
+  document.addEventListener('shopify:section:load', (e) => initCountdowns(e.target));
   // The theme editor re-renders a section in place; re-bind the header then.
   document.addEventListener('shopify:section:load', () => initHeader(ELARAA.routes));
 }

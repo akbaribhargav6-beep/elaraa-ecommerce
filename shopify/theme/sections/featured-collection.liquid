@@ -1,0 +1,48 @@
+{% comment %}
+  Featured Collection — ported from the FEATURED COLLECTION block of
+  frontend/src/app/page.tsx: heading row + three product cards.
+{% endcomment %}
+{%- liquid
+  assign col = section.settings.collection
+  assign limit = section.settings.limit
+-%}
+{%- if col != blank and col.products_count > 0 -%}
+  <section class="px-6 md:px-16 py-28 max-w-7xl mx-auto" data-section-id="{{ section.id }}">
+    <div class="flex flex-col md:flex-row md:items-end md:justify-between mb-16" data-reveal>
+      <div>
+        <p class="eyebrow">{{ section.settings.eyebrow }}</p>
+        <h2 class="serif text-4xl md:text-5xl mt-4">{{ section.settings.heading }}</h2>
+      </div>
+      <p class="max-w-xs text-sm opacity-70 mt-6 md:mt-0">{{ section.settings.copy }}</p>
+    </div>
+    <div class="grid md:grid-cols-3 gap-8">
+      {%- for product in col.products limit: limit -%}
+        <div data-reveal>{% render 'product-card', product: product %}</div>
+      {%- endfor -%}
+    </div>
+  </section>
+{%- elsif request.design_mode -%}
+  <section class="px-6 md:px-16 py-16 max-w-7xl mx-auto text-center text-sm opacity-60">
+    Featured collection: pick a collection with products (the import creates one with the handle “featured”).
+  </section>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Featured collection",
+  "tag": "div",
+  "settings": [
+    { "type": "collection", "id": "collection", "label": "Collection" },
+    { "type": "range", "id": "limit", "label": "Products to show", "min": 3, "max": 9, "step": 3, "default": 3 },
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "Featured Collection" },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Timeless Essentials" },
+    {
+      "type": "textarea",
+      "id": "copy",
+      "label": "Copy",
+      "default": "Premium anti-tarnish jewellery crafted to keep its brilliance through every day, every occasion, and every moment."
+    }
+  ],
+  "presets": [{ "name": "Featured collection" }]
+}
+{% endschema %}

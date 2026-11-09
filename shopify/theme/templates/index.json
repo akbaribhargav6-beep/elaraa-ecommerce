@@ -31,11 +31,35 @@
       "block_order": ["p1", "p2", "p3", "p4"],
       "settings": {}
     },
+    "featured": {
+      "type": "featured-collection",
+      "settings": { "collection": "featured", "limit": 3 }
+    },
+    "best-sellers": {
+      "type": "best-sellers",
+      "settings": { "collection": "best-sellers" }
+    },
+    "signature-earrings": {
+      "type": "signature-earrings",
+      "settings": { "collection": "earrings" }
+    },
     "brand-story": {
       "type": "brand-story",
       "settings": {
         "button_link": "shopify://pages/about"
       }
+    },
+    "luxury-deal": {
+      "type": "luxury-deal",
+      "settings": { "fallback_collection": "featured" }
+    },
+    "necklace-chapters": {
+      "type": "necklace-chapters",
+      "settings": { "collection": "necklaces", "limit": 4 }
+    },
+    "new-arrivals": {
+      "type": "new-arrivals",
+      "settings": { "collection": "new-arrivals", "limit": 6 }
     },
     "faq": {
       "type": "faq",
@@ -77,5 +101,18 @@
       "settings": {}
     }
   },
-  "order": ["hero", "categories", "value-props", "brand-story", "faq", "newsletter"]
+  "order": [
+    "hero",
+    "categories",
+    "value-props",
+    "featured",
+    "best-sellers",
+    "signature-earrings",
+    "brand-story",
+    "luxury-deal",
+    "necklace-chapters",
+    "new-arrivals",
+    "faq",
+    "newsletter"
+  ]
 }

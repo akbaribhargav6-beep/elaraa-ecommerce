@@ -1,0 +1,134 @@
+{% comment %}
+  Featured Luxury Deal — ported from the FEATURED LUXURY DEAL block of
+  frontend/src/app/page.tsx and components/home/FeaturedLuxuryDeal.tsx.
+  The countdown is purely decorative (loops on a fixed clock, gates nothing);
+  src/js/countdown.mjs drives [data-countdown].
+  Product: the picked one, else the first product of the fallback collection
+  that has a compare-at price, else that collection's first product.
+{% endcomment %}
+{%- liquid
+  assign product = section.settings.product
+  if product == blank
+    assign fallback = section.settings.fallback_collection
+    for candidate in fallback.products limit: 12
+      if candidate.compare_at_price > candidate.price
+        assign product = candidate
+        break
+      endif
+    endfor
+    if product == blank
+      assign product = fallback.products.first
+    endif
+  endif
+-%}
+{%- if product != blank -%}
+  {%- liquid
+    assign variant = product.selected_or_first_available_variant
+    assign short_description = product.metafields.custom.short_description.value
+    assign has_compare = false
+    if product.compare_at_price > product.price
+      assign has_compare = true
+      assign savings = product.compare_at_price | minus: product.price
+    endif
+  -%}
+  <section class="relative py-24 md:py-32 px-6 md:px-12 overflow-hidden" style="background: radial-gradient(ellipse at center, #FAF6EE 0%, #EFE7DA 100%)" data-section-id="{{ section.id }}">
+    <div class="max-w-7xl mx-auto relative z-10">
+      <div data-reveal>
+        <div class="bg-white/80 backdrop-blur-xl border rounded-sm shadow-2xl p-6 sm:p-10 md:p-16 relative overflow-hidden" style="border-color: rgba(43,38,32,.1)">
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-12 items-center">
+            <div class="lg:col-span-6 group relative aspect-square sm:aspect-[4/3] lg:aspect-square bg-cream overflow-hidden rounded-sm border shadow-md" style="border-color: rgba(43,38,32,.1)">
+              {%- if product.featured_image -%}
+                <a href="{{ product.url }}" class="block absolute inset-0">
+                  {{ product.featured_image | image_url: width: 1200 | image_tag: alt: product.title, class: 'absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105', widths: '600, 900, 1200', sizes: '(min-width:1024px) 40vw, 90vw', loading: 'lazy' }}
+                </a>
+              {%- endif -%}
+              <div class="absolute top-4 left-4 z-10 flex items-center gap-2">
+                <span class="inline-flex items-center gap-1.5 text-[10px] tracking-[.25em] uppercase font-medium px-3.5 py-1.5 rounded-sm shadow-lg" style="background: var(--black); color: var(--ivory)">
+                  <span class="w-2 h-2 rounded-full animate-pulse" style="background: #E6B84D"></span>
+                  {{ section.settings.badge }}
+                </span>
+                {%- if has_compare -%}
+                  <span class="text-white text-[10px] font-bold tracking-widest px-2.5 py-1 rounded-sm uppercase" style="background: var(--gold-deep)">Limited Price</span>
+                {%- endif -%}
+              </div>
+              <div class="absolute bottom-4 left-4 z-10 bg-white/90 backdrop-blur-md px-3.5 py-1.5 text-[10px] tracking-widest uppercase font-medium border" style="border-color: rgba(43,38,32,.1)">
+                {{ section.settings.image_caption }}
+              </div>
+            </div>
+
+            <div class="lg:col-span-6 space-y-6">
+              <div>
+                <p class="text-[10px] tracking-[.3em] uppercase font-medium" style="color: var(--gold-deep)">{{ section.settings.eyebrow }}</p>
+                <h2 class="serif text-3xl sm:text-4xl md:text-5xl mt-1 leading-tight">{{ product.title }}</h2>
+                {%- if short_description != blank -%}
+                  <p class="text-xs sm:text-sm opacity-70 font-light mt-3 leading-relaxed">{{ short_description }}</p>
+                {%- endif -%}
+              </div>
+
+              <div class="p-4 border rounded-sm flex items-center justify-between" style="border-color: rgba(43,38,32,.1); background: var(--cream)">
+                <div>
+                  <p class="text-[10px] opacity-60 uppercase tracking-widest font-medium">Special Promotional Price</p>
+                  <div class="flex items-baseline gap-3 mt-1 flex-wrap">
+                    <span class="text-3xl font-semibold">{{ product.price | money_without_trailing_zeros }}</span>
+                    {%- if has_compare -%}
+                      <span class="text-sm opacity-40 line-through">{{ product.compare_at_price | money_without_trailing_zeros }}</span>
+                      <span class="text-xs font-semibold px-2 py-0.5 rounded" style="color: var(--gold-deep); background: rgba(201,166,107,.18)">You Save {{ savings | money_without_trailing_zeros }}</span>
+                    {%- endif -%}
+                  </div>
+                </div>
+                <div class="text-right hidden sm:block">
+                  <span class="text-[10px] opacity-60 block uppercase tracking-widest">Availability</span>
+                  <span class="text-xs font-medium" style="color: var(--gold-deep)">Limited Stock</span>
+                </div>
+              </div>
+
+              <div class="space-y-2">
+                <p class="text-[10px] tracking-[.2em] opacity-60 uppercase font-medium">Offer Highlighted For:</p>
+                <div class="grid grid-cols-3 gap-3 text-center" data-countdown aria-hidden="true">
+                  <div class="p-3 rounded-sm" style="background: var(--black); color: var(--ivory)">
+                    <span class="serif text-2xl sm:text-3xl font-light block" data-countdown-hours>08</span>
+                    <span class="text-[9px] tracking-widest opacity-60 uppercase">Hours</span>
+                  </div>
+                  <div class="p-3 rounded-sm" style="background: var(--black); color: var(--ivory)">
+                    <span class="serif text-2xl sm:text-3xl font-light block" data-countdown-mins>42</span>
+                    <span class="text-[9px] tracking-widest opacity-60 uppercase">Minutes</span>
+                  </div>
+                  <div class="p-3 rounded-sm" style="background: var(--black); color: var(--ivory)">
+                    <span class="serif text-2xl sm:text-3xl font-light block" data-countdown-secs>19</span>
+                    <span class="text-[9px] tracking-widest opacity-60 uppercase">Seconds</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="pt-2 flex flex-col sm:flex-row items-center gap-4">
+                <button type="button" data-quick-add="{{ variant.id }}" {% unless product.available %}disabled{% endunless %} class="btn-luxury btn-gold-solid w-full sm:w-auto h-13 px-8 justify-center text-xs tracking-widest disabled:opacity-40">
+                  <span>Add To Bag · {{ product.price | money_without_trailing_zeros }} →</span>
+                </button>
+                <a href="{{ product.url }}" class="btn-luxury w-full sm:w-auto h-13 px-6 justify-center text-xs"><span>View Product Specs</span></a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+{%- elsif request.design_mode -%}
+  <section class="px-6 md:px-16 py-16 max-w-7xl mx-auto text-center text-sm opacity-60">
+    Luxury deal: pick a product, or a fallback collection with products.
+  </section>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Featured luxury deal",
+  "tag": "div",
+  "settings": [
+    { "type": "product", "id": "product", "label": "Product", "info": "Leave empty to use the first discounted product of the fallback collection." },
+    { "type": "collection", "id": "fallback_collection", "label": "Fallback collection" },
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "Featured Luxury Offer" },
+    { "type": "text", "id": "badge", "label": "Image badge", "default": "Featured Promo" },
+    { "type": "text", "id": "image_caption", "label": "Image caption", "default": "★ Anti Tarnish Guarantee · Insured Express Courier" }
+  ],
+  "presets": [{ "name": "Featured luxury deal" }]
+}
+{% endschema %}

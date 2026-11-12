@@ -38,7 +38,8 @@
         {%- endfor -%}
         <div class="flex justify-between text-sm mb-2"><span class="opacity-70">Shipping</span><span>{% if order.shipping_price == 0 %}Free{% else %}{{ order.shipping_price | money_without_trailing_zeros }}{% endif %}</span></div>
         {%- if order.tax_price > 0 -%}
-          <div class="flex justify-between text-sm mb-4"><span class="opacity-70">GST{% if order.taxes_included %} (included){% endif %}</span><span>{{ order.tax_price | money_without_trailing_zeros }}</span></div>
+          {%- comment -%} The order object has no taxes_included; the store-wide setting decides it. {%- endcomment -%}
+          <div class="flex justify-between text-sm mb-4"><span class="opacity-70">GST{% if shop.taxes_included %} (included){% endif %}</span><span>{{ order.tax_price | money_without_trailing_zeros }}</span></div>
         {%- endif -%}
         <div class="flex justify-between text-base font-medium"><span>Total</span><span>{{ order.total_price | money_without_trailing_zeros }}</span></div>
       </div>

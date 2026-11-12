@@ -3,7 +3,17 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
-import { addressToggleLabel, provinceSelectorArgs } from '../src/js/account.mjs';
+import { addressToggleLabel, provinceSelectorArgs, shouldOpenAddressForm } from '../src/js/account.mjs';
+
+test('shouldOpenAddressForm reopens the form when Shopify sent it back with errors', () => {
+  const form = (hasErrors, open = false) => ({
+    hasAttribute: (n) => n === 'data-open' && open,
+    querySelector: (sel) => (sel === '[data-form-errors]' && hasErrors ? {} : null),
+  });
+  assert.equal(shouldOpenAddressForm(form(true)), true, 'errors rendered inside a hidden form would be invisible');
+  assert.equal(shouldOpenAddressForm(form(false, true)), true);
+  assert.equal(shouldOpenAddressForm(form(false)), false);
+});
 
 const theme = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = (...p) => readFile(path.join(theme, ...p), 'utf8');

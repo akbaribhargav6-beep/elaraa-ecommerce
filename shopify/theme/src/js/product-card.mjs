@@ -23,7 +23,8 @@ export function initProductCards(store, quickView) {
       quickAdd.dataset.busy = '1';
       label.textContent = 'Adding…';
       try {
-        await store.add(variantId, 1);
+        // The cart page's upsell adds in place (the drawer would cover the page it links to).
+        await store.add(variantId, 1, { open: !quickAdd.hasAttribute('data-quick-add-silent') });
       } catch (err) {
         notify(err instanceof CartError ? err.description : MESSAGES.addFailed);
       } finally {

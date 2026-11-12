@@ -28,6 +28,24 @@ export function discountOutcome(cart, code) {
   return hit && hit.applicable ? 'applied' : 'not-applicable';
 }
 
+/** Codes Shopify currently honours on this cart (from the cart JSON). */
+export function applicableCodes(cart) {
+  if (!cart || !Array.isArray(cart.discount_codes)) return [];
+  return cart.discount_codes.filter((d) => d.applicable).map((d) => normalizeCode(d.code));
+}
+
+/**
+ * The Cart API's `discount` parameter REPLACES the whole list of codes, so a
+ * new code is posted together with the ones already applied — otherwise a
+ * typo would silently drop a working discount.
+ */
+export function discountList(existing, newCode) {
+  const list = existing.map(normalizeCode).filter(Boolean);
+  const code = normalizeCode(newCode);
+  if (code && !list.includes(code)) list.push(code);
+  return list.join(',');
+}
+
 /** Quantity after a ± step. The stepper never goes below 1 — Remove deletes a line. */
 export function nextLineQty(current, step, max) {
   const ceiling = Number.isFinite(Number(max)) && Number(max) > 0 ? Math.min(HARD_MAX_QTY, Number(max)) : HARD_MAX_QTY;
@@ -88,6 +106,15 @@ export function initCartPage(store, routes = {}) {
 
   document.addEventListener('elaraa:cart:updated', refresh);
 
+  // A bag that holds only the ₹99 gift-packaging add-on would read "empty"
+  // while the header badge says 1: drop the add-on along with the last piece.
+  const dropOrphanGift = () => {
+    const marker = root()?.querySelector('[data-orphan-gift]');
+    if (marker && marker.dataset.orphanGift) store.remove(marker.dataset.orphanGift).catch(() => {});
+  };
+  document.addEventListener('elaraa:section:replaced', dropOrphanGift);
+  dropOrphanGift();
+
   const fail = (err, fallback) => notify(err instanceof CartError ? err.description : fallback);
 
   document.addEventListener('click', async (e) => {
@@ -145,12 +172,15 @@ export function initCartPage(store, routes = {}) {
     if (!code) return;
     if (button) button.disabled = true;
     if (label) label.textContent = '…';
-    try {
-      const res = await fetch(updateRoute, {
+    const post = (discount) =>
+      fetch(updateRoute, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-        body: JSON.stringify({ discount: code }),
+        body: JSON.stringify({ discount }),
       });
+    try {
+      const existing = applicableCodes(store.current());
+      const res = await post(discountList(existing, code));
       const cart = res.ok ? await res.json() : null;
       const outcome = discountOutcome(cart, code);
       if (outcome === 'unknown') {
@@ -158,6 +188,10 @@ export function initCartPage(store, routes = {}) {
         // /discount route attach the code and bring the shopper back.
         window.location.assign(applyDiscountUrl(code, cartRoute));
         return;
+      }
+      if (outcome === 'not-applicable' && existing.length > 0) {
+        // Put the working codes back exactly as they were before the typo.
+        await post(discountList(existing, ''));
       }
       couponNote =
         outcome === 'applied'

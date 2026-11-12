@@ -1,6 +1,33 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { applyDiscountUrl, normalizeCode, discountOutcome, nextLineQty, cartSectionUrl } from '../src/js/cart-page.mjs';
+import { applyDiscountUrl, normalizeCode, discountOutcome, nextLineQty, cartSectionUrl, discountList, applicableCodes } from '../src/js/cart-page.mjs';
+import { readFile } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
+import path from 'node:path';
+
+const theme = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
+
+test('applicableCodes lists the codes Shopify currently honours', () => {
+  const cart = { discount_codes: [{ code: 'WELCOME10', applicable: true }, { code: 'OLD', applicable: false }] };
+  assert.deepEqual(applicableCodes(cart), ['WELCOME10']);
+  assert.deepEqual(applicableCodes({}), []);
+  assert.deepEqual(applicableCodes(null), []);
+});
+
+test('discountList keeps the codes already applied when a new one is added (the Cart API replaces the whole list)', () => {
+  assert.equal(discountList(['WELCOME10'], 'festive'), 'WELCOME10,FESTIVE');
+  assert.equal(discountList([], 'festive'), 'FESTIVE');
+  assert.equal(discountList(['WELCOME10'], 'welcome10'), 'WELCOME10', 'no duplicates');
+  assert.equal(discountList(['A', 'B'], ''), 'A,B', 'empty new code just re-posts the current list');
+});
+
+test('the cart page flags an orphaned gift-packaging line and keeps the upsell add silent', async () => {
+  const src = (await readFile(path.join(theme, 'sections', 'main-cart.liquid'), 'utf8')).replace(/\{%-?\s*comment\s*-?%\}[\s\S]*?\{%-?\s*endcomment\s*-?%\}/g, '');
+  // A bag holding only the ₹99 add-on must not read "empty" while the badge says 1.
+  assert.match(src, /data-orphan-gift="\{\{ gift_line\.key \}\}"/);
+  // The React cart page added the upsell without opening the drawer over the cart.
+  assert.match(src, /data-quick-add="\{\{ upsell[^"]*\}\}"[^>]*data-quick-add-silent/);
+});
 
 test('normalizeCode trims and upper-cases a typed promo code', () => {
   assert.equal(normalizeCode('  welcome10 '), 'WELCOME10');

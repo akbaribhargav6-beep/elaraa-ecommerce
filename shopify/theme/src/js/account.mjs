@@ -14,6 +14,15 @@ export function provinceSelectorArgs(suffix) {
   };
 }
 
+/**
+ * The add-address form starts hidden. It must open when the page comes back
+ * from Shopify with validation errors rendered inside it — otherwise the
+ * customer sees an unchanged list and no message.
+ */
+export function shouldOpenAddressForm(form) {
+  return form.hasAttribute('data-open') || Boolean(form.querySelector('[data-form-errors]'));
+}
+
 export function initAccount() {
   const book = document.querySelector('[data-address-book]');
   if (!book || book.dataset.bound === '1') return;
@@ -30,7 +39,7 @@ export function initAccount() {
     };
     toggle.addEventListener('click', () => paint(form.classList.contains('hidden')));
     // Shopify reloads the page with the form's errors after a failed save.
-    if (form.hasAttribute('data-open')) paint(true);
+    if (shouldOpenAddressForm(form)) paint(true);
   }
 
   // Shopify's shared script fills the province list for the chosen country.

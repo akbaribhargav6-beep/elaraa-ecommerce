@@ -55,7 +55,7 @@ Replace the current self-hosted stack (Next.js 15 storefront on Vercel + Express
 | Checkout | Shopify Checkout with branding (logo, ivory/gold colours, fonts) | Not themeable below Plus. Accepted change. |
 | Payments | Razorpay Secure app + Shopify manual payment "Cash on Delivery" | Shopify Payments unavailable in India. |
 | Taxes | India GST 3 %, prices **tax-inclusive** | Matches "Inclusive of all taxes". |
-| Customer accounts | **Classic** customer accounts (Liquid-themeable login/register/reset/orders/addresses) | New accounts are Shopify-hosted and cannot match the design. No email-verification step exists in Shopify. Accepted change. |
+| Customer accounts | **Shopify's new customer accounts** (hosted, passwordless) — login, register, orders and addresses live on Shopify's pages with the store's logo/colours, not in the theme. **Correction 2026-11-12:** classic (legacy) accounts have been unavailable to new stores since 26 Feb 2026 (Shopify changelog "Legacy customer accounts are deprecated"), so the Liquid account templates built in plan Task 22 only ever render on a store that already had legacy accounts enabled before that date. | Shopify decision, not ours. Accepted change: the account pages will not be pixel-identical. No email-verification step exists in Shopify. |
 | Analytics | Facebook & Instagram sales channel (native Meta pixel) | Replaces `MetaPixel.tsx`. |
 | Combo groups | Dropped (combo builder page already removed in git `1d36d53`); Duo Set stays an ordinary collection | No Shopify equivalent without Functions. |
 | Invoices | Dropped; Shopify order confirmation/Order Printer if needed later | Admin feature. |

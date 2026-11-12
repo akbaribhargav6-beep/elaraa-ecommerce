@@ -71,6 +71,10 @@
   <p class="text-xs sm:text-sm opacity-60 mb-8 sm:mb-12">{{ visible_count }} {% if visible_count == 1 %}item{% else %}items{% endif %} in your shopping bag</p>
 
   {%- if visible_count == 0 -%}
+    {%- if gift_line != nil -%}
+      {%- comment -%} Only the gift add-on is left; cart-page.mjs removes it. {%- endcomment -%}
+      <span hidden data-orphan-gift="{{ gift_line.key }}"></span>
+    {%- endif -%}
     <div class="text-center py-16 space-y-4" style="background: rgba(255,255,255,.6); border: 1px solid rgba(43,38,32,.1)">
       <div class="text-4xl opacity-30" aria-hidden="true">🛍️</div>
       <h2 class="serif text-2xl">{{ section.settings.empty_heading }}</h2>
@@ -137,7 +141,7 @@
                 <h3 class="serif text-base"><a href="{{ upsell.url }}" class="hover:opacity-70">{{ upsell.title }}</a></h3>
                 <p class="text-xs font-medium">{{ upsell.price | money_without_trailing_zeros }}</p>
               </div>
-              <button type="button" data-quick-add="{{ upsell.selected_or_first_available_variant.id }}" data-focus-key="upsell" class="btn-luxury btn-gold text-[10px] px-4 py-2 min-h-[36px]"><span>+ Add To Bag</span></button>
+              <button type="button" data-quick-add="{{ upsell.selected_or_first_available_variant.id }}" data-quick-add-silent data-focus-key="upsell" class="btn-luxury btn-gold text-[10px] px-4 py-2 min-h-[36px]"><span>+ Add To Bag</span></button>
             </div>
           </div>
         {%- endif -%}

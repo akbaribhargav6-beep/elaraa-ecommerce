@@ -1,0 +1,61 @@
+{% comment %}
+  Account home — ported from frontend/src/app/account/layout.tsx, page.tsx and
+  orders/page.tsx. Shopify's classic accounts have one account page that also
+  lists the orders, so Profile and Order History share this page (the sidebar's
+  "Orders" link jumps to #orders). There is no email-verification concept on
+  Shopify, so that profile row is not shown.
+{% endcomment %}
+<div class="pt-28"></div>
+<section class="px-6 md:px-16 pb-28 max-w-6xl mx-auto" data-section-id="{{ section.id }}">
+  <div class="grid md:grid-cols-[200px_1fr] gap-12">
+    {% render 'account-nav', active: 'profile' %}
+    <div>
+      <h1 class="serif text-3xl mb-8">Your Profile</h1>
+      <div class="space-y-4 text-sm max-w-md">
+        <div class="flex justify-between border-b pb-3" style="border-color: rgba(43,38,32,.1)">
+          <span class="opacity-60">Name</span>
+          <span>{{ customer.name | default: '—' }}</span>
+        </div>
+        <div class="flex justify-between border-b pb-3" style="border-color: rgba(43,38,32,.1)">
+          <span class="opacity-60">Email</span>
+          <span class="break-all text-right">{{ customer.email }}</span>
+        </div>
+        <div class="flex justify-between border-b pb-3" style="border-color: rgba(43,38,32,.1)">
+          <span class="opacity-60">Phone</span>
+          <span>{{ customer.phone | default: customer.default_address.phone | default: 'Not provided' }}</span>
+        </div>
+      </div>
+
+      <h2 id="orders" class="serif text-3xl mt-16 mb-8 scroll-mt-28">Order History</h2>
+      {%- paginate customer.orders by 10 -%}
+        {%- if customer.orders.size == 0 -%}
+          <p class="text-sm opacity-60">You haven't placed any orders yet.</p>
+        {%- else -%}
+          <div class="space-y-4">
+            {%- for order in customer.orders -%}
+              <a href="{{ order.customer_url }}" class="block border p-5 hover:opacity-80 transition-opacity" style="border-color: rgba(43,38,32,.12)">
+                <div class="flex justify-between text-sm">
+                  <span class="serif text-lg">{{ order.name }}</span>
+                  <span>{{ order.total_price | money_without_trailing_zeros }}</span>
+                </div>
+                <div class="flex justify-between text-xs opacity-60 mt-2">
+                  <span>{{ order.created_at | date: '%-d %B %Y' }}</span>
+                  <span class="uppercase tracking-wide">{% render 'order-status', order: order %}</span>
+                </div>
+              </a>
+            {%- endfor -%}
+          </div>
+          {% render 'pagination', paginate: paginate %}
+        {%- endif -%}
+      {%- endpaginate -%}
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Account",
+  "tag": "div",
+  "settings": []
+}
+{% endschema %}

@@ -1,0 +1,47 @@
+{% comment %}
+  "The ELARAA Edit" image strip — ported from the STYLE GALLERY block of
+  frontend/src/app/page.tsx: the first five products' photos, the fifth
+  hidden below md.
+{% endcomment %}
+{%- assign source = section.settings.collection | default: collections.all -%}
+{%- if source.products_count > 0 -%}
+  <section class="px-6 md:px-16 py-24 max-w-7xl mx-auto text-center" data-section-id="{{ section.id }}">
+    <div data-reveal><p class="eyebrow">{{ section.settings.eyebrow }}</p></div>
+    <div class="mt-4 mb-12" data-reveal><h2 class="serif text-4xl md:text-5xl">{{ section.settings.heading }}</h2></div>
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+      {%- comment -%} Scan a few extra so the hidden gift-packaging add-on never takes a slot. {%- endcomment -%}
+      {%- assign shown = 0 -%}
+      {%- for product in source.products limit: 10 -%}
+        {%- liquid
+          if product.tags contains 'hidden'
+            continue
+          endif
+          if shown == 5
+            break
+          endif
+          assign shown = shown | plus: 1
+        -%}
+        <div class="aspect-square overflow-hidden{% if shown == 5 %} hidden md:block{% endif %}" data-reveal>
+          <a href="{{ product.url }}" class="block w-full h-full" aria-label="{{ product.title | escape }}">
+            {%- if product.featured_image -%}
+              {{ product.featured_image | image_url: width: 800 | image_tag: alt: product.title, class: 'w-full h-full object-cover hover:scale-105 transition-transform duration-700', widths: '300, 400, 800', sizes: '(min-width:768px) 20vw, 50vw', loading: 'lazy' }}
+            {%- endif -%}
+          </a>
+        </div>
+      {%- endfor -%}
+    </div>
+  </section>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "The ELARAA Edit",
+  "tag": "div",
+  "settings": [
+    { "type": "collection", "id": "collection", "label": "Collection", "info": "All products when empty." },
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "Follow Along" },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "The ELARAA Edit" }
+  ],
+  "presets": [{ "name": "The ELARAA Edit" }]
+}
+{% endschema %}

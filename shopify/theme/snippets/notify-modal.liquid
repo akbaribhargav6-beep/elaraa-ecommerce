@@ -1,0 +1,70 @@
+{% comment %}
+  "Notify Me When Available" modal — ported from frontend/src/components/product/NotifyMeModal.tsx.
+  Usage: {% render 'notify-modal', product: product %}
+  Submits Shopify's contact form (spec: no back-in-stock app), so the request
+  arrives in the store's inbox with product, variant, phone and email.
+  Shopify's contact form requires an email address, so — unlike the React
+  modal, where it was optional — the email field is required here.
+  Opened by src/js/notify.mjs on `elaraa:notify:open`; after the POST Shopify
+  reloads the page and the modal reopens showing the confirmation or error.
+{% endcomment %}
+{%- capture default_body -%}Please notify me when "{{ product.title }}" is back in stock.{%- endcapture -%}
+{%- form 'contact', id: 'NotifyForm', class: 'contents' -%}
+  {%- liquid
+    assign auto_open = false
+    if form.posted_successfully? or form.errors
+      assign auto_open = true
+    endif
+  -%}
+  <div
+    data-notify-modal
+    data-product-title="{{ product.title | escape }}"
+    {% if auto_open %}data-notify-auto-open{% endif %}
+    class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Notify me when available"
+    aria-hidden="true"
+  >
+    <div class="bg-white max-w-md w-full rounded-sm shadow-2xl relative p-6 sm:p-8">
+      <button type="button" data-notify-close aria-label="Close" class="absolute top-4 right-4 w-9 h-9 rounded-full bg-stone-100 flex items-center justify-center text-stone-600 hover:text-black transition-colors">✕</button>
+
+      {%- if form.posted_successfully? -%}
+        <div class="text-center py-8" role="status">
+          <div class="text-3xl mb-3">✓</div>
+          <h3 class="serif text-2xl">You're on the List</h3>
+          <p class="text-sm opacity-70 mt-2">We'll text you the moment {{ product.title }} is back in stock.</p>
+        </div>
+      {%- else -%}
+        <p class="eyebrow">Out of Stock</p>
+        <h3 class="serif text-2xl mt-1">Notify Me</h3>
+        <p class="text-sm opacity-70 mt-2">
+          Leave your number and we'll let you know the moment <span class="font-medium">{{ product.title }}</span> is back in stock.
+        </p>
+
+        <div class="mt-6 space-y-4">
+          <input type="hidden" name="contact[Request]" value="Back in stock notification">
+          <input type="hidden" name="contact[Product]" value="{{ product.title | escape }}">
+          <input type="hidden" name="contact[Product URL]" value="{{ shop.url }}{{ product.url }}">
+          <input type="hidden" name="contact[Variant]" value="" data-notify-variant>
+          <input type="hidden" name="contact[body]" value="{{ default_body | escape }}" data-notify-body>
+
+          <div>
+            <label for="NotifyPhone" class="block text-[11px] uppercase tracking-widest opacity-60 mb-1.5 font-medium">Mobile Number *</label>
+            <input id="NotifyPhone" required type="tel" name="contact[Phone]" autocomplete="tel" placeholder="+91 98765 43210" class="w-full px-4 py-3 text-sm bg-white border outline-none" style="border-color: rgba(43,38,32,.2)">
+          </div>
+          <div>
+            <label for="NotifyEmail" class="block text-[11px] uppercase tracking-widest opacity-60 mb-1.5 font-medium">Email Address *</label>
+            <input id="NotifyEmail" required type="email" name="contact[email]" autocomplete="email" value="{{ form.email | default: customer.email | escape }}" placeholder="you@example.com" class="w-full px-4 py-3 text-sm bg-white border outline-none" style="border-color: rgba(43,38,32,.2)">
+          </div>
+
+          {%- if form.errors -%}
+            <p class="text-xs" style="color: #b91c1c" role="alert">Something went wrong. Please try again.</p>
+          {%- endif -%}
+
+          <button type="submit" class="btn-luxury btn-gold-solid w-full justify-center h-12"><span>Notify Me</span></button>
+        </div>
+      {%- endif -%}
+    </div>
+  </div>
+{%- endform -%}

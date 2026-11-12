@@ -1,0 +1,19 @@
+{% comment %}
+  Numbered pagination pills — ported from frontend/src/app/shop/page.tsx.
+  Usage (inside a paginate tag): {% render 'pagination', paginate: paginate %}
+  The collection page intercepts these links (src/js/collection.mjs) and
+  re-renders the section; without JS they are ordinary links.
+{% endcomment %}
+{%- if paginate.pages > 1 -%}
+  <nav class="flex justify-center flex-wrap gap-3 mt-16" aria-label="Pagination" data-pagination>
+    {%- for part in paginate.parts -%}
+      {%- if part.is_link -%}
+        <a href="{{ part.url }}" class="w-9 h-9 flex items-center justify-center text-sm border" style="border-color: rgba(43,38,32,.2)" aria-label="Page {{ part.title }}">{{ part.title }}</a>
+      {%- elsif part.title == paginate.current_page -%}
+        <span class="w-9 h-9 flex items-center justify-center text-sm border" style="border-color: var(--black); background: var(--black); color: var(--ivory)" aria-current="page">{{ part.title }}</span>
+      {%- else -%}
+        <span class="w-9 h-9 flex items-center justify-center text-sm opacity-50" aria-hidden="true">{{ part.title }}</span>
+      {%- endif -%}
+    {%- endfor -%}
+  </nav>
+{%- endif -%}

@@ -1,0 +1,13 @@
+{
+  "current": {
+    "whatsapp_number": "919213473062",
+    "contact_email": "customer@elaraaluxes.com",
+    "contact_phone": "+91 92134 73062",
+    "instagram_url": "https://www.instagram.com/elaraa.luxes/",
+    "facebook_url": "https://www.facebook.com/elaraa.luxes",
+    "free_shipping_threshold": 2000,
+    "pincode_success_copy": "We deliver to {pincode}. Orders typically arrive in 3 to 5 business days, with Cash on Delivery available.",
+    "enable_smooth_scroll": true,
+    "enable_cursor": true
+  }
+}

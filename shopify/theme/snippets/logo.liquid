@@ -1,0 +1,22 @@
+{% comment %}
+  Brand logo with fallbacks: section image → theme setting → bundled asset.
+  Usage: {% render 'logo', image: section.settings.logo, variant: 'full' | 'footer', class: 'h-11 w-auto' %}
+{% endcomment %}
+{%- liquid
+  assign variant = variant | default: 'full'
+  assign picked = image
+  if picked == blank
+    if variant == 'footer'
+      assign picked = settings.logo_footer
+    else
+      assign picked = settings.logo
+    endif
+  endif
+-%}
+{%- if picked != blank -%}
+  {{ picked | image_url: height: 376 | image_tag: alt: shop.name, class: class, loading: 'eager', widths: '188, 260, 376' }}
+{%- elsif variant == 'footer' -%}
+  <img src="{{ 'logo-elaraa-footer.png' | asset_url }}" alt="{{ shop.name | escape }}" width="260" height="188" class="{{ class }}" loading="lazy">
+{%- else -%}
+  <img src="{{ 'logo-elaraa-full.png' | asset_url }}" alt="{{ shop.name | escape }}" width="260" height="188" class="{{ class }}" fetchpriority="high">
+{%- endif -%}

@@ -1,0 +1,12 @@
+{
+  "sections": {
+    "main": {
+      "type": "main-wishlist",
+      "settings": {
+        "heading": "Your Wishlist",
+        "empty_copy": "Nothing saved yet. Browse the collection and tap the heart on anything you love."
+      }
+    }
+  },
+  "order": ["main"]
+}

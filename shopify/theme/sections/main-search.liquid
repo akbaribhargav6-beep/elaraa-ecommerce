@@ -1,0 +1,77 @@
+{% comment %}
+  Search results — replaces /shop?search=… on the Next.js site. Reuses the shop
+  page's header, search bar, product grid and pagination. The header search
+  and the shop search box both send type=product, so results are products;
+  any other result type is skipped.
+{% endcomment %}
+<div class="pt-28"></div>
+<section class="px-4 sm:px-6 md:px-16 pb-20 sm:pb-28 max-w-7xl mx-auto" data-section-id="{{ section.id }}">
+  <div class="text-center mb-6 sm:mb-10">
+    <p class="eyebrow">{{ section.settings.eyebrow }}</p>
+    <h1 class="serif text-3xl sm:text-4xl md:text-6xl mt-2 sm:mt-4">
+      {%- if search.performed and search.terms != blank -%}
+        {{ section.settings.heading_results }} &ldquo;{{ search.terms | escape }}&rdquo;
+      {%- else -%}
+        {{ section.settings.heading }}
+      {%- endif -%}
+    </h1>
+    {%- if search.performed -%}
+      <p class="text-xs sm:text-sm opacity-60 mt-2 sm:mt-4">{{ search.results_count }} {% if search.results_count == 1 %}piece{% else %}pieces{% endif %} found</p>
+    {%- endif -%}
+  </div>
+
+  <div class="mb-6 flex flex-col sm:flex-row gap-3 justify-between items-stretch sm:items-center p-3 border" style="background: var(--cream); border-color: rgba(43,38,32,.15)">
+    <form action="{{ routes.search_url }}" method="get" role="search" class="flex-1 relative flex items-center gap-3">
+      <span class="absolute left-3 text-stone-400 text-sm" aria-hidden="true">🔍</span>
+      <input type="hidden" name="type" value="product">
+      <input
+        type="search"
+        name="q"
+        value="{{ search.terms | escape }}"
+        placeholder="{{ section.settings.search_placeholder | escape }}"
+        aria-label="Search products"
+        class="w-full pl-9 pr-4 py-2 bg-white text-xs border rounded-sm focus:outline-none"
+        style="border-color: rgba(43,38,32,.2)"
+      >
+      <button type="submit" class="text-xs tracking-[.15em] uppercase font-medium min-h-[40px] px-4 bg-white border rounded-sm shrink-0" style="border-color: rgba(43,38,32,.2)">Search</button>
+    </form>
+    <a href="{{ routes.all_products_collection_url }}" class="text-xs opacity-60 hover:opacity-100 underline underline-offset-4 text-center">Browse all jewellery</a>
+  </div>
+
+  {%- if search.performed -%}
+    {%- paginate search.results by section.settings.per_page -%}
+      {%- if search.results_count == 0 -%}
+        <div class="py-16 text-center space-y-4">
+          <p class="serif text-2xl opacity-70">{{ section.settings.empty_heading }}</p>
+          <p class="text-xs opacity-50">{{ section.settings.empty_copy }}</p>
+        </div>
+      {%- else -%}
+        <p class="text-xs opacity-60 mb-6 sm:mb-8">Showing {{ search.results.size }} of {{ search.results_count }} products</p>
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 md:gap-8">
+          {%- for result in search.results -%}
+            {%- if result.object_type != 'product' -%}{%- continue -%}{%- endif -%}
+            {%- if result.tags contains 'hidden' -%}{%- continue -%}{%- endif -%}
+            {% render 'product-card', product: result %}
+          {%- endfor -%}
+        </div>
+      {%- endif -%}
+      {% render 'pagination', paginate: paginate %}
+    {%- endpaginate -%}
+  {%- endif -%}
+</section>
+
+{% schema %}
+{
+  "name": "Search results",
+  "tag": "div",
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "The Full Edit" },
+    { "type": "text", "id": "heading", "label": "Heading (no search yet)", "default": "Search the Collection" },
+    { "type": "text", "id": "heading_results", "label": "Heading prefix (results)", "default": "Results for" },
+    { "type": "text", "id": "search_placeholder", "label": "Search placeholder", "default": "Search by jewellery name, material, category..." },
+    { "type": "range", "id": "per_page", "label": "Products per page", "min": 8, "max": 24, "step": 4, "default": 12 },
+    { "type": "text", "id": "empty_heading", "label": "Empty state heading", "default": "No pieces match your search" },
+    { "type": "text", "id": "empty_copy", "label": "Empty state copy", "default": "Try a different name, material or category." }
+  ]
+}
+{% endschema %}

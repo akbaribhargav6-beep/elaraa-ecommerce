@@ -1,0 +1,41 @@
+{% comment %}
+  Value props strip — ported from the VALUE PROPS block of frontend/src/app/page.tsx.
+{% endcomment %}
+<section class="px-6 py-10 border-y" style="border-color: rgba(43,38,32,.08); background: var(--cream)" data-section-id="{{ section.id }}">
+  <div class="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+    {%- for block in section.blocks -%}
+      <div data-reveal {{ block.shopify_attributes }}>
+        <div class="flex items-center justify-center mb-2 mx-auto rounded-full" style="width: 56px; height: 56px; background: var(--ivory); border: 1px solid rgba(168,130,61,.3)">
+          {% render 'icon', name: 'sparkle', size: 22, stroke: 'var(--gold-deep)', stroke_width: 1.3 %}
+        </div>
+        <p class="text-xs tracking-[.15em] uppercase opacity-80">{{ block.settings.label }}</p>
+      </div>
+    {%- endfor -%}
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Value props",
+  "tag": "div",
+  "max_blocks": 8,
+  "blocks": [
+    {
+      "type": "prop",
+      "name": "Value prop",
+      "settings": [{ "type": "text", "id": "label", "label": "Label", "default": "Anti Tarnish" }]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Value props",
+      "blocks": [
+        { "type": "prop", "settings": { "label": "Handcrafted Detail" } },
+        { "type": "prop", "settings": { "label": "Skin Friendly" } },
+        { "type": "prop", "settings": { "label": "Anti Tarnish" } },
+        { "type": "prop", "settings": { "label": "14 Day Easy Returns" } }
+      ]
+    }
+  ]
+}
+{% endschema %}

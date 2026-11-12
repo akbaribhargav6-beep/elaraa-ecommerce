@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="{{ request.locale.iso_code }}">
+  <head>
+    {% render 'meta-tags' %}
+
+    {%- liquid
+      assign favicon = settings.favicon
+    -%}
+    {%- if favicon != blank -%}
+      <link rel="icon" type="image/png" href="{{ favicon | image_url: width: 32, height: 32 }}">
+      <link rel="apple-touch-icon" href="{{ favicon | image_url: width: 192, height: 192 }}">
+    {%- else -%}
+      <link rel="icon" type="image/png" sizes="32x32" href="{{ 'favicon-32.png' | asset_url }}">
+      <link rel="apple-touch-icon" sizes="192x192" href="{{ 'favicon-192.png' | asset_url }}">
+    {%- endif -%}
+
+    {% render 'head-styles' %}
+
+    {{ content_for_header }}
+  </head>
+
+  <body class="template-{{ request.page_type | handle }}">
+    <div class="cursor-dot" aria-hidden="true"></div>
+
+    {% sections 'header-group' %}
+
+    <main id="MainContent" role="main" tabindex="-1">
+      {{ content_for_layout }}
+    </main>
+
+    {% sections 'footer-group' %}
+
+    {% comment %}
+      Global overlays live in the layout on purpose: a section re-render in the
+      theme editor (shopify:section:load) would otherwise replace #cartDrawer /
+      #quickView and orphan their JS bindings.
+    {% endcomment %}
+    {% render 'cart-drawer' %}
+    {% render 'quick-view' %}
+
+    <script>
+      window.ELARAA = {
+        settings: {
+          freeShippingThreshold: {{ settings.free_shipping_threshold | default: 2000 | json }},
+          whatsappNumber: {{ settings.whatsapp_number | json }},
+          contactEmail: {{ settings.contact_email | json }},
+          contactPhone: {{ settings.contact_phone | json }},
+          instagramUrl: {{ settings.instagram_url | json }},
+          facebookUrl: {{ settings.facebook_url | json }},
+          giftPackagingVariantId: {{ settings.gift_packaging_product.selected_or_first_available_variant.id | json }},
+          pincodeSuccessCopy: {{ settings.pincode_success_copy | json }},
+          enableSmoothScroll: {{ settings.enable_smooth_scroll | json }},
+          enableCursor: {{ settings.enable_cursor | json }}
+        },
+        cart: {
+          totalPrice: {{ cart.total_price | json }},
+          itemCount: {{ cart.item_count | json }}
+        },
+        routes: {
+          root: {{ routes.root_url | json }},
+          cart: {{ routes.cart_url | json }},
+          cartAdd: {{ routes.cart_add_url | json }},
+          cartChange: {{ routes.cart_change_url | json }},
+          cartUpdate: {{ routes.cart_update_url | json }},
+          search: {{ routes.search_url | json }},
+          predictiveSearch: {{ routes.predictive_search_url | json }},
+          productRecommendations: {{ routes.product_recommendations_url | json }},
+          allProducts: {{ routes.all_products_collection_url | json }},
+          account: {{ routes.account_url | json }},
+          login: {{ routes.account_login_url | json }}
+        },
+        shop: {
+          currency: {{ cart.currency.iso_code | json }},
+          moneyFormat: {{ shop.money_format | json }}
+        }
+      };
+    </script>
+    <script src="{{ 'vendor-gsap.min.js' | asset_url }}" defer></script>
+    <script src="{{ 'vendor-scrolltrigger.min.js' | asset_url }}" defer></script>
+    <script src="{{ 'vendor-lenis.min.js' | asset_url }}" defer></script>
+    <script src="{{ 'elaraa.js' | asset_url }}" defer></script>
+  </body>
+</html>

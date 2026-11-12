@@ -1,0 +1,82 @@
+{% comment %}
+  Product card — ported from frontend/src/components/ui/ProductCard.tsx.
+  Usage: {% render 'product-card', product: product %}
+  Hover cross-fade (.card-luxury / .img-primary / .img-secondary), category
+  badge, wishlist heart (wishlist.mjs), Quick View (quick-view.mjs) and
+  "+ Bag" quick add (product-card.mjs).
+{% endcomment %}
+{%- liquid
+  assign primary = product.featured_image
+  assign secondary = product.images[1]
+  assign variant = product.selected_or_first_available_variant
+  assign material = product.metafields.custom.material.value
+  assign eyebrow = product.metafields.custom.eyebrow.value
+  assign short_description = product.metafields.custom.short_description.value
+  assign metal_finish = product.metafields.custom.metal_finish.value
+  assign metal_hex = product.metafields.custom.metal_hex.value
+  assign sizes = '(min-width: 768px) 33vw, 50vw'
+  comment
+    `| default:` must not appear inside a filter's argument list — Liquid
+    would parse it as a new filter and silently drop every argument after it.
+  endcomment
+  assign primary_alt = primary.alt | default: product.title
+  assign secondary_alt = secondary.alt | default: product.title
+-%}
+
+<div class="card-luxury" data-product-card data-product-handle="{{ product.handle }}">
+  <a href="{{ product.url }}" class="img-wrap aspect-square block relative overflow-hidden bg-cream">
+    {%- if primary -%}
+      {{ primary | image_url: width: 800 | image_tag: alt: primary_alt, class: 'img-primary absolute inset-0 w-full h-full object-cover', widths: '300, 400, 600, 800', sizes: sizes, loading: 'lazy' }}
+    {%- endif -%}
+    {%- if secondary and secondary != primary -%}
+      {{ secondary | image_url: width: 800 | image_tag: alt: secondary_alt, class: 'img-secondary absolute inset-0 w-full h-full object-cover', widths: '300, 400, 600, 800', sizes: sizes, loading: 'lazy' }}
+    {%- endif -%}
+
+    {%- if product.type != blank -%}
+      <span class="absolute top-3 left-3 z-10 bg-[#17140F]/80 text-[#F8F5F0] text-[9px] uppercase tracking-widest px-2 py-0.5 rounded-sm pointer-events-none backdrop-blur-sm">{{ product.type }}</span>
+    {%- endif -%}
+
+    <button
+      type="button"
+      data-wishlist-toggle="{{ product.handle }}"
+      aria-label="Add to wishlist"
+      aria-pressed="false"
+      class="absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-white/90 flex items-center justify-center text-sm shadow-md hover:bg-red-50 transition-colors"
+      style="color: #2B2620"
+    >♡</button>
+
+    <button
+      type="button"
+      data-quick-view="{{ product.handle }}"
+      data-eyebrow="{{ eyebrow | escape }}"
+      data-short-description="{{ short_description | escape }}"
+      data-metal-finish="{{ metal_finish | escape }}"
+      data-metal-hex="{{ metal_hex | escape }}"
+      class="card-cta btn-luxury bg-white/90"
+    >
+      <span>Quick View</span>
+    </button>
+  </a>
+
+  <div class="pt-5 flex items-start justify-between">
+    <div>
+      <h3 class="serif text-xl"><a href="{{ product.url }}">{{ product.title }}</a></h3>
+      {%- if material != blank -%}
+        <p class="text-xs opacity-60 mt-1">{{ material }}</p>
+      {%- endif -%}
+    </div>
+    <div class="text-right">
+      <p class="text-sm">{{ product.price | money_without_trailing_zeros }}</p>
+      {%- if product.compare_at_price > product.price -%}
+        <p class="text-xs opacity-50 line-through">{{ product.compare_at_price | money_without_trailing_zeros }}</p>
+      {%- endif -%}
+    </div>
+  </div>
+
+  <button
+    type="button"
+    data-quick-add="{{ variant.id }}"
+    {% unless product.available %}disabled{% endunless %}
+    class="text-[11px] uppercase tracking-wider font-medium mt-2 underline decoration-stone-300 underline-offset-4 hover:opacity-70 disabled:opacity-30"
+  >+ Bag</button>
+</div>

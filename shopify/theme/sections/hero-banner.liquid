@@ -1,0 +1,119 @@
+{% comment %}
+  Home hero — ported from frontend/src/components/home/HeroBanner.tsx.
+  One <picture> drives both breakpoints (desktop source ≥1024px, mobile img
+  below) so only one banner is ever fetched; each breakpoint has its own copy.
+{% endcomment %}
+{%- liquid
+  assign desktop = section.settings.desktop_image
+  assign mobile = section.settings.mobile_image
+  assign alt = section.settings.image_alt
+  assign primary_url = section.settings.primary_link | default: routes.all_products_collection_url
+  assign secondary_url = section.settings.secondary_link | default: '/pages/about'
+-%}
+
+<section class="relative w-full overflow-hidden bg-[#1A1714]" data-section-id="{{ section.id }}">
+  <picture>
+    {%- if desktop != blank -%}
+      <source media="(min-width: 1024px)" srcset="{{ desktop | image_url: width: 1920 }}">
+    {%- else -%}
+      <source media="(min-width: 1024px)" srcset="{{ 'hero-desktop.webp' | asset_url }}">
+    {%- endif -%}
+    <img
+      src="{% if mobile != blank %}{{ mobile | image_url: width: 1080 }}{% else %}{{ 'hero-mobile.png' | asset_url }}{% endif %}"
+      alt="{{ alt | escape }}"
+      width="1080"
+      height="1350"
+      sizes="100vw"
+      fetchpriority="high"
+      decoding="async"
+      class="block w-full aspect-[4/5] lg:aspect-[1920/900] min-h-[500px] lg:min-h-[600px] max-h-[750px] lg:max-h-[920px] object-cover object-center"
+    >
+  </picture>
+
+  {%- comment -%} Desktop copy — centred inside the safe area {%- endcomment -%}
+  <div class="hidden lg:flex absolute inset-0 items-center justify-center px-8 bg-gradient-to-t from-[#1A1714]/85 via-[#1A1714]/40 to-[#1A1714]/20">
+    <div class="text-center max-w-2xl mx-auto z-10 pt-16">
+      <h1 class="serif font-light text-white leading-[1.08] text-5xl xl:text-7xl mb-6">
+        {{ section.settings.heading_line_1 }}
+        <br>
+        {{ section.settings.heading_line_2 }} <em class="not-italic text-[#D8B77E]">{{ section.settings.heading_accent }}</em>{{ section.settings.heading_suffix }}
+      </h1>
+      <p class="text-sm xl:text-base text-stone-200/80 max-w-lg mx-auto font-light leading-relaxed mb-8">{{ section.settings.desktop_copy }}</p>
+      <div class="flex items-center justify-center gap-5">
+        <a href="{{ primary_url }}" class="btn-luxury !border-white !text-white min-w-[170px] justify-center"><span>{{ section.settings.primary_label }}</span></a>
+        <a href="{{ secondary_url }}" class="btn-luxury btn-gold min-w-[160px] justify-center"><span>{{ section.settings.secondary_label }}</span></a>
+      </div>
+    </div>
+    <div class="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5 opacity-60 text-stone-300">
+      <span class="text-[9px] tracking-[.3em] uppercase">Scroll</span>
+      <div class="w-[1px] h-8 bg-[#D8B77E]"></div>
+    </div>
+  </div>
+
+  {%- comment -%} Mobile copy — anchored near the bottom of the portrait frame. Decorative duplicate of the heading, hidden from assistive tech. {%- endcomment -%}
+  <div class="flex lg:hidden absolute inset-0 items-end justify-center px-6 pb-14 pt-20 bg-gradient-to-b from-[#1A1714]/40 via-[#1A1714]/50 to-[#1A1714]/85">
+    <div class="text-center max-w-sm mx-auto z-10">
+      <p class="serif font-light text-white leading-[1.1] text-3xl sm:text-4xl mb-4" role="heading" aria-level="1">
+        {{ section.settings.heading_line_1 }}
+        <br>
+        {{ section.settings.heading_line_2 }} <em class="not-italic text-[#D8B77E]">{{ section.settings.heading_accent }}</em>{{ section.settings.heading_suffix }}
+      </p>
+      <p class="text-xs sm:text-sm text-stone-200/80 font-light leading-relaxed mb-6 px-2">{{ section.settings.mobile_copy }}</p>
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-3.5 w-full">
+        <a href="{{ primary_url }}" class="btn-luxury !border-white !text-white w-full justify-center text-xs"><span>{{ section.settings.primary_label }}</span></a>
+        <a href="{{ secondary_url }}" class="btn-luxury btn-gold w-full justify-center text-xs"><span>{{ section.settings.secondary_label }}</span></a>
+      </div>
+    </div>
+    <div class="absolute bottom-3 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 opacity-50 text-stone-300">
+      <div class="w-[1px] h-5 bg-[#D8B77E]"></div>
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Hero banner",
+  "tag": "div",
+  "settings": [
+    {
+      "type": "image_picker",
+      "id": "desktop_image",
+      "label": "Desktop banner (1920 × 900)",
+      "info": "Leave empty to use the bundled hero."
+    },
+    {
+      "type": "image_picker",
+      "id": "mobile_image",
+      "label": "Mobile banner (1080 × 1350)",
+      "info": "Leave empty to use the bundled hero."
+    },
+    {
+      "type": "text",
+      "id": "image_alt",
+      "label": "Image alt text",
+      "default": "ELARAA premium fashion jewellery, anti tarnish and designed for everyday wear"
+    },
+    { "type": "text", "id": "heading_line_1", "label": "Heading line 1", "default": "Wear Light." },
+    { "type": "text", "id": "heading_line_2", "label": "Heading line 2", "default": "Wear" },
+    { "type": "text", "id": "heading_accent", "label": "Heading accent (gold)", "default": "ELARAA" },
+    { "type": "text", "id": "heading_suffix", "label": "Heading suffix", "default": "." },
+    {
+      "type": "textarea",
+      "id": "desktop_copy",
+      "label": "Desktop copy",
+      "default": "Premium fashion jewellery, anti tarnish and finished for the way you actually live, from morning coffee to candlelit dinners."
+    },
+    {
+      "type": "textarea",
+      "id": "mobile_copy",
+      "label": "Mobile copy",
+      "default": "Premium fashion jewellery, anti tarnish and finished for the way you live, from morning coffee to candlelit dinners."
+    },
+    { "type": "text", "id": "primary_label", "label": "Primary button label", "default": "Shop Collections" },
+    { "type": "url", "id": "primary_link", "label": "Primary button link", "default": "/collections/all" },
+    { "type": "text", "id": "secondary_label", "label": "Secondary button label", "default": "Our Story" },
+    { "type": "url", "id": "secondary_link", "label": "Secondary button link" }
+  ],
+  "presets": [{ "name": "Hero banner" }]
+}
+{% endschema %}

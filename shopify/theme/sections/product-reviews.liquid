@@ -1,0 +1,50 @@
+{% comment %}
+  Reviews — replaces frontend/src/components/product/ReviewsSection.tsx.
+  Shopify has no native reviews (spec: Judge.me free plan). The Judge.me
+  widget renders into #judgeme_product_reviews and is restyled in
+  assets/elaraa.css (.jdgm-*). Until the app is installed, or for a product
+  with no reviews yet, the React component's empty state is shown instead.
+{% endcomment %}
+{%- assign widget = product.metafields.judgeme.widget -%}
+<section id="reviews" class="scroll-mt-28 max-w-7xl mx-auto px-4 sm:px-6 md:px-12 mt-24 sm:mt-32 pb-24" data-section-id="{{ section.id }}">
+  {%- if widget != blank -%}
+    <div class="mb-8">
+      <p class="eyebrow">{{ section.settings.eyebrow }}</p>
+    </div>
+    <div id="judgeme_product_reviews" class="jdgm-widget jdgm-review-widget" data-product-title="{{ product.title | escape }}" data-id="{{ product.id }}">{{ widget }}</div>
+  {%- else -%}
+    <div class="grid lg:grid-cols-12 gap-10 items-start">
+      <div class="lg:col-span-4 bg-white p-6 sm:p-8 border rounded-sm space-y-6" style="border-color: rgba(43,38,32,.1)">
+        <div>
+          <p class="eyebrow">{{ section.settings.eyebrow }}</p>
+          <div class="flex items-baseline gap-3 mt-2">
+            <span class="text-5xl font-light serif">0.0</span>
+            <span class="text-xs opacity-50">out of 5.0</span>
+          </div>
+          <div class="text-lg mt-1" style="color: var(--gold-deep)" aria-hidden="true">☆☆☆☆☆</div>
+          <p class="text-xs opacity-50 mt-1">No reviews yet</p>
+        </div>
+      </div>
+      <div class="lg:col-span-8 space-y-6">
+        <p class="text-sm opacity-60">{{ section.settings.empty_copy }}</p>
+        {%- comment -%} Judge.me mounts its "write a review" UI here once installed. {%- endcomment -%}
+        <div id="judgeme_product_reviews" class="jdgm-widget jdgm-review-widget" data-product-title="{{ product.title | escape }}" data-id="{{ product.id }}"></div>
+      </div>
+    </div>
+  {%- endif -%}
+</section>
+
+{% schema %}
+{
+  "name": "Product reviews",
+  "tag": "div",
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "Verified Reviews" },
+    { "type": "text", "id": "empty_copy", "label": "Empty state copy", "default": "Be the first to review this piece." }
+  ],
+  "enabled_on": {
+    "templates": ["product"]
+  },
+  "presets": [{ "name": "Product reviews" }]
+}
+{% endschema %}

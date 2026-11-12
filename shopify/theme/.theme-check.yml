@@ -1,0 +1,7 @@
+extends: theme-check:recommended
+
+# The storefront's typography (Cormorant Garamond, Jost, Caveat) is served
+# from Google Fonts on purpose — the spec pins the same families next/font
+# loaded on the Next.js site. Everything else stays on the Shopify CDN.
+RemoteAsset:
+  enabled: false

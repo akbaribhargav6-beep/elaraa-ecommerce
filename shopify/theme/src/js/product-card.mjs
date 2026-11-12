@@ -1,0 +1,49 @@
+// Product card behaviour (ports frontend/src/components/ui/ProductCard.tsx):
+// "+ Bag" quick add and the Quick View trigger. Event-delegated so cards
+// injected later (search, recommendations, wishlist page) work too. The
+// wishlist heart is handled by wishlist.mjs.
+import { notify, MESSAGES } from './toast.mjs';
+import { CartError } from './cart.mjs';
+
+export function initProductCards(store, quickView) {
+  if (document.body.dataset.cardsBound === '1') return;
+  document.body.dataset.cardsBound = '1';
+
+  document.addEventListener('click', async (e) => {
+    const quickAdd = e.target.closest('[data-quick-add]');
+    if (quickAdd) {
+      e.preventDefault();
+      if (quickAdd.disabled || quickAdd.dataset.busy === '1') return;
+      const variantId = Number(quickAdd.dataset.quickAdd);
+      if (!variantId) return;
+      // .btn-luxury keeps its label in a <span> (it must sit above the hover
+      // sweep), so swap the text there and leave the button's markup intact.
+      const label = quickAdd.querySelector('span') || quickAdd;
+      const original = label.textContent;
+      quickAdd.dataset.busy = '1';
+      label.textContent = 'Adding…';
+      try {
+        // The cart page's upsell adds in place (the drawer would cover the page it links to).
+        await store.add(variantId, 1, { open: !quickAdd.hasAttribute('data-quick-add-silent') });
+      } catch (err) {
+        notify(err instanceof CartError ? err.description : MESSAGES.addFailed);
+      } finally {
+        quickAdd.dataset.busy = '0';
+        label.textContent = original;
+      }
+      return;
+    }
+
+    const trigger = e.target.closest('[data-quick-view]');
+    if (trigger && quickView) {
+      e.preventDefault();
+      const d = trigger.dataset;
+      quickView.open(d.quickView, {
+        eyebrow: d.eyebrow || '',
+        shortDescription: d.shortDescription || '',
+        metalFinish: d.metalFinish || '',
+        metalHex: d.metalHex || '',
+      });
+    }
+  });
+}

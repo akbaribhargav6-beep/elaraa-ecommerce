@@ -1,0 +1,21 @@
+{% comment %}
+  Account sidebar — ported from frontend/src/app/account/layout.tsx.
+  Usage: {% render 'account-nav', active: 'profile' | 'orders' | 'addresses' %}
+  Shopify's classic accounts list orders on the account page itself, so
+  "Orders" jumps to that list; "Wishlist" is the login-free localStorage page.
+{% endcomment %}
+{%- liquid
+  assign wishlist_url = pages.wishlist.url | default: '/pages/wishlist'
+  assign on = 'display: block; opacity: 1; color: var(--gold-deep)'
+  assign off = 'display: block; opacity: .6'
+-%}
+<aside>
+  <p class="text-xs opacity-50 mb-6">Hi, {{ customer.first_name | default: 'there' }}</p>
+  <nav class="space-y-3 text-sm" aria-label="Account">
+    <a href="{{ routes.account_url }}" style="{% if active == 'profile' %}{{ on }}{% else %}{{ off }}{% endif %}"{% if active == 'profile' %} aria-current="page"{% endif %}>Profile</a>
+    <a href="{{ routes.account_url }}#orders" style="{% if active == 'orders' %}{{ on }}{% else %}{{ off }}{% endif %}">Orders</a>
+    <a href="{{ routes.account_addresses_url }}" style="{% if active == 'addresses' %}{{ on }}{% else %}{{ off }}{% endif %}"{% if active == 'addresses' %} aria-current="page"{% endif %}>Addresses</a>
+    <a href="{{ wishlist_url }}" style="{{ off }}">Wishlist</a>
+    <a href="{{ routes.account_logout_url }}" class="hover:opacity-100 !mt-6" style="{{ off }}">Sign Out</a>
+  </nav>
+</aside>

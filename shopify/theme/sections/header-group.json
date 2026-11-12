@@ -1,0 +1,16 @@
+{
+  "type": "header",
+  "name": "Header",
+  "sections": {
+    "header": {
+      "type": "header",
+      "settings": {
+        "main_menu": "main-menu",
+        "mobile_menu": "mobile-menu",
+        "drawer_tagline": "Anti Tarnish Premium Fashion Jewellery",
+        "drawer_subline": "Free Insured Shipping Across India"
+      }
+    }
+  },
+  "order": ["header"]
+}

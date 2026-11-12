@@ -1,0 +1,23 @@
+{% comment %}
+  Default page template for any page without its own design (for example a
+  page the merchant adds later). Content comes from the page editor and is
+  styled by the .rte rules in assets/elaraa.css.
+{% endcomment %}
+<div class="pt-28"></div>
+<section class="px-4 sm:px-6 md:px-16 pb-20 sm:pb-28 max-w-3xl mx-auto" data-section-id="{{ section.id }}">
+  <div class="text-center mb-8 sm:mb-14">
+    {%- if section.settings.eyebrow != blank -%}
+      <p class="eyebrow">{{ section.settings.eyebrow }}</p>
+    {%- endif -%}
+    <h1 class="serif text-3xl sm:text-4xl md:text-6xl mt-3 sm:mt-4">{{ page.title }}</h1>
+  </div>
+  <div class="rte text-sm sm:text-base opacity-80 leading-relaxed">{{ page.content }}</div>
+</section>
+
+{% schema %}
+{
+  "name": "Page",
+  "tag": "div",
+  "settings": [{ "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "ELARAA" }]
+}
+{% endschema %}

@@ -1,0 +1,45 @@
+{% comment %}
+  Brand story band — ported from the BRAND STORY block of frontend/src/app/page.tsx.
+{% endcomment %}
+{%- assign button_url = section.settings.button_link | default: '/pages/about' -%}
+<section class="relative py-32 px-6" style="background: var(--black); color: var(--ivory)" data-section-id="{{ section.id }}">
+  <div class="max-w-4xl mx-auto text-center">
+    <div data-reveal><p class="eyebrow !text-gold">{{ section.settings.eyebrow }}</p></div>
+    <div class="mt-6" data-reveal>
+      <h2 class="serif text-4xl md:text-6xl leading-tight">
+        {{ section.settings.heading_line_1 }}
+        <br>
+        {{ section.settings.heading_line_2 }}
+      </h2>
+    </div>
+    <div class="mt-8 max-w-xl mx-auto opacity-70 text-sm md:text-base" data-reveal>
+      <p>{{ section.settings.body }}</p>
+    </div>
+    {%- if section.settings.button_label != blank -%}
+      <div class="mt-10" data-reveal>
+        <a href="{{ button_url }}" class="btn-luxury btn-gold !border-gold !text-gold"><span>{{ section.settings.button_label }}</span></a>
+      </div>
+    {%- endif -%}
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Brand story",
+  "tag": "div",
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "About ELARAA" },
+    { "type": "text", "id": "heading_line_1", "label": "Heading line 1", "default": "Jewellery made for the moments" },
+    { "type": "text", "id": "heading_line_2", "label": "Heading line 2", "default": "that don't need an occasion." },
+    {
+      "type": "textarea",
+      "id": "body",
+      "label": "Body",
+      "default": "ELARAA was born from a simple belief: premium fashion jewellery shouldn't sit in a box waiting for a wedding. Every piece has a long lasting, anti tarnish finish, made by hand and designed to be worn every single day until it becomes part of you."
+    },
+    { "type": "text", "id": "button_label", "label": "Button label", "default": "Read Our Story" },
+    { "type": "url", "id": "button_link", "label": "Button link" }
+  ],
+  "presets": [{ "name": "Brand story" }]
+}
+{% endschema %}

@@ -1,0 +1,30 @@
+{
+  "sections": {
+    "main": {
+      "type": "main-product",
+      "settings": {}
+    },
+    "related": {
+      "type": "related-products",
+      "settings": { "limit": 6 }
+    },
+    "guarantee": {
+      "type": "product-guarantee",
+      "blocks": {
+        "g1": { "type": "item", "settings": { "icon": "👑", "label": "Anti Tarnish", "sub": "100% Quality Guaranteed" } },
+        "g2": { "type": "item", "settings": { "icon": "💎", "label": "Premium Finish", "sub": "Ethically Sourced Materials" } },
+        "g3": { "type": "item", "settings": { "icon": "🎁", "label": "Velvet Box", "sub": "Signature Gift Packaging" } },
+        "g4": { "type": "item", "settings": { "icon": "🚚", "label": "Insured Transit", "sub": "Free Shipping across India" } },
+        "g5": { "type": "item", "settings": { "icon": "↺", "label": "14-Day Returns", "sub": "No Questions Asked" } },
+        "g6": { "type": "item", "settings": { "icon": "🛡️", "label": "Lifetime Care", "sub": "Complimentary Cleaning" } }
+      },
+      "block_order": ["g1", "g2", "g3", "g4", "g5", "g6"],
+      "settings": {}
+    },
+    "reviews": {
+      "type": "product-reviews",
+      "settings": {}
+    }
+  },
+  "order": ["main", "related", "guarantee", "reviews"]
+}

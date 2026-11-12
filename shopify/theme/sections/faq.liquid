@@ -1,0 +1,47 @@
+{% comment %}
+  FAQ — ported from the FAQ block of frontend/src/app/page.tsx (native <details>).
+{% endcomment %}
+<section class="px-6 md:px-16 py-24 max-w-3xl mx-auto" data-section-id="{{ section.id }}">
+  <div class="text-center" data-reveal><p class="eyebrow">{{ section.settings.eyebrow }}</p></div>
+  <div class="text-center mt-4 mb-14" data-reveal><h2 class="serif text-4xl md:text-5xl">{{ section.settings.heading }}</h2></div>
+  <div>
+    {%- for block in section.blocks -%}
+      <div class="py-6 border-b" style="border-color: rgba(43,38,32,.12)" data-reveal {{ block.shopify_attributes }}>
+        <details>
+          <summary class="serif text-lg cursor-pointer flex items-center justify-between">
+            {{ block.settings.question }} <span class="opacity-50 text-sm">+</span>
+          </summary>
+          <div class="text-sm opacity-70 mt-4">{{ block.settings.answer }}</div>
+        </details>
+      </div>
+    {%- endfor -%}
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "FAQ",
+  "tag": "div",
+  "max_blocks": 20,
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "Questions" },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Frequently Asked" }
+  ],
+  "blocks": [
+    {
+      "type": "item",
+      "name": "Question",
+      "settings": [
+        { "type": "text", "id": "question", "label": "Question", "default": "How long does delivery take?" },
+        {
+          "type": "richtext",
+          "id": "answer",
+          "label": "Answer",
+          "default": "<p>We ship across India. Most orders are delivered within 3 to 7 business days in secure, premium packaging.</p>"
+        }
+      ]
+    }
+  ],
+  "presets": [{ "name": "FAQ", "blocks": [{ "type": "item" }] }]
+}
+{% endschema %}

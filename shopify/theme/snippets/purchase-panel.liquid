@@ -1,0 +1,213 @@
+{% comment %}
+  Product purchase panel — ported from frontend/src/components/product/ProductPurchasePanel.tsx.
+  Usage: {% render 'purchase-panel', product: product, tax_note: '…' %}
+  src/js/purchase.mjs drives size selection, price / stock updates, quantity,
+  Add to Bag (Ajax), Buy Now, WhatsApp bulk inquiry, share and the pincode
+  check. Without JS the product form still posts to the cart.
+
+  Shopify mapping: only Size is a real option; the metal finish is a single
+  metafield swatch (spec). "Fastening type" does not exist in the live catalog.
+{% endcomment %}
+{%- liquid
+  assign variant = product.selected_or_first_available_variant
+  assign eyebrow = product.metafields.custom.eyebrow.value
+  assign material = product.metafields.custom.material.value
+  assign metal_finish = product.metafields.custom.metal_finish.value
+  assign metal_hex = product.metafields.custom.metal_hex.value | default: '#C9A66B'
+  assign size_option = product.options_by_name['Size']
+  assign judgeme_badge = product.metafields.judgeme.badge
+
+  comment
+    Units the quantity stepper may reach for the selected variant: tracked
+    stock when Shopify will refuse an oversell, else the 99 hard cap.
+  endcomment
+  assign qty_max = 99
+  if variant.inventory_management == 'shopify' and variant.inventory_policy == 'deny'
+    assign qty_max = variant.inventory_quantity | at_least: 1 | at_most: 99
+  endif
+
+  assign has_compare = false
+  assign savings = 0
+  if variant.compare_at_price > variant.price
+    assign has_compare = true
+    assign savings = variant.compare_at_price | minus: variant.price | times: 100.0 | divided_by: variant.compare_at_price | round
+  endif
+-%}
+
+<div data-purchase-panel>
+  <script type="application/json" data-product-json>{{ product | json }}</script>
+  {%- comment -%} variant id → tracked units (null = Shopify does not limit it). The product JSON carries no inventory quantity. {%- endcomment -%}
+  <script type="application/json" data-inventory-json>
+    {
+      {%- for v in product.variants -%}
+        "{{ v.id }}": {% if v.inventory_management == 'shopify' and v.inventory_policy == 'deny' %}{{ v.inventory_quantity | at_least: 0 }}{% else %}null{% endif %}{% unless forloop.last %},{% endunless %}
+      {%- endfor -%}
+    }
+  </script>
+
+  <div class="flex items-center justify-between mb-1">
+    {%- if eyebrow != blank -%}
+      <p class="eyebrow">{{ eyebrow }}</p>
+    {%- else -%}
+      <span></span>
+    {%- endif -%}
+    <span
+      data-stock-badge
+      class="text-[10px] font-medium px-2 py-0.5 rounded-full uppercase tracking-wider"
+      style="{% if variant.available %}background: rgba(168,130,61,.15); color: var(--gold-deep){% else %}background: #fee2e2; color: #991b1b{% endif %}"
+    >{% if variant.available %}In Stock{% else %}Out of Stock{% endif %}</span>
+  </div>
+
+  <h1 class="serif text-4xl md:text-5xl mt-1">{{ product.title }}</h1>
+
+  {%- comment -%}
+    Judge.me star badge. Rendered only when the app has a badge for this
+    product — an empty link would be an invisible, unnamed tab stop.
+  {%- endcomment -%}
+  {%- if judgeme_badge != blank -%}
+    <a href="#reviews" class="block mt-3 text-xs"><span class="jdgm-widget jdgm-preview-badge" data-id="{{ product.id }}">{{ judgeme_badge }}</span></a>
+  {%- endif -%}
+
+  <div class="flex items-baseline gap-3 mt-4">
+    <span class="text-2xl md:text-3xl font-medium" style="color: var(--charcoal)" data-price>{{ variant.price | money_without_trailing_zeros }}</span>
+    <span class="text-sm opacity-50 line-through{% unless has_compare %} hidden{% endunless %}" data-compare-price>{% if has_compare %}{{ variant.compare_at_price | money_without_trailing_zeros }}{% endif %}</span>
+    <span class="text-xs font-medium px-2.5 py-1 rounded-sm uppercase tracking-wider{% unless savings > 0 %} hidden{% endunless %}" style="background: rgba(168,130,61,.15); color: var(--gold-deep)" data-savings>{% if savings > 0 %}Save {{ savings }}%{% endif %}</span>
+  </div>
+  <p class="text-[11px] opacity-50 mt-1">{{ tax_note }}</p>
+
+  {%- if product.description != blank -%}
+    <div class="text-sm opacity-70 mt-6 leading-relaxed">{{ product.description }}</div>
+  {%- endif -%}
+
+  {%- if metal_finish != blank -%}
+    <div class="mt-8">
+      <p class="text-xs tracking-[.2em] uppercase opacity-60 mb-3">Metal Finish: <span class="opacity-100">{{ metal_finish }}</span></p>
+      <div class="flex gap-3">
+        <span class="w-10 h-10 rounded-full border-2 p-0.5 block" style="border-color: var(--black)" role="img" aria-label="{{ metal_finish | escape }}">
+          <span class="w-full h-full rounded-full block" style="background: {{ metal_hex }}"></span>
+        </span>
+      </div>
+    </div>
+  {%- endif -%}
+
+  {%- form 'product', product, data-product-form: 'true', novalidate: 'novalidate' -%}
+    <input type="hidden" name="id" value="{{ variant.id }}" data-variant-id>
+
+    {%- if size_option -%}
+      {%- assign size_index = size_option.position | minus: 1 -%}
+      <div class="mt-6">
+        <p class="text-xs tracking-[.2em] uppercase opacity-60 mb-3">Size: <span class="opacity-100" data-size-label>{{ variant.options[size_index] }}</span></p>
+        <div class="grid grid-cols-4 gap-3">
+          {%- for value in size_option.values -%}
+            {%- assign selected = false -%}
+            {%- if variant.options[size_index] == value -%}{%- assign selected = true -%}{%- endif -%}
+            <button
+              type="button"
+              data-size="{{ value | escape }}"
+              aria-pressed="{{ selected }}"
+              class="py-2.5 px-3 text-xs tracking-wider border font-medium transition-colors"
+              style="{% if selected %}border-color: var(--black); background: var(--black); color: var(--ivory){% else %}border-color: rgba(43,38,32,.3){% endif %}"
+            >{{ value }}</button>
+          {%- endfor -%}
+        </div>
+      </div>
+    {%- endif -%}
+
+    <div class="space-y-3 pt-6">
+      <div data-purchase-soldout class="{% if variant.available %}hidden{% endif %}">
+        <button type="button" data-notify-open class="btn-luxury btn-gold-solid w-full justify-center h-12">
+          <span class="flex items-center gap-2">
+            {% render 'icon', name: 'bell', size: 16, stroke_width: 1.6 %}
+            <span>Notify Me When Available</span>
+          </span>
+        </button>
+      </div>
+
+      <div data-purchase-available class="space-y-3{% unless variant.available %} hidden{% endunless %}">
+        <div class="flex items-center gap-3">
+          <div class="qty-box">
+            <button type="button" data-qty-step="-1" aria-label="Decrease quantity">−</button>
+            <input type="number" name="quantity" value="1" min="1" max="{{ qty_max }}" data-qty-input aria-label="Quantity">
+            <button type="button" data-qty-step="1" aria-label="Increase quantity">+</button>
+          </div>
+          <button type="submit" data-add-to-bag class="btn-luxury btn-gold-solid flex-1 justify-center h-12">
+            <span>Add to Bag | {{ variant.price | money_without_trailing_zeros }}</span>
+          </button>
+        </div>
+        <button type="button" data-buy-now class="btn-luxury w-full justify-center h-12">
+          <span>Buy Now | Instant Checkout</span>
+        </button>
+      </div>
+
+      <button type="button" data-bulk-inquiry class="btn-luxury w-full justify-center h-12">
+        <span class="flex items-center gap-2">
+          {% render 'icon', name: 'whatsapp', size: 16 %}
+          <span>Bulk Inquiry on WhatsApp</span>
+        </span>
+      </button>
+
+      <div class="flex items-center justify-between pt-1 text-xs">
+        <button type="button" data-wishlist-toggle="{{ product.handle }}" data-wishlist-idle="inherit" aria-pressed="false" class="flex items-center gap-2 opacity-70 hover:opacity-100 transition-colors py-1">
+          <span data-wishlist-icon>♡</span>
+          <span data-wishlist-label>Add to Wishlist</span>
+        </button>
+        <button type="button" data-share class="flex items-center gap-2 opacity-70 hover:opacity-100 transition-colors py-1">
+          <span>↗</span>
+          <span>Share</span>
+        </button>
+      </div>
+    </div>
+  {%- endform -%}
+
+  <form data-pincode-form class="mt-6 p-4 space-y-2 text-xs" style="background: var(--cream); border: 1px solid rgba(43,38,32,.1)" novalidate>
+    <div class="flex items-center justify-between">
+      <span class="font-medium">📍 Check Delivery Availability</span>
+      <span class="text-[10px]" style="color: #047857">Free Insured Shipping</span>
+    </div>
+    <div class="flex gap-2">
+      <input
+        type="text"
+        inputmode="numeric"
+        autocomplete="postal-code"
+        data-pincode-input
+        placeholder="Enter 6-digit pincode"
+        aria-label="Pincode"
+        maxlength="6"
+        class="flex-1 px-3 py-2 bg-white border text-xs outline-none"
+        style="border-color: rgba(43,38,32,.2)"
+      >
+      <button type="submit" class="px-4 py-2 text-[11px] tracking-wider uppercase font-medium" style="background: var(--black); color: var(--ivory)">Check</button>
+    </div>
+    <p data-pincode-valid class="hidden" style="color: #047857" role="status"></p>
+    <p data-pincode-invalid class="hidden" style="color: #b91c1c" role="alert">Please enter a valid 6-digit pincode.</p>
+  </form>
+
+  <div class="grid grid-cols-3 gap-2 text-center text-[10px] opacity-70 mt-4">
+    <div class="p-2" style="background: rgba(255,255,255,.6); border: 1px solid rgba(43,38,32,.08)">
+      <div class="text-sm mb-0.5">👑</div>
+      <p class="font-medium" style="color: var(--charcoal)">Anti Tarnish</p>
+      <p class="opacity-75">100% Quality Guaranteed</p>
+    </div>
+    <div class="p-2" style="background: rgba(255,255,255,.6); border: 1px solid rgba(43,38,32,.08)">
+      <div class="text-sm mb-0.5">↺</div>
+      <p class="font-medium" style="color: var(--charcoal)">14-Day Returns</p>
+      <p class="opacity-75">Easy Doorstep Pickup</p>
+    </div>
+    <div class="p-2" style="background: rgba(255,255,255,.6); border: 1px solid rgba(43,38,32,.08)">
+      <div class="text-sm mb-0.5">🛡️</div>
+      <p class="font-medium" style="color: var(--charcoal)">Lifetime Care</p>
+      <p class="opacity-75">Free Annual Polish</p>
+    </div>
+  </div>
+
+  <div class="mt-10 space-y-0">
+    <details class="py-4 border-t" style="border-color: rgba(43,38,32,.12)">
+      <summary class="text-sm cursor-pointer flex items-center justify-between">Specifications <span>+</span></summary>
+      <p class="text-sm opacity-70 mt-3">{{ material | default: 'Premium materials, handfinished.' }}</p>
+    </details>
+    <details class="py-4 border-t" style="border-color: rgba(43,38,32,.12)">
+      <summary class="text-sm cursor-pointer flex items-center justify-between">Shipping &amp; Returns <span>+</span></summary>
+      <p class="text-sm opacity-70 mt-3">Ships in 3 to 5 business days. Free returns within 14 days of delivery.</p>
+    </details>
+  </div>
+</div>

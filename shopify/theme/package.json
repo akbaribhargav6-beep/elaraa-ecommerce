@@ -1,0 +1,25 @@
+{
+  "name": "elaraa-shopify-theme",
+  "private": true,
+  "version": "0.1.0",
+  "description": "ELARAA Shopify Online Store 2.0 theme — build tooling (Tailwind + esbuild) and Shopify CLI scripts",
+  "type": "module",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "build:css": "tailwindcss -i src/css/tailwind.css -o assets/tailwind.css --minify",
+    "build:js": "node esbuild.config.mjs",
+    "build": "npm run build:css && npm run build:js",
+    "watch:css": "tailwindcss -i src/css/tailwind.css -o assets/tailwind.css --watch",
+    "watch:js": "node esbuild.config.mjs --watch",
+    "dev": "shopify theme dev",
+    "check": "shopify theme check",
+    "push": "npm run build && shopify theme push --unpublished",
+    "package": "npm run build && shopify theme package",
+    "test": "node --test"
+  },
+  "devDependencies": {
+    "@shopify/cli": "^3.80.0",
+    "esbuild": "^0.25.0",
+    "tailwindcss": "^3.4.17"
+  }
+}

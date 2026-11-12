@@ -1,0 +1,139 @@
+{
+  "sections": {
+    "hero": {
+      "type": "hero-banner",
+      "settings": {
+        "primary_link": "shopify://collections/all",
+        "secondary_link": "shopify://pages/about"
+      }
+    },
+    "categories": {
+      "type": "shop-categories",
+      "blocks": {
+        "earrings": { "type": "category", "settings": { "collection": "earrings" } },
+        "rings": { "type": "category", "settings": { "collection": "rings" } },
+        "necklaces": { "type": "category", "settings": { "collection": "necklaces" } },
+        "bracelets": { "type": "category", "settings": { "collection": "bracelets" } },
+        "charms": { "type": "category", "settings": { "collection": "charms" } },
+        "duo-set": { "type": "category", "settings": { "collection": "duo-set" } }
+      },
+      "block_order": ["earrings", "rings", "necklaces", "bracelets", "charms", "duo-set"],
+      "settings": {}
+    },
+    "value-props": {
+      "type": "value-props",
+      "blocks": {
+        "p1": { "type": "prop", "settings": { "label": "Handcrafted Detail" } },
+        "p2": { "type": "prop", "settings": { "label": "Skin Friendly" } },
+        "p3": { "type": "prop", "settings": { "label": "Anti Tarnish" } },
+        "p4": { "type": "prop", "settings": { "label": "14 Day Easy Returns" } }
+      },
+      "block_order": ["p1", "p2", "p3", "p4"],
+      "settings": {}
+    },
+    "featured": {
+      "type": "featured-collection",
+      "settings": { "collection": "featured", "limit": 3 }
+    },
+    "best-sellers": {
+      "type": "best-sellers",
+      "settings": { "collection": "best-sellers" }
+    },
+    "signature-earrings": {
+      "type": "signature-earrings",
+      "settings": { "collection": "earrings" }
+    },
+    "brand-story": {
+      "type": "brand-story",
+      "settings": {
+        "button_link": "shopify://pages/about"
+      }
+    },
+    "luxury-deal": {
+      "type": "luxury-deal",
+      "settings": { "fallback_collection": "featured" }
+    },
+    "necklace-chapters": {
+      "type": "necklace-chapters",
+      "settings": { "collection": "necklaces", "limit": 4 }
+    },
+    "new-arrivals": {
+      "type": "new-arrivals",
+      "settings": { "collection": "new-arrivals", "limit": 6 }
+    },
+    "testimonials": {
+      "type": "testimonials",
+      "blocks": {
+        "t1": { "type": "testimonial", "settings": { "name": "Ananya R.", "region": "west", "region_label": "Maharashtra", "quote": "The kind of jewellery I actually reach for every morning, it just goes with everything.", "doodle": "never taking these off", "rotation": -3, "offset_y": 10 } },
+        "t2": { "type": "testimonial", "settings": { "name": "Meera S.", "region": "north", "region_label": "Delhi NCR", "quote": "Hasn’t left my ears since the day it arrived, and still looks brand new.", "doodle": "zero tarnish so far", "rotation": 2, "offset_y": -8 } },
+        "t3": { "type": "testimonial", "settings": { "name": "Kavya P.", "region": "south", "region_label": "Karnataka", "quote": "Packaging alone felt like a gift before I even opened the box.", "doodle": "so obsessed", "rotation": -2, "offset_y": 14 } },
+        "t4": { "type": "testimonial", "settings": { "name": "Riya D.", "region": "east", "region_label": "West Bengal", "quote": "Wore it to a wedding and got asked where it was from all night.", "doodle": "so many compliments", "rotation": 3, "offset_y": -6 } },
+        "t5": { "type": "testimonial", "settings": { "name": "Sneha K.", "region": "west", "region_label": "Gujarat", "quote": "Lightweight, comfortable, and it genuinely hasn’t faded after months of wear.", "doodle": "my everyday piece", "rotation": -1, "offset_y": 8 } },
+        "t6": { "type": "testimonial", "settings": { "name": "Pooja M.", "region": "north", "region_label": "Punjab", "quote": "Gifted it to my sister and now she wants the whole edit for herself.", "doodle": "buying one more", "rotation": 2, "offset_y": -10 } },
+        "t7": { "type": "testimonial", "settings": { "name": "Divya T.", "region": "south", "region_label": "Tamil Nadu", "quote": "Looks far more premium than what I actually paid for it.", "doodle": "best find this year", "rotation": -3, "offset_y": 12 } },
+        "t8": { "type": "testimonial", "settings": { "name": "Arushi N.", "region": "east", "region_label": "Odisha", "quote": "Skin friendly finish means I can wear it all day with zero irritation.", "doodle": "finally, no itching", "rotation": 1, "offset_y": -6 } }
+      },
+      "block_order": ["t1", "t2", "t3", "t4", "t5", "t6", "t7", "t8"],
+      "settings": {}
+    },
+    "elaraa-edit": {
+      "type": "elaraa-edit",
+      "settings": {}
+    },
+    "faq": {
+      "type": "faq",
+      "blocks": {
+        "q1": {
+          "type": "item",
+          "settings": {
+            "question": "Will the jewellery tarnish over time??",
+            "answer": "<p>Our jewellery is crafted with premium anti-tarnish technology to maintain its shine. With proper care, it stays beautiful for everyday wear.</p>"
+          }
+        },
+        "q2": {
+          "type": "item",
+          "settings": {
+            "question": "Is the jewellery waterproof and sweat resistant?",
+            "answer": "<p>Yes. Our anti-tarnish jewellery is designed to resist water, sweat, and everyday exposure, helping it retain its lasting shine.</p>"
+          }
+        },
+        "q3": {
+          "type": "item",
+          "settings": {
+            "question": "Is it safe for sensitive skin?",
+            "answer": "<p>Absolutely. Our jewellery is hypoallergenic, nickel-free, and designed to be gentle on sensitive skin for all-day comfort.</p>"
+          }
+        },
+        "q4": {
+          "type": "item",
+          "settings": {
+            "question": "How long does delivery take?",
+            "answer": "<p>We ship across India. Most orders are delivered within 3 to 7 business days in secure, premium packaging.</p>"
+          }
+        }
+      },
+      "block_order": ["q1", "q2", "q3", "q4"],
+      "settings": {}
+    },
+    "newsletter": {
+      "type": "newsletter",
+      "settings": {}
+    }
+  },
+  "order": [
+    "hero",
+    "categories",
+    "value-props",
+    "featured",
+    "best-sellers",
+    "signature-earrings",
+    "brand-story",
+    "luxury-deal",
+    "necklace-chapters",
+    "new-arrivals",
+    "testimonials",
+    "elaraa-edit",
+    "faq",
+    "newsletter"
+  ]
+}

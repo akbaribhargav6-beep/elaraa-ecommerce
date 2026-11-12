@@ -1,0 +1,102 @@
+{% comment %}
+  Contact — hero + the four contact cards, ported from frontend/src/app/contact/page.tsx.
+  Phone, email and WhatsApp come from Theme settings → Contact.
+{% endcomment %}
+{%- liquid
+  assign phone = settings.contact_phone
+  assign phone_href = phone | remove: ' '
+  assign email = settings.contact_email
+  assign whatsapp = settings.whatsapp_number
+-%}
+<div class="pt-28"></div>
+<section class="relative pb-16 sm:pb-20 px-6 md:px-16 text-center" style="background: linear-gradient(180deg, #FAF7F2 0%, #F8F5F0 50%, rgba(239,233,222,.5) 100%); border-bottom: 1px solid rgba(43,38,32,.08)" data-section-id="{{ section.id }}">
+  <div class="max-w-3xl mx-auto space-y-6">
+    {%- if section.settings.pill != blank -%}
+      <div data-reveal>
+        <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/80" style="border: 1px solid rgba(201,166,107,.3)">
+          <span class="w-2 h-2 rounded-full" style="background: #10b981" aria-hidden="true"></span>
+          <span class="text-[11px] font-medium tracking-wider uppercase">{{ section.settings.pill }}</span>
+        </div>
+      </div>
+    {%- endif -%}
+    <div data-reveal><p class="eyebrow tracking-[.4em]">{{ section.settings.eyebrow }}</p></div>
+    <div data-reveal>
+      <h1 class="serif text-4xl sm:text-6xl font-light leading-[1.1]">
+        {{ section.settings.heading_before }} <em class="not-italic" style="color: var(--gold-deep)">{{ section.settings.heading_accent }}</em>
+      </h1>
+    </div>
+    <div data-reveal>
+      <p class="text-sm sm:text-base opacity-70 leading-relaxed">{{ section.settings.copy }}</p>
+    </div>
+  </div>
+</section>
+
+<section class="px-6 md:px-16 -mt-8 relative z-10 max-w-7xl mx-auto">
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+    {%- if phone != blank -%}
+      <div class="bg-white p-6 shadow-sm flex flex-col justify-between" style="border: 1px solid rgba(43,38,32,.08)" data-reveal>
+        <div>
+          <div class="w-10 h-10 rounded-full flex items-center justify-center mb-4 text-lg" style="background: rgba(168,130,61,.1)" aria-hidden="true">📞</div>
+          <p class="eyebrow text-[10px] mb-1">Direct Client Line</p>
+          <h2 class="serif text-xl font-medium mb-1">{{ phone }}</h2>
+          <p class="text-xs opacity-60">{{ section.settings.phone_hours }}</p>
+        </div>
+        <a href="tel:{{ phone_href }}" class="text-xs font-medium tracking-wider uppercase underline underline-offset-4 hover:opacity-70 transition-opacity pt-6 inline-block" style="color: var(--gold-deep)">Call Number →</a>
+      </div>
+    {%- endif -%}
+    {%- if email != blank -%}
+      <div class="bg-white p-6 shadow-sm flex flex-col justify-between" style="border: 1px solid rgba(43,38,32,.08)" data-reveal>
+        <div>
+          <div class="w-10 h-10 rounded-full flex items-center justify-center mb-4 text-lg" style="background: rgba(168,130,61,.1)" aria-hidden="true">✉️</div>
+          <p class="eyebrow text-[10px] mb-1">Client Care &amp; Orders</p>
+          <h2 class="serif text-xl font-medium mb-1 break-words">{{ email }}</h2>
+          <p class="text-xs opacity-60">{{ section.settings.email_note }}</p>
+        </div>
+        <a href="mailto:{{ email }}" class="text-xs font-medium tracking-wider uppercase underline underline-offset-4 hover:opacity-70 transition-opacity pt-6 inline-block" style="color: var(--gold-deep)">Compose Email →</a>
+      </div>
+    {%- endif -%}
+    {%- if whatsapp != blank -%}
+      <div class="bg-white p-6 shadow-sm flex flex-col justify-between" style="border: 1px solid rgba(43,38,32,.08)" data-reveal>
+        <div>
+          <div class="w-10 h-10 rounded-full flex items-center justify-center mb-4 text-lg" style="background: rgba(168,130,61,.1)" aria-hidden="true">💬</div>
+          <p class="eyebrow text-[10px] mb-1">Instant WhatsApp</p>
+          <h2 class="serif text-xl font-medium mb-1">Styling Assistance</h2>
+          <p class="text-xs opacity-60">Message our concierge desk directly</p>
+        </div>
+        <a href="https://wa.me/{{ whatsapp }}?text=Hello%20ELARAA%2C%20I%20would%20like%20to%20inquire%20about%20your%20jewellery." target="_blank" rel="noopener" class="text-xs font-medium tracking-wider uppercase underline underline-offset-4 hover:opacity-70 transition-opacity pt-6 inline-block" style="color: var(--gold-deep)">Chat on WhatsApp →</a>
+      </div>
+    {%- endif -%}
+    <div class="bg-white p-6 shadow-sm flex flex-col justify-between" style="border: 1px solid rgba(43,38,32,.08)" data-reveal>
+      <div>
+        <div class="w-10 h-10 rounded-full flex items-center justify-center mb-4 text-lg" style="background: rgba(168,130,61,.1)" aria-hidden="true">📍</div>
+        <p class="eyebrow text-[10px] mb-1">Flagship Atelier</p>
+        <h2 class="serif text-xl font-medium mb-1">{{ section.settings.city }}</h2>
+        <p class="text-xs opacity-60">Fine fashion jewellery, made with care</p>
+      </div>
+      <a href="#inquiry-form" class="text-xs font-medium tracking-wider uppercase underline underline-offset-4 hover:opacity-70 transition-opacity pt-6 inline-block" style="color: var(--gold-deep)">Get in Touch →</a>
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Contact hero",
+  "tag": "div",
+  "settings": [
+    { "type": "text", "id": "pill", "label": "Pill", "default": "Concierge Desk Active · Response Under 15 Mins" },
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "The Atelier Experience" },
+    { "type": "text", "id": "heading_before", "label": "Heading (before accent)", "default": "We Welcome Your" },
+    { "type": "text", "id": "heading_accent", "label": "Heading accent (gold)", "default": "Inquiry" },
+    {
+      "type": "textarea",
+      "id": "copy",
+      "label": "Copy",
+      "default": "Whether you're looking for the perfect everyday piece, need assistance choosing the right jewellery, or have questions about your order, our dedicated client advisors are always ready to assist you."
+    },
+    { "type": "text", "id": "phone_hours", "label": "Phone card note", "default": "Monday to Saturday, 10:00 AM to 7:30 PM IST" },
+    { "type": "text", "id": "email_note", "label": "Email card note", "default": "Replies within 1 to 2 business days" },
+    { "type": "text", "id": "city", "label": "Atelier city", "default": "Jamnagar, Gujarat" }
+  ],
+  "presets": [{ "name": "Contact hero" }]
+}
+{% endschema %}

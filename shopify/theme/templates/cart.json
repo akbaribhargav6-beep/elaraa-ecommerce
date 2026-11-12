@@ -1,0 +1,11 @@
+{
+  "sections": {
+    "main": {
+      "type": "main-cart",
+      "settings": {
+        "shipping_fee": 99
+      }
+    }
+  },
+  "order": ["main"]
+}

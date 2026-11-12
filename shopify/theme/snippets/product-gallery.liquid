@@ -1,0 +1,90 @@
+{% comment %}
+  Product gallery — ported from frontend/src/components/product/ProductGallery.tsx.
+  Usage: {% render 'product-gallery', product: product %}
+  Every image is rendered; src/js/gallery.mjs fades the active one in, runs the
+  3.5 s autoplay bar, prev/next, thumbnails, swipe and the fullscreen lightbox.
+  Keep this snippet OUTSIDE any [data-reveal] wrapper (the lightbox is fixed).
+{% endcomment %}
+{%- liquid
+  assign images = product.images
+  assign many = false
+  if images.size > 1
+    assign many = true
+  endif
+-%}
+{%- if images.size > 0 -%}
+  <div class="space-y-4" data-gallery>
+    <div data-gallery-frame class="relative bg-cream border rounded-sm overflow-hidden group aspect-square shadow-lg" style="border-color: rgba(43,38,32,.1)">
+      {%- for image in images -%}
+        {%- assign alt = image.alt | default: product.title -%}
+        <img
+          src="{{ image | image_url: width: 1400 }}"
+          srcset="{{ image | image_url: width: 600 }} 600w, {{ image | image_url: width: 1000 }} 1000w, {{ image | image_url: width: 1400 }} 1400w"
+          sizes="(min-width:768px) 50vw, 100vw"
+          width="{{ image.width }}"
+          height="{{ image.height }}"
+          alt="{{ alt | escape }}"
+          data-gallery-slide
+          data-full="{{ image | image_url: width: 2000 }}"
+          class="absolute inset-0 w-full h-full object-cover transition-opacity duration-300 {% if forloop.first %}opacity-100{% else %}opacity-0{% endif %}"
+          {% if forloop.first %}fetchpriority="high"{% else %}loading="lazy" aria-hidden="true"{% endif %}
+        >
+      {%- endfor -%}
+
+      {%- if many -%}
+        <div class="absolute top-0 left-0 right-0 h-1 bg-black/10 z-20" aria-hidden="true">
+          <div data-gallery-progress class="h-full transition-[width] duration-75" style="width: 0%; background: var(--gold-deep)"></div>
+        </div>
+      {%- endif -%}
+
+      <div class="absolute top-4 right-4 flex items-center gap-2 z-20">
+        {%- if many -%}
+          <button type="button" data-gallery-autoplay aria-label="Pause slideshow" class="w-9 h-9 rounded-full bg-white/80 backdrop-blur-md flex items-center justify-center text-xs shadow-md hover:scale-110 transition-transform">⏸</button>
+        {%- endif -%}
+        <button type="button" data-gallery-expand aria-label="View fullscreen" class="w-9 h-9 rounded-full bg-white/80 backdrop-blur-md flex items-center justify-center text-xs shadow-md hover:scale-110 transition-transform">⤢</button>
+      </div>
+
+      {%- if many -%}
+        <button type="button" data-gallery-step="-1" aria-label="Previous image" class="absolute left-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/85 backdrop-blur-md flex items-center justify-center text-lg shadow-md opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity z-20">‹</button>
+        <button type="button" data-gallery-step="1" aria-label="Next image" class="absolute right-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/85 backdrop-blur-md flex items-center justify-center text-lg shadow-md opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity z-20">›</button>
+        <div data-gallery-counter class="absolute bottom-4 left-4 bg-black/75 text-white text-[10px] tracking-widest px-3 py-1 rounded-full z-20 uppercase font-medium">1 / {{ images.size }}</div>
+      {%- endif -%}
+    </div>
+
+    {%- if many -%}
+      <div class="grid grid-cols-5 gap-2 sm:gap-3">
+        {%- for image in images -%}
+          {%- assign alt = image.alt | default: product.title -%}
+          <button type="button" data-gallery-thumb="{{ forloop.index0 }}" aria-label="Show image {{ forloop.index }}" class="aspect-square border-2 rounded-sm overflow-hidden relative transition-all" style="border-color: {% if forloop.first %}var(--gold-deep){% else %}transparent{% endif %}">
+            {{ image | image_url: width: 160 | image_tag: alt: alt, class: 'absolute inset-0 w-full h-full object-cover', sizes: '80px', loading: 'lazy' }}
+          </button>
+        {%- endfor -%}
+      </div>
+    {%- endif -%}
+
+    <div data-gallery-lightbox class="hidden fixed inset-0 bg-black/95 backdrop-blur-md z-[100] flex flex-col items-center justify-between p-6" role="dialog" aria-modal="true" aria-label="Fullscreen gallery" aria-hidden="true">
+      <div class="w-full flex items-center justify-between text-white text-xs tracking-widest">
+        <span class="uppercase opacity-70">Fullscreen Gallery</span>
+        <button type="button" data-lightbox-close aria-label="Close fullscreen" class="text-2xl hover:opacity-70 p-2">✕</button>
+      </div>
+
+      <div data-lightbox-stage class="relative w-full max-w-4xl h-[70vh] flex items-center justify-center my-auto">
+        <img data-lightbox-image src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" alt="" width="2000" height="2000" class="absolute inset-0 w-full h-full object-contain">
+        {%- if many -%}
+          <button type="button" data-gallery-step="-1" aria-label="Previous" class="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/20 hover:bg-white/40 text-white text-2xl flex items-center justify-center">‹</button>
+          <button type="button" data-gallery-step="1" aria-label="Next" class="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/20 hover:bg-white/40 text-white text-2xl flex items-center justify-center">›</button>
+        {%- endif -%}
+      </div>
+
+      {%- if many -%}
+        <div data-lightbox-thumbs class="flex items-center gap-2">
+          {%- for image in images -%}
+            <button type="button" data-lightbox-thumb="{{ forloop.index0 }}" aria-label="Show image {{ forloop.index }}" class="w-12 h-12 relative border-2 rounded-sm overflow-hidden" style="border-color: transparent; opacity: 0.6">
+              {{ image | image_url: width: 96 | image_tag: alt: '', class: 'absolute inset-0 w-full h-full object-cover', sizes: '48px', loading: 'lazy' }}
+            </button>
+          {%- endfor -%}
+        </div>
+      {%- endif -%}
+    </div>
+  </div>
+{%- endif -%}

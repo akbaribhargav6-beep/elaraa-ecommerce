@@ -1,0 +1,40 @@
+{% comment %}
+  Wishlist page — ported from frontend/src/app/account/wishlist/page.tsx.
+  Items live in the shopper's browser (localStorage) and are rendered by
+  src/js/wishlist.mjs from /products/<handle>.js. Assign template
+  page.wishlist to a page with handle "wishlist" (plan Task 23).
+{% endcomment %}
+<div class="pt-28"></div>
+<section class="px-4 sm:px-6 md:px-16 pb-20 sm:pb-28 max-w-5xl mx-auto" data-wishlist-page data-section-id="{{ section.id }}">
+  <h1 class="serif text-3xl mb-8">{{ section.settings.heading }}</h1>
+  <p data-wishlist-empty class="text-sm opacity-60">{{ section.settings.empty_copy }}</p>
+  <div data-wishlist-grid class="grid sm:grid-cols-2 gap-6" aria-live="polite"></div>
+  <noscript>
+    <p class="text-sm opacity-60 mt-6">Your wishlist needs JavaScript to display saved pieces.</p>
+  </noscript>
+</section>
+
+{% schema %}
+{
+  "name": "Wishlist",
+  "tag": "div",
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Your Wishlist"
+    },
+    {
+      "type": "text",
+      "id": "empty_copy",
+      "label": "Empty state copy",
+      "default": "Nothing saved yet. Browse the collection and tap the heart on anything you love."
+    }
+  ],
+  "enabled_on": {
+    "templates": ["page"]
+  },
+  "presets": [{ "name": "Wishlist" }]
+}
+{% endschema %}
